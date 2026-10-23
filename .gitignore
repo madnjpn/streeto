@@ -51,6 +51,7 @@ android/captures/
 *.jks
 *.keystore
 keystore.properties
+android/signing/
 
 # The APK served by the login page is a build artifact, not source
 public/downloads/*.apk

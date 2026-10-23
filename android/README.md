@@ -33,7 +33,9 @@ Release builds are signed with the keystore held in these repository secrets:
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-The keystore and password are backed up outside this repository. **Keep them safe** — without them you cannot update installed copies of the app; users would have to uninstall and reinstall.
+The keystore and password are kept locally in `android/signing/` (git-ignored)
+and in the GitHub secrets above. **Keep them safe** — without them you cannot
+update installed copies of the app; users would have to uninstall and reinstall.
 
 Before each release, increase `versionCode` (and usually `versionName`) in `app/build.gradle.kts`. Installed apps only accept an update with the same signing key and a higher `versionCode`.
 
