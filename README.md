@@ -33,12 +33,15 @@ Demo logins created by `npm run seed` all use the password `street123`
 ## Android app
 
 `android/` holds a native WebView shell for **https://streeto.net**. GitHub
-Actions builds a test APK (`.github/workflows/android.yml`) on every push to
-`main`, and the login page offers it for download.
+Actions builds a signed release APK (`.github/workflows/android.yml`) on every
+push to `main`, and the login page offers it for download. Distribution is
+website-only; there is no Play Store listing.
 
 - package `net.streeto.app`, Android 7.0+ (API 24)
 - camera/gallery uploads, GPS, back button, pull-to-refresh
-- rebuild: Actions → **Build Android APK**; copy the artifact to
+- fixed release signing key stored in GitHub Secrets, so updates install over
+  older versions
+- rebuild: Actions → **Build Android APK**; copy `app-release.apk` to
   `public/downloads/STREETO-android.apk` for the login-page button
 
 See [android/README.md](android/README.md) for details.
