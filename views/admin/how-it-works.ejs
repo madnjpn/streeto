@@ -1,0 +1,192 @@
+<%
+/* The manual editor: the articles on the left, the live page on the
+   right. Every change is saved as it is made; the page itself is in
+   another tab. */
+const kaText = (typeof kaOf !== 'undefined' && typeof kaOf === 'function') ? kaOf : (() => '');
+/* The icons the manual uses now, so the picker can show them first. */
+const usedIcons = [...new Set(sections.map((section) => section.icon).filter((name) => name && iconNames.includes(name)))];
+%>
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('control room') %></p>
+    <h1 class="display"><%= t('How it works') %></h1>
+    <p class="lede"><%= t('Write the manual. Every line you type appears on the page, and its English becomes a key in the Translations console.') %></p>
+  </div>
+  <div class="btnrow">
+    <a class="btn btn--ghost" href="/about" target="_blank" rel="noopener"><%= t('Open the page') %></a>
+    <form action="/admin/translations/sync" method="post" data-sync-form style="display:inline">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <button class="btn btn--ghost" type="submit"><%= t('Sync translations') %></button>
+    </form>
+    <button class="btn btn--primary" type="button" data-add-section-open>
+      <%- include('../partials/icon', { name: 'plus', size: 16 }) %> <%= t('New article') %>
+    </button>
+  </div>
+</div>
+
+<div class="feedtabs">
+  <a class="feedtabs__tab" href="/admin?tab=users"><%= t('Drivers') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=content"><%= t('Content') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=backups"><%= t('Backups') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=reports"><%= t('Reports') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=appearance"><%= t('Appearance') %></a>
+  <a class="feedtabs__tab" href="/admin/partners"><%= t('Partners') %></a>
+  <a class="feedtabs__tab" href="/admin/service-claims"><%= t('Claims') %></a>
+  <a class="feedtabs__tab" href="/admin/translations"><%= t('Translations') %></a>
+  <a class="feedtabs__tab is-active" href="/admin/how-it-works"><%= t('How it works') %></a>
+  <span class="feedtabs__count"><%= sections.length %> <%= t('articles') %></span>
+</div>
+
+<div class="howeditor howeditor--single">
+  <div class="howeditor__list" data-howlist>
+    <% sections.forEach(function (section) { %>
+      <section class="howart" data-section="<%= section.id %>">
+        <header class="howart__head">
+          <button class="howart__grip" type="button" draggable="true" data-drag-section="<%= section.id %>" title="<%= t('Drag to reorder') %>" aria-label="<%= t('Drag to reorder') %>">
+            <%- include('../partials/icon', { name: 'menu', size: 15 }) %>
+          </button>
+          <button class="howart__iconbtn" type="button" data-icon-pick title="<%= t('Choose an icon') %>" aria-label="<%= t('Choose an icon') %>">
+            <%- include('../partials/icon', { name: section.icon || 'bolt', size: 16 }) %>
+          </button>
+          <input type="hidden" value="<%= section.icon %>" data-sec-icon>
+          <div class="howart__titles">
+            <input class="howart__en" type="text" value="<%= section.heading %>" data-sec-en data-english placeholder="<%= t('Heading in English') %>">
+            <input class="howart__ka" type="text" value="<%= kaText(section.heading) %>" data-sec-ka placeholder="<%= t('Heading in Georgian') %>">
+          </div>
+          <div class="howart__acts">
+            <button class="iconbtn iconbtn--ghost" type="button" data-sec-up title="<%= t('Move up') %>"><%- include('../partials/icon', { name: 'chevron', size: 15 }) %></button>
+            <button class="iconbtn iconbtn--ghost" type="button" data-sec-down title="<%= t('Move down') %>"><%- include('../partials/icon', { name: 'chevron', size: 15, cls: 'icon--rot270' }) %></button>
+            <button class="iconbtn iconbtn--ghost" type="button" data-sec-delete title="<%= t('Remove') %>" aria-label="<%= t('Remove') %>"><%- include('../partials/icon', { name: 'trash', size: 15 }) %></button>
+          </div>
+        </header>
+
+        <div class="howart__blocks" data-blocks>
+          <% section.blocks.forEach(function (block) { %>
+            <div class="howline" data-block="<%= block.id %>">
+              <button class="howline__grip" type="button" draggable="true" data-drag-block="<%= block.id %>" title="<%= t('Drag to reorder') %>" aria-label="<%= t('Drag to reorder') %>">
+                <%- include('../partials/icon', { name: 'menu', size: 13 }) %>
+              </button>
+              <div class="howline__body">
+                <textarea rows="2" spellcheck="false" data-block-en data-english placeholder="<%= t('Text in English') %>"><%= block.body %></textarea>
+                <textarea rows="2" spellcheck="false" data-block-ka placeholder="<%= t('Text in Georgian') %>"><%= kaText(block.body) %></textarea>
+              </div>
+              <div class="howline__acts">
+                <select data-block-kind title="<%= t('Kind') %>">
+                  <option value="p" <%= block.kind === 'p' ? 'selected' : '' %>><%= t('Paragraph') %></option>
+                  <option value="li" <%= block.kind === 'li' ? 'selected' : '' %>><%= t('Bullet') %></option>
+                </select>
+                <button class="iconbtn iconbtn--ghost" type="button" data-block-delete title="<%= t('Remove') %>" aria-label="<%= t('Remove') %>"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+
+        <footer class="howart__foot">
+          <button class="btn btn--ghost btn--sm" type="button" data-add-block-open="<%= section.id %>">
+            <%- include('../partials/icon', { name: 'plus', size: 14 }) %> <%= t('Add a line') %>
+          </button>
+        </footer>
+      </section>
+    <% }); %>
+
+    <button class="howart howart--new" type="button" data-add-section-open>
+      <%- include('../partials/icon', { name: 'plus', size: 16 }) %> <%= t('New article') %>
+    </button>
+  </div>
+
+
+</div>
+
+<!-- ── the icon library ─────────────────────────────────────────── -->
+<dialog class="dialog" id="how-icon-dialog">
+  <div class="dialog__form">
+    <div class="dialog__head">
+      <h2><%= t('Choose an icon') %></h2>
+      <button class="iconbtn iconbtn--ghost" type="button" data-dialog-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 17 }) %></button>
+    </div>
+    <div class="dialog__body">
+      <p class="iconlib__label"><%= t('In use on the manual right now') %></p>
+      <div class="iconlib__grid iconlib__grid--used" data-used-strip>
+        <% usedIcons.forEach(function (name) { %>
+          <button class="iconlib__btn" type="button" data-icon="<%= name %>" title="<%= name %>">
+            <%- include('../partials/icon', { name, size: 18 }) %>
+          </button>
+        <% }); %>
+      </div>
+      <p class="iconlib__label"><%= t('All icons') %></p>
+      <div class="iconlib__grid" data-icon-grid>
+        <% iconNames.forEach(function (name) { %>
+          <button class="iconlib__btn <%= usedIcons.includes(name) ? 'is-used' : '' %>" type="button" data-icon="<%= name %>" title="<%= name %>">
+            <%- include('../partials/icon', { name, size: 18 }) %>
+          </button>
+        <% }); %>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn btn--ghost" type="button" data-dialog-close><%= t('Cancel') %></button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ── new article ─────────────────────────────────────────────── -->
+<dialog class="dialog dialog--sm" id="how-section-dialog">
+  <form method="dialog" class="dialog__form" data-section-form>
+    <div class="dialog__head">
+      <h2><%= t('New article') %></h2>
+      <button class="iconbtn iconbtn--ghost" type="button" data-dialog-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 17 }) %></button>
+    </div>
+    <div class="dialog__body">
+      <div class="field">
+        <span class="field__label"><%= t('Icon') %></span>
+        <button class="howart__iconbtn" type="button" data-icon-pick data-icon-target="#how-section-dialog [name=icon]" title="<%= t('Choose an icon') %>" aria-label="<%= t('Choose an icon') %>">
+          <%- include('../partials/icon', { name: 'bolt', size: 16 }) %>
+        </button>
+        <input type="hidden" name="icon" value="bolt">
+      </div>
+      <label class="field">
+        <span class="field__label"><%= t('Heading in English') %></span>
+        <input type="text" name="heading" maxlength="160" required placeholder="e.g. The wall">
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Heading in Georgian') %></span>
+        <input type="text" name="heading_ka" maxlength="160" placeholder="მაგ. კედელი">
+      </label>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn btn--ghost" type="button" data-dialog-close><%= t('Cancel') %></button>
+      <button class="btn btn--primary" type="submit"><%= t('Create') %></button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ── new line ─────────────────────────────────────────────────── -->
+<dialog class="dialog dialog--sm" id="how-block-dialog">
+  <form method="dialog" class="dialog__form" data-block-form>
+    <div class="dialog__head">
+      <h2><%= t('Add a line') %></h2>
+      <button class="iconbtn iconbtn--ghost" type="button" data-dialog-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 17 }) %></button>
+    </div>
+    <div class="dialog__body">
+      <input type="hidden" name="section_id">
+      <label class="field">
+        <span class="field__label"><%= t('Kind') %></span>
+        <select name="kind">
+          <option value="p"><%= t('Paragraph') %></option>
+          <option value="li"><%= t('Bullet') %></option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Text in English') %></span>
+        <textarea name="body" rows="3" maxlength="4000" required></textarea>
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Text in Georgian') %></span>
+        <textarea name="body_ka" rows="3" maxlength="4000"></textarea>
+      </label>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn btn--ghost" type="button" data-dialog-close><%= t('Cancel') %></button>
+      <button class="btn btn--primary" type="submit"><%= t('Create') %></button>
+    </div>
+  </form>
+</dialog>

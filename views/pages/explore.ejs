@@ -1,0 +1,55 @@
+<div class="single">
+  <p class="eyebrow"><%= t('explore') %></p>
+  <h1 class="display"><%= t('Explore the network') %></h1>
+  <p class="lede"><%= t('Hot posts, builds, meetups and groups from the last week.') %></p>
+
+  <% if (trending && trending.length) { %>
+    <div class="card mini">
+      <h3 class="mini__title"><%= t('Trending tags') %></h3>
+      <div class="tagcloud">
+        <% trending.forEach(function (trow) { %>
+          <a class="tag tag--type" href="/search?q=%23<%= encodeURIComponent(trow.tag) %>&type=posts">#<%= trow.tag %> <span class="muted">(<%= trow.n %>)</span></a>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+
+  <h2 class="display" style="font-size:1.4rem;margin-top:18px"><%= t('Hot posts') %></h2>
+  <% if (!topPosts || !topPosts.length) { %><%- include('../partials/empty', { title: t('No posts yet.'), hint: t('Be the first to post on the wall.') }) %><% } %>
+  <% (topPosts || []).forEach(function (post) { %><%- include('../partials/post', { p: post }) %><% }); %>
+
+  <h2 class="display" style="font-size:1.4rem;margin-top:18px"><%= t('Hot builds') %></h2>
+  <div class="cards">
+    <% (hotBuilds || []).forEach(function (b) { %>
+      <a class="card buildcard" href="/builds/<%= b.id %>">
+        <% if (b.cover) { %><img src="<%= config.uploadUrl %>/<%= b.cover %>"<% if (srcset(b.cover)) { %> srcset="<%= srcset(b.cover) %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy"><% } %>
+        <div class="buildcard__body">
+          <strong><%= b.title %></strong>
+          <span class="muted small"><%= b.make %> <%= b.model %> <%= b.year || '' %></span>
+          <span class="muted small"><%= t('{n} votes', { n: b.vote_count }) %></span>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+  <% if (!hotBuilds || !hotBuilds.length) { %><%- include('../partials/empty', { title: t('No builds yet.'), hint: t('Upload your car to get started.') }) %><% } %>
+
+  <% if (saleBuilds && saleBuilds.length) { %>
+    <h2 class="display" style="font-size:1.4rem;margin-top:18px">
+      <%- include('../partials/icon', { name: 'tag', size: 18 }) %> <%= t('Builds for sale') %>
+      <a class="link small" style="font-size:0.85rem;margin-left:8px" href="/builds?scope=sale"><%= t('See all') %></a>
+    </h2>
+    <div class="cards cards--builds">
+      <% saleBuilds.forEach(function (b) { %><%- include('../partials/build-card', { build: b, isAuthenticated: isAuthenticated, currentUser: currentUser, mine: b.user_id === currentUser?.id, csrfField: csrfField, csrfToken: csrfToken }) %><% }); %>
+    </div>
+  <% } %>
+
+  <h2 class="display" style="font-size:1.4rem;margin-top:18px"><%= t('Upcoming meetups') %></h2>
+  <% (upcoming || []).forEach(function (m) { %><%- include('../partials/meetup-card', { meetup: m }) %><% }); %>
+  <% if (!upcoming || !upcoming.length) { %><%- include('../partials/empty', { title: t('No upcoming meetups.'), hint: t('Host one from your group or the meetups page.') }) %><% } %>
+
+  <h2 class="display" style="font-size:1.4rem;margin-top:18px"><%= t('Active groups') %></h2>
+  <div class="cards">
+    <% (activeGroups || []).forEach(function (g) { %><%- include('../partials/group-card', { group: g, currentUser: currentUser }) %><% }); %>
+  </div>
+  <% if (!activeGroups || !activeGroups.length) { %><%- include('../partials/empty', { title: t('No groups yet.'), hint: t('Start one from the groups page.') }) %><% } %>
+</div>

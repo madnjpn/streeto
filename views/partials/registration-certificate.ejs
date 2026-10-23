@@ -1,0 +1,100 @@
+<%
+  /* Georgian registration certificate card (tech passport).
+     Renders a paper-like front and back with inline editing. */
+  const esc = f.escapeHtml;
+  const plateText = (value) => (value || '').replace(/[^A-Za-z0-9]/g, '').replace(/^([A-Za-z]{2})([0-9]{3})([A-Za-z]{2})$/, '$1-$2-$3');
+  const fmtDate = (value) => {
+    if (!value) return '';
+    const m = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : String(value);
+  };
+  const unit = (value, suffix) => (value == null || value === '' ? '' : `${value} ${suffix}`);
+  const row = (code, value, label, fieldName, inputType, inputAttrs) => {
+    const displayVal = value == null || value === '' ? '—' : value;
+    const editable = fieldName ? `
+      <input type="${inputType || 'text'}" name="${fieldName}" value="${esc(value || '')}" ${inputAttrs || ''} class="regcert__edit-input" hidden>
+    ` : '';
+    return `<div class="regcert__row" data-field="${esc(fieldName || '')}">
+      <span class="regcert__code">${esc(code)}</span>
+      <span class="regcert__value-wrap">
+        <span class="regcert__value">${esc(displayVal)}</span>
+        ${editable}
+      </span>
+      <span class="regcert__label">${esc(label)}</span>
+    </div>`;
+  };
+%>
+<section class="cert-block" data-regcert data-vehicle-id="<%= v.id %>">
+  <div class="cert-tabs">
+    <button type="button" class="cert-tab is-active" data-cert-tab="front" aria-selected="true"><%= t('Front') %></button>
+    <button type="button" class="cert-tab" data-cert-tab="back" aria-selected="false"><%= t('Back') %></button>
+    <button type="button" class="cert-tab cert-tab--edit" data-cert-edit-toggle title="<%= t('Edit certificate') %>" aria-label="<%= t('Edit certificate') %>">
+      <span class="cert-edit-icon"><%- include('icon', { name: 'edit', size: 13 }) %></span>
+      <span class="cert-edit-check"><%- include('icon', { name: 'check', size: 13 }) %></span>
+      <span class="cert-edit-spinner" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="cert-tab cert-tab--scan" data-cert-scan title="<%= t('Scan certificate') %>"><%- include('icon', { name: 'camera', size: 13 }) %></button>
+  </div>
+
+  <div class="regcert" data-cert-face="front">
+    <div class="regcert__head">
+      <span class="regcert__ge">GE</span>
+      <div class="regcert__title">
+        <span class="regcert__title-ka">რეგისტრაციის მოწმობა</span>
+        <span class="regcert__title-en">REGISTRATION CERTIFICATE</span>
+        <span class="regcert__country">საქართველო / GEORGIA</span>
+      </div>
+    </div>
+    <div class="regcert__rows">
+      <%- row('A', plateText(v.number_plate), 'რეგისტრაციის ნომერი / Registration number', 'number_plate', 'text', 'maxlength="20"') %>
+      <%- row('B', v.year, 'სატრ. საშ. გამოშვების წელი / Manufacture year', 'year', 'number', 'min="1900" max="2099" step="1"') %>
+      <%- row('I', fmtDate(v.registration_date), 'რეგისტრაციის თარიღი / Date of registration', 'registration_date', 'date') %>
+      <%- row('C.1.1', v.owner_surname, 'გვარი / Surname', 'owner_surname', 'text', 'maxlength="80"') %>
+      <%- row('C.1.2', v.owner_name, 'სახელი / Name', 'owner_name', 'text', 'maxlength="80"') %>
+      <%- row('C.1.3', v.owner_address, 'მისამართი / Address', 'owner_address', 'text', 'maxlength="200"') %>
+      <%- row('C.1.4', v.owner_id, 'პ/ნ ან ს/კ / Personal number or ID code', 'owner_id', 'text', 'maxlength="40"') %>
+      <%- row('C.4(a)', v.owner_of_vehicle, 'სატრანსპორტო საშუალების მფლობელი / Owner of the vehicle', 'owner_of_vehicle', 'text', 'maxlength="120"') %>
+      <%- row('H', fmtDate(v.expiry_date), 'ვადის გასვლის თარიღი / Expiration date', 'expiry_date', 'date') %>
+      <%- row('P', v.technical_passport, 'ტექ. პასპორტი / Technical passport', 'technical_passport', 'text', 'maxlength="40"') %>
+    </div>
+    <div class="regcert__foot">
+      <span class="regcert__issuer">მოწმობა გაცემულია შსს მომსახურების სააგენტოს მიერ<br>Certificate is issued by Service Agency of MIA</span>
+    </div>
+  </div>
+
+  <div class="regcert" data-cert-face="back" hidden>
+    <div class="regcert__head">
+      <span class="regcert__ge">GE</span>
+      <div class="regcert__title">
+        <span class="regcert__title-ka">რეგისტრაციის მოწმობა</span>
+        <span class="regcert__title-en">REGISTRATION CERTIFICATE</span>
+        <span class="regcert__country">საქართველო / GEORGIA</span>
+      </div>
+    </div>
+    <div class="regcert__rows">
+      <%- row('D.1', v.make, 'მარკა / Make', 'make', 'text', 'maxlength="40"') %>
+      <%- row('D.2', v.vehicle_type, 'ტიპი / Type', 'vehicle_type', 'text', 'maxlength="40"') %>
+      <%- row('D.3', v.model, 'მოდელი / Model', 'model', 'text', 'maxlength="40"') %>
+      <%- row('E', v.vin, 'სატრ. საშ. საიდენტიფიკაციო ნომერი / Vehicle identification number', 'vin', 'text', 'maxlength="40"') %>
+      <%- row('F.1', unit(v.max_laden_mass, 'kg'), 'მაქს. ტექ. დასაშვები მასა / Max tech. permissible laden mass', 'max_laden_mass', 'number', 'min="0" step="1"') %>
+      <%- row('F.2', unit(v.permissible_mass, 'kg'), 'ნებადართული მაქს. მასა / Permissible max mass', 'permissible_mass', 'number', 'min="0" step="1"') %>
+      <%- row('G', unit(v.unladen_mass, 'kg'), 'დაუტვირთავი მასა / Unladen mass', 'unladen_mass', 'number', 'min="0" step="1"') %>
+      <%- row('P.1', unit(v.engine_capacity, 'cm³'), 'ძრავის მოცულობა / Engine capacity', 'engine_capacity', 'number', 'min="0" step="1"') %>
+      <%- row('P.2', unit(v.net_power_kw, 'kW'), 'მაქსიმალური სიმძლავრე / Max net power', 'net_power_kw', 'number', 'min="0" step="1"') %>
+      <%- row('P.3', v.fuel_type, 'საწვავის ტიპი ან ენერგიის წყარო / Type of fuel or power source', 'fuel_type', 'text', 'maxlength="40"') %>
+      <%- row('P.5', v.engine_number, 'ძრავის საიდენტიფიკაციო ნომერი / Engine identification number', 'engine_number', 'text', 'maxlength="60"') %>
+      <%- row('Q', unit(v.power_weight_ratio, 'kW/kg'), 'სიმძლავრე / წონის ფარდობა / Power / weight ratio', 'power_weight_ratio', 'number', 'min="0" step="0.001"') %>
+      <%- row('R', v.colour, 'ფერი / Colour', 'colour', 'text', 'maxlength="40"') %>
+      <%- row('S.1', v.seats, 'დასაჯდომი ადგილები / Number of seats', 'seats', 'number', 'min="0" step="1"') %>
+      <%- row('S.2', v.standing_places, 'დასადგომი міс épar / Number of standing places', 'standing_places', 'number', 'min="0" step="1"') %>
+    </div>
+    <div class="regcert__foot">
+      <span class="regcert__issuer">დამზადებულია: Muehlbauer Group</span>
+    </div>
+  </div>
+
+  <!-- Hidden state for the inline editor. The edit tab toggles editing:
+       first tap opens the fields, second tap saves them. -->
+  <input type="hidden" class="cert-edit-csrf" name="<%= csrfField %>" value="<%= csrfToken %>">
+  <input type="hidden" class="cert-edit-title" name="title" value="<%= v.name || '' %>">
+</section>

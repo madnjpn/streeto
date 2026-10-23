@@ -1,0 +1,267 @@
+<%
+  const plateText = (value) => (value || '').replace(/[^A-Za-z0-9]/g, '').replace(/^([A-Za-z]{2})([0-9]{3})([A-Za-z]{2})$/, '$1-$2-$3');
+  const gel = (value) => (value == null ? '—' : (value / 100).toFixed(2));
+  const fmtWhen = (value) => {
+    if (!value) return '';
+    const [date, time] = String(value).split('T');
+    const [year, month, day] = date.split('-');
+    return `${day}.${month}.${year}${time ? ` ${time.slice(0, 5)}` : ''}`;
+  };
+  const hasResult = typeof result !== 'undefined' && result;
+  const hasError = typeof fineError !== 'undefined' && fineError;
+%>
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('garage') %></p>
+    <h1 class="display"><%= t('Fines') %></h1>
+    <p class="lede"><%= t('Check traffic fines using your vehicle number plate and technical passport.') %></p>
+  </div>
+</div>
+
+<%- include('../partials/garage-tabs', { section: 'fines' }) %>
+
+<% if (vehicles && vehicles.length) { %>
+  <% vehicles.forEach(function (v) { %>
+    <%
+      const isChecked = Boolean(hasResult && checkedVehicle && checkedVehicle.id === v.id);
+      const isError = Boolean(hasError && checkedVehicle && checkedVehicle.id === v.id);
+      const showResult = isChecked && !isError;
+    %>
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="fines-card__head">
+        <h2 class="fines-card__title"><%= v.name %></h2>
+
+        <% if (v.number_plate) { %>
+          <span class="fines-card__sep" aria-hidden="true">|</span>
+          <span class="fines-card__plate"><%= plateText(v.number_plate) %></span>
+        <% } %>
+
+        <% if (v.technical_passport) { %>
+          <span class="fines-card__sep" aria-hidden="true">|</span>
+          <span class="fines-card__passport"><%= v.technical_passport %></span>
+        <% } %>
+
+        <% if (finesAvailable && v.number_plate) { %>
+          <span class="fines-card__sep" aria-hidden="true">|</span>
+          <form action="/garage/fines/check" method="post" data-fines-form class="fines-card__check">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <input type="hidden" name="vehicle_id" value="<%= v.id %>">
+            <button class="btn btn--primary btn--sm" type="submit">
+              <%- include('../partials/icon', { name: 'search', size: 14 }) %>
+              <span data-fines-label><%= showResult || isError ? t('Check again') : t('Check fines') %></span>
+            </button>
+          </form>
+        <% } %>
+
+        <% if (showResult) { %>
+          <span class="fines-card__status">
+            <% if (finesCheckedAt) { %><span class="muted small"><%= t('Checked') %> <%= f.timeAgo(finesCheckedAt) %></span><% } %>
+            <% if (result.total) { %><span class="tag tag--hot"><%= t('{n} fines', { n: result.total }) %></span><% } %>
+          </span>
+        <% } %>
+      </div>
+
+      <% if (v.technical_passport) { %>
+        <%- include('../partials/certificate-badge', { v }) %>
+      <% } %>
+
+      <% if (isError) { %>
+        <div class="alert alert--error" style="margin-top: 12px;">
+          <%- include('../partials/icon', { name: 'alert', size: 18 }) %>
+          <span><%= t(hasError) %></span>
+        </div>
+      <% } %>
+
+      <% if (showResult) { %>
+        <div style="margin-top: 12px;">
+          <% if (!result.fines.length) { %>
+            <p class="muted" style="margin: 0;"><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('No fines found for this vehicle.') %></p>
+          <% } else { %>
+            <div class="fines">
+              <% result.fines.forEach(function (fine) { %>
+                <% const due = fine.amountToPay != null; %>
+                <article class="fine">
+                  <div class="fine__head">
+                    <strong><%= fine.protocolNo || t('Protocol') %></strong>
+                    <span class="fine__state<%= due ? ' fine__state--due' : '' %>"><%= fine.state || '' %></span>
+                  </div>
+                  <p class="muted small" style="margin: 4px 0;">
+                    <%= fmtWhen(fine.violationDate) %>
+                    <% if (fine.place) { %> · <%= fine.place %><% } %>
+                    <% if (fine.automobileNo) { %> · <%= fine.automobileNo %><% } %>
+                  </p>
+                  <% if (fine.lawName) { %><p class="small" style="margin: 4px 0;">⚖ <%= fine.lawName %></p><% } %>
+                  <p style="margin: 8px 0 0;">
+                    <strong><%= due ? t('Amount to pay') : t('Fine') %>:</strong>
+                    <span class="fine__amount<%= due ? '' : ' fine__amount--paid' %>"><%= gel(due ? fine.amountToPay : fine.amount) %> ₾</span>
+                    <% if (fine.discount && fine.discountEndDate) { %>
+                      <span class="muted small">· <%= t('discount until') %> <%= f.shortDate(fine.discountEndDate, lang) %></span>
+                    <% } %>
+                  </p>
+                  <% if (fine.ownerName) { %><p class="muted small" style="margin: 4px 0 0;"><%= fine.ownerName %></p><% } %>
+                  <% if (fine.payable && fine.protocolId && Number(fine.amountToPay) > 0) { %>
+                    <div class="fine__actions">
+                      <button type="button" class="btn btn--primary btn--sm" data-pay-open="pay-<%= fine.protocolId %>">
+                        <%- include('../partials/icon', { name: 'card', size: 15 }) %>
+                        <span><%= t('Pay') %> <%= gel(fine.amountToPay) %> ₾</span>
+                      </button>
+                    </div>
+                  <% } %>
+                </article>
+
+                <% if (fine.payable && fine.protocolId && Number(fine.amountToPay) > 0) { %>
+                  <dialog class="dialog dialog--sm pay-dialog" id="pay-<%= fine.protocolId %>" aria-labelledby="pay-title-<%= fine.protocolId %>">
+                    <div class="dialog__head">
+                      <h2 id="pay-title-<%= fine.protocolId %>"><%= t('Pay fine') %></h2>
+                      <button type="button" class="btn btn--ghost btn--sm" data-pay-close aria-label="<%= t('Close') %>">
+                        <%- include('../partials/icon', { name: 'x', size: 18 }) %>
+                      </button>
+                    </div>
+                    <div class="dialog__body pay-dialog__body">
+                      <div class="pay-dialog__summary">
+                        <span class="pay-dialog__amount"><%= gel(fine.amountToPay) %> ₾</span>
+                        <span class="muted small">
+                          <%= t('Fine') %> <%= fine.protocolNo || '' %>
+                          <% if (fine.violationDate) { %> · <%= fmtWhen(fine.violationDate) %><% } %>
+                        </span>
+                      </div>
+                      <p class="muted small pay-dialog__hint">
+                        <%- include('../partials/icon', { name: 'lock', size: 14 }) %>
+                        <span><%= t('Choose a bank to continue. You will finish the payment on the bank’s secure page.') %></span>
+                      </p>
+                      <form action="/garage/fines/<%= fine.protocolId %>/pay" method="post" data-pay-form
+                            data-wait="<%= t('Preparing secure payment…') %>"
+                            data-fail="<%= t('Could not open the bank payment page. Please try again.') %>">
+                        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                        <input type="hidden" name="vehicle_id" value="<%= v.id %>">
+                        <div class="pay-dialog__banks">
+                          <button type="submit" class="pay-bank" name="gateway" value="TBC">
+                            <span class="pay-bank__mark pay-bank__mark--tbc" aria-hidden="true">TBC</span>
+                            <span class="pay-bank__name"><%= t('Pay with TBC') %></span>
+                          </button>
+                          <button type="submit" class="pay-bank" name="gateway" value="BOG">
+                            <span class="pay-bank__mark pay-bank__mark--bog" aria-hidden="true">BOG</span>
+                            <span class="pay-bank__name"><%= t('Pay with Bank of Georgia') %></span>
+                          </button>
+                          <button type="submit" class="pay-bank" name="gateway" value="LIBERTY">
+                            <span class="pay-bank__mark pay-bank__mark--liberty" aria-hidden="true">LIB</span>
+                            <span class="pay-bank__name"><%= t('Pay with Liberty Bank') %></span>
+                          </button>
+                        </div>
+                        <p class="pay-dialog__status" data-pay-status role="status" aria-live="polite"></p>
+                      </form>
+                    </div>
+                    <div class="dialog__foot">
+                      <button type="button" class="btn btn--ghost" data-pay-close><%= t('Cancel') %></button>
+                    </div>
+                  </dialog>
+                <% } %>
+              <% }); %>
+            </div>
+            <p class="muted small" style="margin-top: 12px;">
+              <%= t('Fines are read from the official Georgian portal') %>
+              <a class="link" href="https://protocols.ge/" target="_blank" rel="noopener noreferrer">protocols.ge</a>.
+            </p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (!finesAvailable) { %>
+        <p class="muted small" style="margin-top: 12px;"><%= t('Fines checking needs Microsoft Edge or Google Chrome installed on the server.') %></p>
+      <% } else if (!v.number_plate) { %>
+        <p class="muted small" style="margin-top: 12px;"><%= t('Add a number plate in My Ride to check fines.') %></p>
+      <% } %>
+    </div>
+  <% }); %>
+<% } else { %>
+  <%- include('../partials/empty', { icon: 'car', title: t('No vehicles yet'), text: t('Add a vehicle in My Ride first to check fines.'), action: '<a class="btn btn--primary" href="/garage/ride">' + t('Go to My Ride') + '</a>' }) %>
+<% } %>
+
+<script>
+  (function () {
+    document.querySelectorAll('[data-fines-form]').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        var button = form.querySelector('button[type=submit]');
+        var label = form.querySelector('[data-fines-label]');
+        if (button) button.disabled = true;
+        if (label) label.textContent = <%- f.js(t('Checking…')) %>;
+      });
+    });
+  })();
+
+  // Payment: open a small bank chooser and turn the choice into a hosted
+  // checkout URL. Without JS the same form still posts and redirects.
+  (function () {
+    var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+    function setBusy(dialog, busy) {
+      if (!dialog) return;
+      dialog.querySelectorAll('[data-pay-close]').forEach(function (button) {
+        button.disabled = busy;
+      });
+    }
+
+    document.querySelectorAll('.pay-dialog').forEach(function (dialog) {
+      dialog.querySelectorAll('[data-pay-close]').forEach(function (button) {
+        button.addEventListener('click', function () { dialog.close(); });
+      });
+      dialog.addEventListener('click', function (event) {
+        if (event.target === dialog && !dialog.querySelector('.pay-form--busy')) dialog.close();
+      });
+      dialog.addEventListener('cancel', function (event) {
+        if (dialog.querySelector('.pay-form--busy')) event.preventDefault();
+      });
+    });
+
+    document.querySelectorAll('[data-pay-open]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var dialog = document.getElementById(button.getAttribute('data-pay-open'));
+        if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+      });
+    });
+
+    document.querySelectorAll('[data-pay-form]').forEach(function (form) {
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        var gateway = event.submitter ? event.submitter.value : '';
+        if (!gateway) return;
+        var dialog = form.closest('.pay-dialog');
+        var status = form.querySelector('[data-pay-status]');
+        var buttons = form.querySelectorAll('button[type="submit"]');
+        var wait = form.getAttribute('data-wait') || 'Preparing secure payment…';
+        var fail = form.getAttribute('data-fail') || 'Could not open the bank payment page. Please try again.';
+
+        buttons.forEach(function (button) { button.disabled = true; });
+        form.classList.add('pay-form--busy');
+        setBusy(dialog, true);
+        if (status) {
+          status.textContent = wait;
+          status.classList.remove('pay-dialog__status--error');
+        }
+
+        try {
+          var body = new URLSearchParams();
+          body.set('vehicle_id', form.querySelector('input[name="vehicle_id"]').value);
+          body.set('gateway', gateway);
+          var response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'x-requested-with': 'fetch', 'x-csrf-token': csrfToken },
+            credentials: 'same-origin',
+            body: body,
+          });
+          var payload = await response.json().catch(function () { return {}; });
+          if (!response.ok || !payload.url) throw new Error(payload.error || fail);
+          window.location.href = payload.url;
+        } catch (error) {
+          buttons.forEach(function (button) { button.disabled = false; });
+          form.classList.remove('pay-form--busy');
+          setBusy(dialog, false);
+          if (status) {
+            status.textContent = error && error.message ? error.message : fail;
+            status.classList.add('pay-dialog__status--error');
+          }
+        }
+      });
+    });
+  })();
+</script>

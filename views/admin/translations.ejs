@@ -1,0 +1,80 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('control room') %></p>
+    <h1 class="display"><%= t('Translations') %></h1>
+    <p class="lede"><%= t('Every word of the site, English on the left and Georgian on the right. The English is the key the templates ask for, so it cannot be changed here.') %></p>
+  </div>
+  <div class="btnrow">
+    <% if (unusedCount) { %>
+      <form action="/admin/translations/sync" method="post" data-sync-form>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button class="btn btn--primary" type="submit"><%= t('Remove the {n} leftover(s)', { n: unusedCount }) %></button>
+      </form>
+    <% } %>
+    <form action="/admin/translations/sync" method="post" data-sync-form>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <button class="btn btn--primary" type="submit"><%= t('Sync with code') %></button>
+    </form>
+    <a class="btn btn--ghost" href="/admin/how-it-works"><%= t('How it works editor') %></a>
+  </div>
+</div>
+
+<div class="feedtabs">
+  <a class="feedtabs__tab" href="/admin?tab=users"><%= t('Drivers') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=content"><%= t('Content') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=backups"><%= t('Backups') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=reports"><%= t('Reports') %></a>
+  <a class="feedtabs__tab" href="/admin?tab=appearance"><%= t('Appearance') %></a>
+  <a class="feedtabs__tab" href="/admin/partners"><%= t('Partners') %></a>
+  <a class="feedtabs__tab" href="/admin/service-claims"><%= t('Claims') %></a>
+  <a class="feedtabs__tab is-active" href="/admin/translations"><%= t('Translations') %></a>
+  <a class="feedtabs__tab" href="/admin/how-it-works"><%= t('How it works') %></a>
+  <span class="feedtabs__count"><%= total %> <%= t('strings') %><% if (missing) { %> · <b class="tr__missing"><%= missing %> <%= t('not translated yet') %></b><% } %></span>
+</div>
+
+<section class="card adminpanel">
+  <form class="inlineform adminfilter" action="/admin/translations" method="get" role="search">
+    <input type="hidden" name="only" value="<%= only %>">
+    <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Filter by English or Georgian') %>" autocomplete="off">
+    <button class="btn btn--ghost" type="submit"><%= t('Filter') %></button>
+    <% if (q) { %><a class="btn btn--ghost btn--sm" href="/admin/translations<%= only ? '?only=missing' : '' %>"><%= t('Clear') %></a><% } %>
+  </form>
+
+  <div class="tr__switch">
+    <a class="btn btn--sm <%= only === 'missing' ? 'btn--outline' : 'btn--ghost' %>" href="/admin/translations<%= q ? '?q=' + encodeURIComponent(q) : '' %><%= only === 'missing' ? '' : '?only=missing' %>">
+      <%= only === 'missing' ? t('Showing the ones without a translation') : t('Show only the ones without a translation') %>
+    </a>
+  </div>
+
+  <p class="muted small tr__hint">
+    <%= t('Changes go live the moment you leave the field. The English text stays the key, so a translation can never break the page. The words of the site itself cannot be removed - clear the Georgian box and the English text is shown instead.') %>
+    <br>
+    <%= t('Keep the {placeholders} and the HTML tags. The console will tell you if a translation would break the page.') %>
+  </p>
+
+  <% if (!rows.length) { %>
+    <%- include('../partials/empty', { icon: 'search', title: t('Nothing matches that filter'), text: null }) %>
+  <% } %>
+
+  <div class="trlist" data-trlist>
+    <% rows.forEach(function (row) { %>
+      <div class="trrow <%= (!row.value || row.deleted) ? 'trrow--missing' : '' %> <%= row.used ? '' : 'trrow--unused' %>" data-trrow data-key="<%= row.key %>">
+        <div class="trrow__en" title="<%= row.key %>">
+          <span class="trrow__entext"><%= row.key %></span>
+          <% if (!row.used) { %><span class="trrow__tag"><%= t('not used') %></span><% } %>
+        </div>
+        <div class="trrow__ka">
+          <textarea
+            class="trrow__input"
+            data-tr-ka
+            rows="2"
+            spellcheck="false"
+            placeholder="<%= t('Leave empty to show the English text') %>"><%= row.deleted ? '' : row.value %></textarea>
+        </div>
+        <div class="trrow__act">
+          <span class="trrow__state" data-tr-state></span>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+</section>

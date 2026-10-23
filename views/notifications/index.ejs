@@ -1,0 +1,43 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('activity') %></p>
+    <h1 class="display"><%= t('What you missed') %></h1>
+    <p class="lede"><%= t('Friend requests, comments, likes, invites, sale alerts and meetup updates.') %></p>
+  </div>
+  <% if (items.length) { %>
+    <form action="/notifications/clear" method="post">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <button class="btn btn--ghost" type="submit"><%- include('../partials/icon', { name: 'trash', size: 16 }) %> <%= t('Clear all') %></button>
+    </form>
+  <% } %>
+</div>
+
+<% if (!items.length) { %>
+  <%- include('../partials/empty', { icon: 'bell', title: t('No activity yet'), text: t('Post something, add friends or join a group and this fills up fast.') }) %>
+<% } else { %>
+  <ul class="rows rows--activity">
+    <% items.forEach(function (n) { %>
+      <%
+        /* Notification text is stored as "key" or "key|name" so the reader's
+           language decides the wording (see the notify() call sites). */
+        const parts = String(n.text || '').split('|');
+        const notifVars = parts.length > 1 ? { name: parts.slice(1).join('|') } : undefined;
+      %>
+      <li class="row row--activity <%= !n.read_at ? 'is-fresh' : '' %>">
+        <a class="row__id" href="<%= n.url || '/notifications' %>">
+          <% if (n.actor_username) { %>
+            <%- include('../partials/avatar', { u: { username: n.actor_username, display_name: n.actor_display_name, avatar: n.actor_avatar }, cls: 'avatar--sm' }) %>
+          <% } else { %>
+            <span class="avatar avatar--sm avatar--gen" style="--h:<%= f.hueOf(n.type) %>"><%- include('../partials/icon', { name: 'bell', size: 16 }) %></span>
+          <% } %>
+          <span>
+            <% if (n.actor_username) { %><strong>@<%= n.actor_username %></strong> <% } %>
+            <span><%= t(parts[0], notifVars) %></span>
+            <span class="muted small">· <%= f.timeAgo(n.created_at) %></span>
+          </span>
+        </a>
+        <% if (!n.read_at) { %><span class="pip pip--solid"></span><% } %>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>

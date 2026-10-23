@@ -1,0 +1,94 @@
+<%
+/* Shared create/edit form for a maintenance listing.
+   Locals: action, values, errors, mode, service (edit),
+           isProvider, providerName. */
+const v = (name, fallback = '') => (values && values[name] != null ? values[name] : fallback);
+const existing = typeof service !== 'undefined' && service ? service.cover : null;
+const serviceId = typeof service !== 'undefined' && service ? service.id : null;
+const catOptions = Object.entries(categories).map(([value, label]) => ({ value, label: t(label) }));
+%>
+
+<% if (!isProvider) { %>
+  <div class="note">
+    <%- t('You have not marked yourself as a service provider yet.') %>
+    <a class="link" href="/settings"><%= t('Tick it in Settings') %></a>
+    <%= t('so your profile shows a provider badge.') %>
+  </div>
+<% } else if (providerName) { %>
+  <p class="muted small"><%- include('../partials/icon', { name: 'shield', size: 14 }) %> <%= t('Posting as') %> <strong><%= providerName %></strong></p>
+<% } %>
+
+<form class="card card--form" action="<%= action %>" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+  <input type="hidden" name="lat" value="<%= v('lat') %>" data-pin-lat>
+  <input type="hidden" name="lng" value="<%= v('lng') %>" data-pin-lng>
+  <input type="hidden" name="zoom" value="<%= v('zoom') %>" data-pin-zoom>
+
+  <label class="field <%= errors.title ? 'field--bad' : '' %>">
+    <span class="field__label"><%= t('Service or shop name') %></span>
+    <input type="text" name="title" value="<%= v('title') %>" maxlength="90" required placeholder="<%= t('e.g. Pit Lane Motors - engine and ECU specialists') %>">
+    <% if (errors.title) { %><span class="field__error"><%= t(errors.title) %></span><% } %>
+  </label>
+
+  <label class="field">
+    <%- include('select-modal', {
+      name: 'category',
+      value: v('category', 'engine_mech'),
+      options: catOptions,
+      label: t('Category'),
+      icon: 'wrench'
+    }) %>
+  </label>
+
+  <label class="field">
+    <span class="field__label"><%= t('Details') %></span>
+    <textarea name="description" rows="4" maxlength="2000" placeholder="<%= t('What you do, brands you work on, opening hours, pricing.') %>"><%= v('description') %></textarea>
+  </label>
+
+  <div class="field-grid field-grid--2">
+    <label class="field <%= errors.phone ? 'field--bad' : '' %>">
+      <span class="field__label"><%= t('Phone') %></span>
+      <input type="tel" name="phone" value="<%= v('phone') %>" maxlength="16" inputmode="tel" autocomplete="tel" placeholder="<%= t('e.g. +995 577 009 096') %>" data-phone>
+      <% if (errors.phone) { %><span class="field__error"><%= t(errors.phone) %></span><% } %>
+    </label>
+    <label class="field <%= errors.email ? 'field--bad' : '' %>">
+      <span class="field__label"><%= t('Email') %> <span class="muted"><%= t('(optional)') %></span></span>
+      <input type="email" name="email" value="<%= v('email') %>" maxlength="254" placeholder="<%= t('shop@example.com') %>">
+      <% if (errors.email) { %><span class="field__error"><%= t(errors.email) %></span><% } %>
+    </label>
+  </div>
+
+  <fieldset class="field <%= errors.place_name ? 'field--bad' : '' %>">
+    <legend class="field__label"><%= t('Location') %></legend>
+    <% if (errors.place_name) { %><span class="field__error"><%= t(errors.place_name) %></span><% } %>
+    <%- include('map-picker', { id: 'service-map', lat: v('lat'), lng: v('lng') }) %>
+    <label class="field field--tight">
+      <span class="field__label"><%= t('Place name') %></span>
+      <input type="text" name="place_name" value="<%= v('place_name') %>" maxlength="160" placeholder="<%= t('e.g. Pit Lane Motors, Didube') %>">
+      <span class="field__hint"><%= t('Filled in automatically when you pick from search or GPS - edit it if you like.') %></span>
+    </label>
+    <label class="field field--tight">
+      <span class="field__label"><%= t('Address') %> <span class="muted"><%= t('(optional)') %></span></span>
+      <input type="text" name="address" value="<%= v('address') %>" maxlength="240" placeholder="<%= t('Street, city') %>">
+    </label>
+  </fieldset>
+
+  <label class="field">
+    <span class="field__label"><%= t('Cover photo') %> <span class="muted"><%= t('(optional)') %></span></span>
+    <input type="file" name="cover" accept="image/*">
+    <span class="field__hint"><%= t('One photo of the shop or workshop, up to {mb} MB.', { mb: maxUploadMb }) %></span>
+  </label>
+  <% if (existing) { %>
+    <div class="field">
+      <span class="field__label"><%= t('Current photo') %></span>
+      <div class="media-manage">
+        <figure class="media-manage__item"><img src="<%= config.uploadUrl %>/<%= existing %>" alt="" loading="lazy"></figure>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="btnrow">
+    <button class="btn btn--primary" type="submit"><%- include('icon', { name: 'wrench', size: 16 }) %> <%= mode === 'edit' ? t('Save service') : t('Publish service') %></button>
+    <a class="btn btn--ghost" href="<%= serviceId ? '/services/maintenance/' + serviceId : '/services/maintenance' %>"><%= t('Cancel') %></a>
+  </div>
+</form>

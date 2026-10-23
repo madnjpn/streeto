@@ -1,0 +1,14 @@
+<%
+/* The share button: hands this thing to another driver in a chat.
+   Locals: type (build/post/meetup/part/service), id, title, label (the
+   kind in the words of the site) and variant (icon or menu). */
+const shareKind = typeof label !== 'undefined' ? label : '';
+const shareVariant = typeof variant !== 'undefined' ? variant : 'icon';
+const shareAttrs = `data-share="${type}" data-share-id="${id}" data-share-title="${title}" data-share-label="${shareKind}"`;
+%><% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %><% if (shareVariant === 'menu') { %>
+        <button class="menu__item" type="button" <%- shareAttrs %>><%- include('icon', { name: 'share', size: 16 }) %> <%= t('Share') %></button>
+<% } else if (shareVariant === 'stat') { %>
+        <button class="stat sharebtn" type="button" <%- shareAttrs %> title="<%= t('Share') %>" aria-label="<%= t('Share') %>"><%- include('icon', { name: 'share', size: 17 }) %> <span class="stat__label"><%= t('Share') %></span></button>
+<% } else { %>
+        <button class="iconbtn iconbtn--ghost sharebtn" type="button" <%- shareAttrs %> title="<%= t('Share') %>" aria-label="<%= t('Share') %>"><%- include('icon', { name: 'share', size: 16 }) %></button>
+<% } %><% } %>

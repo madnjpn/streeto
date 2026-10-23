@@ -1,0 +1,13 @@
+<%
+/* Server-rendered badge fragments, swapped in by the pulse poller. */
+const badges = [
+  { key: 'chat', value: typeof messages !== 'undefined' ? messages : unreadMessages },
+  { key: 'notifications', value: typeof notifications !== 'undefined' ? notifications : unreadNotifications },
+  { key: 'friends', value: typeof requests !== 'undefined' ? requests : pendingRequests },
+];
+%>
+<div data-badges hidden>
+  <% badges.forEach(function (badge) { %>
+    <span data-badge-source="<%= badge.key %>" data-value="<%= badge.value || 0 %>"></span>
+  <% }); %>
+</div>

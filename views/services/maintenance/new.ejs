@@ -1,0 +1,17 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/services/maintenance"><%- include('../../partials/icon', { name: 'back', size: 15 }) %> <%= t('All services') %></a>
+
+  <p class="eyebrow"><%= t('services') %></p>
+  <h1 class="display"><%= t('Offer a service') %></h1>
+  <p class="lede"><%= t('Tell drivers what you do, drop a pin on the map and how to reach you.') %></p>
+
+  <%- include('../../partials/service-form', {
+    action: action,
+    values: values,
+    errors: errors,
+    mode: 'new',
+    categories: categories,
+    isProvider: isProvider,
+    providerName: providerName
+  }) %>
+</div>

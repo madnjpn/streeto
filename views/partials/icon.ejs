@@ -1,0 +1,9 @@
+<%
+/* Inline SVG icon set - no external icon font, so the icons work offline
+   and under a strict Content-Security-Policy. The set itself lives in
+   src/lib/icons.js, which the admin console uses for the icon picker, so
+   there is only ever one list. */
+const ICON_SET = (typeof ICONS !== 'undefined' && ICONS) ? ICONS : {};
+const dims = typeof size === 'undefined' ? 20 : size;
+const klass = typeof cls === 'undefined' ? '' : cls;
+%><svg class="icon <%= klass %>" width="<%= dims %>" height="<%= dims %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><%- ICON_SET[name] || '' %></svg>

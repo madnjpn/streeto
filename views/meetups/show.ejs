@@ -1,0 +1,252 @@
+<%
+const when = f.toDate(meetup.starts_at);
+const isPast = when < new Date();
+const place = meetup.place_name || meetup.address || t('Spot to be announced');
+const showWhere = meetup.privacy === 'open' || Boolean(currentUser);
+const isTouge = meetup.category === 'touge' && meetup.route_start_lat != null && meetup.route_end_lat != null;
+%>
+<div class="single single--narrow">
+  <a class="backlink" href="/meetups"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('All meetups') %></a>
+
+  <article class="card meetuphero <%= isPast ? 'meetuphero--past' : '' %>">
+    <div class="meetuphero__top">
+      <span class="tag tag--<%= meetup.privacy %>"><%- include('../partials/icon', { name: meetup.privacy === 'open' ? 'globe' : meetup.privacy === 'private' ? 'lock' : 'shield', size: 13 }) %> <%= t(f.PRIVACY_LABELS[meetup.privacy]) %></span>
+      <% if (meetup.group_id) { %><a class="tag tag--group" href="/groups/<%= meetup.group_slug %>"><%- include('../partials/icon', { name: 'shield', size: 13 }) %> <%= meetup.group_name %></a><% } %>
+      <% if (isPast) { %><span class="tag tag--ghost"><%= t('Past') %></span><% } %>
+      <% if (isTouge) { %><span class="tag tag--info"><%- include('../partials/icon', { name: 'pin', size: 13 }) %> <%= t('Touge') %></span><% } %>
+    </div>
+
+    <h1 class="meetuphero__title"><%= meetup.title %></h1>
+
+    <div class="meetuphero__facts">
+      <div class="fact">
+        <span class="fact__icon"><%- include('../partials/icon', { name: 'calendar', size: 18 }) %></span>
+        <div><strong><%= f.fullDate(meetup.starts_at) %></strong><span class="muted"><%= f.relativeFuture(meetup.starts_at) %></span></div>
+      </div>
+      <% if (showWhere) { %>
+        <div class="fact">
+          <span class="fact__icon"><%- include('../partials/icon', { name: 'pin', size: 18 }) %></span>
+          <div><strong><%= place %></strong><span class="muted"><%= meetup.address && meetup.address !== place ? meetup.address : t('Pinned location') %></span></div>
+        </div>
+      <% } else { %>
+        <div class="fact">
+          <span class="fact__icon"><%- include('../partials/icon', { name: 'lock', size: 18 }) %></span>
+          <div><strong><%= t('Location hidden') %></strong><span class="muted"><%= t('Log in to see where this one meets.') %></span></div>
+        </div>
+      <% } %>
+      <div class="fact">
+        <span class="fact__icon"><%- include('../partials/icon', { name: 'users', size: 18 }) %></span>
+        <div><strong><%= t('{n} going', { n: meetup.going_count }) %><%= meetup.capacity ? ' / ' + meetup.capacity : '' %></strong><span class="muted"><%= t('{n} maybe', { n: meetup.maybe_count }) %> · <%= t('{n} requested', { n: meetup.request_count }) %></span></div>
+      </div>
+    </div>
+
+    <% if (meetup.description) { %><p class="meetuphero__desc"><%= meetup.description %></p><% } %>
+
+    <div class="meetuphero__actions">
+      <% if (!currentUser) { %>
+        <a class="btn btn--primary" href="/login"><%= t('Log in to join') %></a>
+      <% } else if (join.action === 'join') { %>
+        <form action="/meetups/<%= meetup.id %>/join" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t(join.label) %></button>
+        </form>
+      <% } else if (join.action === 'request') { %>
+        <form action="/meetups/<%= meetup.id %>/join" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'lock', size: 16 }) %> <%= t(join.label) %></button>
+        </form>
+      <% } else if (join.action === 'leave') { %>
+        <form action="/meetups/<%= meetup.id %>/leave" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--outline" type="submit"><%- include('../partials/icon', { name: 'x', size: 16 }) %> <%= t(join.label) %></button>
+        </form>
+      <% } else { %>
+        <span class="btn btn--ghost is-disabled" aria-disabled="true"><%= t(join.label) %></span>
+      <% } %>
+
+      <% if (currentUser && !isHost && !isPast) { %>
+        <form action="/meetups/<%= meetup.id %>/maybe" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--ghost" type="submit"><%- include('../partials/icon', { name: 'clock', size: 16 }) %> <%= join.status === 'maybe' ? t('Remove maybe') : t('Maybe') %></button>
+        </form>
+      <% } %>
+
+      <% if (canManage) { %>
+        <form action="/meetups/<%= meetup.id %>/invite-friends" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--outline" type="submit"><%- include('../partials/icon', { name: 'users', size: 16 }) %> <%= t('Invite my friends') %></button>
+        </form>
+        <form action="/meetups/<%= meetup.id %>/delete" method="post" data-confirm="<%= t('Cancel this meetup? Everyone who joined will lose the details.') %>">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 16 }) %> <%= t('Cancel meetup') %></button>
+        </form>
+      <% } %>
+    </div>
+
+    <div class="meetuphero__host">
+      <a href="/u/<%= meetup.host_username %>">
+        <%- include('../partials/avatar', { u: { username: meetup.host_username, display_name: meetup.host_display_name, avatar: meetup.host_avatar }, cls: 'avatar--sm' }) %>
+        <span><%= t('Hosted by') %> <strong><%= meetup.host_display_name || meetup.host_username %></strong> <span class="muted">@<%= meetup.host_username %></span></span>
+      </a>
+      <% if (meetup.group_id) { %>
+        <a class="meetuphero__group" href="/groups/<%= meetup.group_slug %>"><%- include('../partials/icon', { name: 'shield', size: 14 }) %> <%= t('{group} group meetup', { group: meetup.group_name }) %></a>
+      <% } %>
+      <% if (currentUser && !isHost) { %>
+        <form action="/friends/message/<%= meetup.host_username %>" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'chat', size: 15 }) %> <%= t('Message host') %></button>
+        </form>
+      <% } %>
+    </div>
+  </article>
+
+  <% if (!isTouge && showWhere && meetup.lat != null && meetup.lng != null) { %>
+    <section class="card mapcard">
+      <div class="mapcard__map" data-map-readonly data-lat="<%= meetup.lat %>" data-lng="<%= meetup.lng %>" <%- include('../partials/pin-avatar', { u: { username: meetup.host_username, display_name: meetup.host_display_name, avatar: meetup.host_avatar } }) %> data-zoom="<%= meetup.zoom || 15 %>"></div>
+      <div class="mapcard__foot">
+        <span><%- include('../partials/icon', { name: 'pin', size: 15 }) %> <%= place %></span>
+        <a class="btn btn--ghost btn--sm" href="https://www.google.com/maps/dir/?api=1&destination=<%= meetup.lat %>,<%= meetup.lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%= t('Get directions') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (isTouge) { %>
+    <section class="card routecard">
+      <h2 class="card__title"><%- include('../partials/icon', { name: 'pin', size: 18 }) %> <%= t('Route') %></h2>
+      <div class="touge-map">
+        <div class="mapcard__map" data-touge-preview
+             data-lat="<%= meetup.route_start_lat %>"
+             data-lng="<%= meetup.route_start_lng %>"
+             data-end-lat="<%= meetup.route_end_lat %>"
+             data-end-lng="<%= meetup.route_end_lng %>"
+             data-view="<%= meetup.route_view || '' %>"
+             data-zoom="<%= meetup.zoom || 13 %>"></div>
+      </div>
+      <div class="touge-widgets">
+        <div class="touge-banner" data-route-length <%= meetup.route_distance_km == null ? 'hidden' : '' %>>
+          <% if (meetup.route_distance_km != null) { %><strong><%= Number(meetup.route_distance_km).toFixed(1) %> km</strong><% } %>
+        </div>
+        <% if (showWhere && meetup.route_start_lat != null && meetup.route_start_lng != null) { %>
+          <div class="meetupweather meetupweather--badge" data-meetup-weather
+               data-at="<%= meetup.starts_at %>"
+               data-lat="<%= meetup.route_start_lat %>"
+               data-lng="<%= meetup.route_start_lng %>"
+               hidden></div>
+        <% } %>
+        <div class="touge-names">
+          <span class="touge-names__chip touge-names__chip--a"><strong>A</strong><span><%= meetup.route_start_name || t('Start') %></span></span>
+          <span class="touge-names__chip touge-names__chip--b"><strong>B</strong><span><%= meetup.route_end_name || t('Finish') %></span></span>
+        </div>
+      </div>
+      <div class="touge-profile" data-route-profile hidden></div>
+      <div class="mapcard__foot">
+        <a class="btn btn--ghost btn--sm" href="https://www.google.com/maps/dir/?api=1&origin=<%= meetup.route_start_lat %>,<%= meetup.route_start_lng %>&destination=<%= meetup.route_end_lat %>,<%= meetup.route_end_lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%= t('Get directions') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (!isTouge && showWhere && meetup.lat != null && meetup.lng != null) { %>
+    <div class="meetupweather" data-meetup-weather
+         data-at="<%= meetup.starts_at %>"
+         data-lat="<%= meetup.lat %>"
+         data-lng="<%= meetup.lng %>"
+         hidden></div>
+  <% } %>
+
+  <% if (canManage && requested.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'clock', size: 17 }) %> <%= t('Requests ({n})', { n: requested.length }) %></h2>
+      <ul class="rows">
+        <% requested.forEach(function (person) { %>
+          <li class="row">
+            <a class="row__id" href="/u/<%= person.username %>">
+              <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+              <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>
+            </a>
+            <div class="row__actions">
+              <form action="/meetups/<%= meetup.id %>/attendees/<%= person.id %>/approve" method="post">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--primary btn--sm" type="submit"><%- include('../partials/icon', { name: 'check', size: 15 }) %> <%= t('Approve') %></button>
+              </form>
+              <form action="/meetups/<%= meetup.id %>/attendees/<%= person.id %>/remove" method="post">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--ghost btn--sm" type="submit"><%= t('Decline') %></button>
+              </form>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+  <% if (canManage) { %>
+    <section class="card mini">
+      <h3 class="mini__title"><%= t('Invite a driver') %></h3>
+      <form class="inlineform" action="/meetups/<%= meetup.id %>/invite" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <input type="text" name="username" placeholder="<%= t('username') %>" required>
+        <button class="btn btn--primary btn--sm" type="submit"><%- include('../partials/icon', { name: 'send', size: 15 }) %> <%= t('Invite') %></button>
+      </form>
+    </section>
+  <% } %>
+
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= t("Who's in ({n})", { n: going.length }) %></h2>
+    <% if (going.length) { %>
+      <div class="faces faces--wrap">
+        <% going.forEach(function (person) { %>
+          <a class="faces__item" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+            <span class="faces__text">
+              <span><%= person.display_name || person.username %><%= person.id === meetup.host_id ? ' · ' + t('host') : '' %></span>
+              <% if (person.car_label) { %><span class="carbadge"><%- include('../partials/icon', { name: 'car', size: 12 }) %> <%= person.car_label %></span><% } %>
+            </span>
+          </a>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="muted"><%= t('Nobody yet - be the first.') %></p>
+    <% } %>
+
+    <% if (invited.length) { %>
+      <h3 class="mini__title"><%= t('Invited') %></h3>
+      <div class="faces faces--wrap">
+        <% invited.forEach(function (person) { %>
+          <a class="faces__item" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--xs' }) %>
+            <span class="muted faces__text">
+              <span><%= person.display_name || person.username %></span>
+              <% if (person.car_label) { %><span class="carbadge"><%- include('../partials/icon', { name: 'car', size: 10 }) %> <%= person.car_label %></span><% } %>
+            </span>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <% if (maybe.length) { %>
+      <h3 class="mini__title"><%= t('Maybe') %></h3>
+      <div class="faces faces--wrap">
+        <% maybe.forEach(function (person) { %>
+          <a class="faces__item" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--xs' }) %>
+            <span class="muted faces__text">
+              <span><%= person.display_name || person.username %></span>
+              <% if (person.car_label) { %><span class="carbadge"><%- include('../partials/icon', { name: 'car', size: 10 }) %> <%= person.car_label %></span><% } %>
+            </span>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </section>
+
+  <% if (groupMeetups.length > 1) { %>
+    <section class="strip">
+      <h2 class="section-title"><%= t('More from this group') %></h2>
+      <div class="cards">
+        <% groupMeetups.filter(function (m) { return m.id !== meetup.id; }).forEach(function (m) { %>
+          <%- include('../partials/meetup-card', { meetup: m }) %>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+</div>

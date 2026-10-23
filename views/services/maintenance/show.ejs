@@ -1,0 +1,174 @@
+<%
+const catLabel = categories[service.category] || 'Other';
+const place = service.place_name || service.address || t('Location TBA');
+const avg = service.rating_avg != null ? Number(service.rating_avg) : 0;
+const hasPin = service.lat != null && service.lng != null;
+/* Start with no star chosen on a fresh review, so a slip of the
+   mouse cannot submit a rating nobody meant to give. */
+const myRating = myReview ? myReview.rating : 0;
+%>
+<div class="single">
+  <a class="backlink" href="/services/maintenance"><%- include('../../partials/icon', { name: 'back', size: 15 }) %> <%= t('All services') %></a>
+  <%- include('../../partials/services-tabs', { section: 'maintenance' }) %>
+
+  <article class="card srvhero">
+    <div class="srvhero__media">
+      <% if (service.cover) { %>
+        <div class="gallery">
+          <div class="gallery__stage">
+            <figure class="gallery__slide is-active" data-slide="0">
+              <a href="<%= config.uploadUrl %>/<%= service.cover %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= service.cover %>" alt="" loading="eager"></a>
+            </figure>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="gallery">
+          <div class="gallery__empty srvhero__gen" style="--h:<%= f.hueOf(service.title) %>">
+            <span class="srvhero__genmark"><%- include('../../partials/icon', { name: 'wrench', size: 44 }) %></span>
+            <p class="muted"><%= t('No photo yet.') %></p>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="srvhero__side">
+      <div class="srvhero__tags">
+        <span class="tag tag--cat"><%- include('../../partials/icon', { name: 'wrench', size: 13 }) %> <%= t(catLabel) %></span>
+        <% if (service.is_provider) { %><span class="badge badge--provider"><%- include('../../partials/icon', { name: 'shield', size: 13 }) %> <%= t('Service provider') %></span><% } %>
+      </div>
+
+      <h1 class="display srvhero__title"><%= service.title %></h1>
+
+      <div class="srvhero__rating">
+        <%- include('../../partials/stars', { rating: avg, size: 18 }) %>
+        <span class="muted"><%= service.review_count ? t('{avg} out of 5 - {n} reviews', { avg: Number(avg).toFixed(1), n: service.review_count }) : t('No reviews yet') %></span>
+      </div>
+
+      <p class="srvhero__meta muted">
+        <span><%- include('../../partials/icon', { name: 'pin', size: 14 }) %> <%= place %></span>
+      </p>
+
+      <a class="seller" href="/u/<%= service.username %>">
+        <%- include('../../partials/avatar', { u: service, cls: 'avatar--sm' }) %>
+        <span class="seller__id">
+          <strong><%= service.provider_name || service.display_name || service.username %></strong>
+          <span class="muted">@<%= service.username %></span>
+        </span>
+      </a>
+
+      <div class="srvhero__actions">
+        <% if (service.phone) { %>
+          <a class="btn btn--primary btn--block" href="tel:<%= String(service.phone).replace(/[^+\d]/g, '') %>"><%- include('../../partials/icon', { name: 'phone', size: 16 }) %> <%= service.phone %></a>
+        <% } %>
+        <% if (service.email) { %>
+          <a class="btn btn--ghost btn--block" href="mailto:<%= service.email %>"><%- include('../../partials/icon', { name: 'mail', size: 16 }) %> <%= service.email %></a>
+        <% } %>
+        <% if (isAuthenticated && !mine) { %>
+          <form action="/friends/message/<%= service.username %>" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--ghost btn--block" type="submit"><%- include('../../partials/icon', { name: 'chat', size: 16 }) %> <%= t('Message') %></button>
+          </form>
+        <% } else { %>
+          <a class="btn btn--ghost btn--block" href="/u/<%= service.username %>"><%- include('../../partials/icon', { name: 'user', size: 16 }) %> @<%= service.username %></a>
+        <% } %>
+      </div>
+
+      <% if (mine || canModerate) { %>
+        <div class="srvhero__manage">
+          <a class="btn btn--ghost btn--sm" href="/services/maintenance/<%= service.id %>/edit"><%- include('../../partials/icon', { name: 'edit', size: 15 }) %> <%= t('Edit') %></a>
+          <form action="/services/maintenance/<%= service.id %>/delete" method="post" data-confirm="<%= t('Delete this listing for good?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--danger btn--sm" type="submit"><%- include('../../partials/icon', { name: 'trash', size: 15 }) %> <%= t('Delete') %></button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </article>
+
+  <% if (service.description) { %>
+    <section class="card build-note">
+      <h2 class="section-title"><%- include('../../partials/icon', { name: 'flag', size: 17 }) %> <%= t('Details') %></h2>
+      <p><%- f.formatText(service.description) %></p>
+    </section>
+  <% } %>
+
+  <% if (hasPin) { %>
+    <section class="card mapcard">
+      <div class="mapcard__map" data-map-readonly data-lat="<%= service.lat %>" data-lng="<%= service.lng %>" <%- include('../../partials/pin-avatar', { u: service }) %> data-zoom="<%= service.zoom || 15 %>"></div>
+      <div class="mapcard__foot">
+        <span><%- include('../../partials/icon', { name: 'pin', size: 15 }) %> <%= place %></span>
+        <a class="btn btn--ghost btn--sm" href="https://www.google.com/maps/dir/?api=1&destination=<%= service.lat %>,<%= service.lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%= t('Get directions') %> <%- include('../../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="card reviews" id="reviews">
+    <div class="reviews__head">
+      <h2 class="section-title"><%- include('../../partials/icon', { name: 'star', size: 17 }) %> <%= t('Reviews') %></h2>
+      <% if (service.review_count) { %>
+        <span class="reviews__summary"><%- include('../../partials/stars', { rating: avg }) %> <span class="muted"><%= Number(avg).toFixed(1) %> · <%= t('{n} reviews', { n: service.review_count }) %></span></span>
+      <% } %>
+    </div>
+
+    <% if (!isAuthenticated) { %>
+      <p class="muted"><a class="link" href="/login"><%= t('Log in') %></a> <%= t('to leave a review.') %></p>
+    <% } else if (mine) { %>
+      <p class="muted"><%= t('You cannot review your own service.') %></p>
+    <% } else { %>
+      <form class="reviewform" action="/services/maintenance/<%= service.id %>/review" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <div class="rateinput" role="radiogroup" aria-label="<%= t('Your rating') %>">
+          <% for (let i = 5; i >= 1; i--) { %>
+            <input class="rateinput__radio" type="radio" id="rate-<%= service.id %>-<%= i %>" name="rating" value="<%= i %>" <%= myRating === i ? 'checked' : '' %>>
+            <label class="rateinput__star" for="rate-<%= service.id %>-<%= i %>" title="<%= i %> / 5"><%- include('../../partials/icon', { name: 'star', size: 26 }) %></label>
+          <% } %>
+        </div>
+        <label class="field">
+          <span class="field__label"><%= t('Your review') %> <span class="muted"><%= t('(optional)') %></span></span>
+          <textarea name="body" rows="3" maxlength="1200" placeholder="<%= t('How was the work, the price, the turnaround?') %>"><%= myReview ? myReview.body : '' %></textarea>
+        </label>
+        <div class="btnrow">
+          <button class="btn btn--primary" type="submit"><%- include('../../partials/icon', { name: 'star', size: 16 }) %> <%= myReview ? t('Update review') : t('Post review') %></button>
+          <% if (myReview) { %>
+            <button class="btn btn--ghost" type="submit" form="del-review" formnovalidate><%- include('../../partials/icon', { name: 'trash', size: 16 }) %> <%= t('Remove review') %></button>
+          <% } %>
+        </div>
+      </form>
+      <% if (myReview) { %>
+        <form id="del-review" action="/services/maintenance/<%= service.id %>/review/delete" method="post" data-confirm="<%= t('Remove your review?') %>" hidden>
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        </form>
+      <% } %>
+    <% } %>
+
+    <% if (reviews.length) { %>
+      <ul class="reviewlist">
+        <% reviews.forEach(function (review) { %>
+          <li class="review">
+            <a class="review__who" href="/u/<%= review.username %>">
+              <%- include('../../partials/avatar', { u: review, cls: 'avatar--xs' }) %>
+              <span class="review__id"><strong><%= review.display_name || review.username %></strong> <span class="muted small"><%= f.shortDate(review.updated_at, lang) %></span></span>
+            </a>
+            <div class="review__body">
+              <%- include('../../partials/stars', { rating: review.rating, size: 14 }) %>
+              <% if (review.body) { %><p><%- f.formatText(review.body) %></p><% } %>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <p class="muted"><%= t('No reviews yet. Be the first.') %></p>
+    <% } %>
+  </section>
+
+  <% if (related.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('../../partials/icon', { name: 'wrench', size: 17 }) %> <%= t('More in {category}', { category: t(catLabel) }) %></h2>
+      <div class="cards">
+        <% related.forEach(function (row) { %>
+          <%- include('../../partials/service-card', { service: row, categories: categories, isAuthenticated: isAuthenticated, currentUser: currentUser, csrfField: csrfField, csrfToken: csrfToken }) %>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+</div>

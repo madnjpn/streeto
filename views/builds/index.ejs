@@ -1,0 +1,98 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('garage') %></p>
+    <h1 class="display"><%= t('Builds') %></h1>
+    <p class="lede"><%= total === 1 ? t('{n} build', { n: total }) : t('{n} builds', { n: total }) %> <%= scope === 'sale' ? t('for sale · message the owner directly.') : t('in the network · vote once a week for build of the week.') %></p>
+  </div>
+  <% if (isAuthenticated) { %>
+    <a class="btn btn--primary" href="/builds/new"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Add your build') %></a>
+  <% } %>
+</div>
+
+<% if (fame.week || fame.month || fame.year) { %>
+  <section class="fame">
+    <% [['week', fame.week], ['month', fame.month], ['year', fame.year]].forEach(function ([kind, winner]) { %>
+      <% if (winner) { %>
+        <a class="fame__card card" href="/builds/<%= winner.build_id || winner.id %>">
+          <span class="fame__kind"><%- include('../partials/icon', { name: kind === 'year' ? 'star' : kind === 'month' ? 'calendar' : 'bolt', size: 15 }) %> <%= t('Build of the {kind}', { kind: t(kind) }) %></span>
+          <% const img = winner.cover ? `${config.uploadUrl}/${winner.cover}` : null; %>
+    <% const imgSet = winner.cover ? srcset(winner.cover) : ''; %>
+          <span class="fame__media">
+            <% if (img) { %><img src="<%= img %>"<% if (imgSet) { %> srcset="<%= imgSet %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy"><% } else { %><span class="build-card__gen" style="--h:<%= f.hueOf(winner.title) %>"><%- include('../partials/icon', { name: 'car', size: 26 }) %></span><% } %>
+          </span>
+          <span class="fame__text">
+            <strong><%= winner.title %></strong>
+            <span class="muted">@<%= winner.username %> · <%= t('{n} votes', { n: winner.votes }) %></span>
+          </span>
+        </a>
+      <% } %>
+    <% }); %>
+  </section>
+<% } %>
+
+<div class="feedtabs" role="tablist">
+  <% Object.entries(scopes).forEach(function ([key, label]) { %>
+    <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/builds?scope=<%= key %>&sort=<%= sort %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
+  <% }); %>
+  <span class="feedtabs__spacer"></span>
+  <% Object.entries(sorts).forEach(function ([key, label]) { %>
+    <a class="feedtabs__tab feedtabs__tab--sm <%= sort === key ? 'is-active' : '' %>" href="/builds?scope=<%= scope %>&sort=<%= key %>"><%= t(label) %></a>
+  <% }); %>
+</div>
+
+<section class="build-layout">
+  <div class="build-layout__main">
+    <% if (!items.length) { %>
+      <%- include('../partials/empty', {
+        icon: 'garage',
+        title: scope === 'mine' ? t('No builds yet') : scope === 'sale' ? t('Nothing for sale yet') : t('Nothing in the garage'),
+        text: scope === 'mine'
+          ? t('Add your car with photos, a clip and its spec sheet.')
+          : scope === 'sale'
+            ? t('Tick "for sale" on your build to list it here with a price.')
+            : t('Be the first to put a build on the board.'),
+        action: scope === 'sale' ? '' : isAuthenticated ? '<a class="btn btn--primary" href="/builds/new">' + t('Add your build') + '</a>' : '<a class="btn btn--primary" href="/register">' + t('Join up') + '</a>'
+      }) %>
+    <% } %>
+
+    <div class="cards cards--builds">
+      <% items.forEach(function (build) { %>
+        <%- include('../partials/build-card', { build: build, isAuthenticated: isAuthenticated, mine: build.user_id === currentUser?.id, csrfField: csrfField, csrfToken: csrfToken }) %>
+      <% }); %>
+    </div>
+
+    <%- include('../partials/pagination', { page: page, hasMore: hasMore, baseQs: 'scope=' + scope + '&sort=' + sort }) %>
+  </div>
+
+  <aside class="build-layout__side">
+    <div class="card mini">
+      <h3 class="mini__title"><%= t("This week's vote") %></h3>
+      <p class="muted small"><%= t('{label}. One vote per driver - you can change it any time before the week closes.', { label: weekLabel }) %></p>
+      <% if (standings.length) { %>
+        <ol class="standings">
+          <% standings.forEach(function (row, index) { %>
+            <li class="standings__row">
+              <span class="standings__rank"><%= index + 1 %></span>
+              <a class="standings__name" href="/builds/<%= row.id %>"><%= f.truncate(row.title, 22) %></a>
+              <span class="standings__votes"><%= row.votes %></span>
+            </li>
+          <% }); %>
+        </ol>
+      <% } else { %>
+        <p class="muted small"><%= t('No votes yet this week. Be the first.') %></p>
+      <% } %>
+      <% if (myVote) { %>
+        <p class="mini__note"><%- include('../partials/icon', { name: 'check', size: 14 }) %> <%= t('Your vote:') %> <a class="link" href="/builds/<%= myVote.build_id %>"><%= f.truncate(myVote.title, 24) %></a></p>
+      <% } %>
+    </div>
+
+    <div class="card mini">
+      <h3 class="mini__title"><%= t('How it works') %></h3>
+      <ul class="mini__rules">
+        <li><%- t('Drivers vote once a week - the top build takes <strong>Build of the Week</strong>.') %></li>
+        <li><%- t('Four weekly wins in one month make it <strong>Build of the Month</strong>.') %></li>
+        <li><%- t("Beat the field's yearly average and it's <strong>Build of the Year</strong>.") %></li>
+      </ul>
+    </div>
+  </aside>
+</section>

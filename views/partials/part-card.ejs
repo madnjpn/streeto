@@ -1,0 +1,38 @@
+<%
+/* Marketplace listing card. Locals: part, categories. */
+const cover = part.cover ? `${config.uploadUrl}/${part.cover}` : null;
+    const coverSet = part.cover ? srcset(part.cover) : '';
+const catLabel = categories[part.category] || 'Other';
+%>
+<article class="card srvcard <%= part.status === 'sold' ? 'srvcard--sold' : '' %>">
+  <a class="srvcard__media" href="/services/parts/<%= part.id %>">
+    <% if (cover) { %>
+      <img src="<%= cover %>"<% if (coverSet) { %> srcset="<%= coverSet %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy">
+    <% } else { %>
+      <span class="srvcard__gen" style="--h:<%= f.hueOf(part.title) %>"><%- include('icon', { name: 'tag', size: 26 }) %></span>
+    <% } %>
+    <span class="srvcard__cat tag"><%= t(catLabel) %></span>
+    <% if (part.status === 'sold') { %><span class="srvcard__sold"><%= t('Sold') %></span><% } %>
+    <% if (part.photo_count > 1) { %><span class="srvcard__count"><%- include('icon', { name: 'image', size: 13 }) %> <%= part.photo_count %></span><% } %>
+  </a>
+  <div class="srvcard__body">
+    <a class="srvcard__title" href="/services/parts/<%= part.id %>"><%= part.title %></a>
+    <div class="srvcard__price">
+      <% if (part.price != null) { %><strong><%= money(part.price, part.currency) %></strong><% } else { %><strong><%= t('Ask') %></strong><% } %>
+      <% if (moneyAlt(part.price, part.currency)) { %><span class="money__alt"><%= moneyAlt(part.price, part.currency) %></span><% } %>
+      <% if (part.price_note) { %><span class="muted small"><%= part.price_note %></span><% } %>
+    </div>
+    <div class="srvcard__meta muted">
+      <% if (part.location) { %><span><%- include('icon', { name: 'pin', size: 13 }) %> <%= f.truncate(part.location, 28) %></span><% } %>
+      <span><%- include('icon', { name: 'clock', size: 13 }) %> <%= f.timeAgo(part.created_at, lang) %></span>
+    </div>
+    <div class="srvcard__foot">
+      <a class="srvcard__seller" href="/u/<%= part.username %>">
+        <%- include('avatar', { u: part, cls: 'avatar--xs' }) %>
+        <span class="muted">@<%= part.username %></span>
+      </a>
+      <a class="btn btn--ghost btn--sm" href="/services/parts/<%= part.id %>"><%= t('Details') %></a>
+      <%- include('share-button', { type: 'part', id: part.id, title: part.title, label: t('Part') }) %>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,46 @@
+<%
+/* Maintenance listing card. Locals: service, categories. */
+const cover = service.cover ? `${config.uploadUrl}/${service.cover}` : null;
+    const coverSet = service.cover ? srcset(service.cover) : '';
+const catLabel = categories[service.category] || 'Other';
+const avg = service.rating_avg != null ? Number(service.rating_avg) : 0;
+const where = service.place_name || service.address || t('Location TBA');
+%>
+<article class="card srvcard <%= service.verified ? 'srvcard--verified' : '' %>">
+  <a class="srvcard__media" href="/services/maintenance/<%= service.id %>">
+    <% if (cover) { %>
+      <img src="<%= cover %>"<% if (coverSet) { %> srcset="<%= coverSet %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy">
+    <% } else { %>
+      <span class="srvcard__gen" style="--h:<%= f.hueOf(service.title) %>"><%- include('icon', { name: 'wrench', size: 26 }) %></span>
+    <% } %>
+    <span class="srvcard__cat tag"><%= t(catLabel) %></span>
+    <% if (service.verified) { %><span class="srvcard__verified badge badge--verified"><%- include('icon', { name: 'check-circle', size: 12 }) %> <%= t('Verified') %></span><% } %>
+  </a>
+  <div class="srvcard__body">
+    <a class="srvcard__title" href="/services/maintenance/<%= service.id %>"><%= service.title %></a>
+    <div class="srvcard__rating">
+      <%- include('stars', { rating: avg }) %>
+      <span class="muted small"><%= service.review_count ? t('{n} reviews', { n: service.review_count }) : t('No reviews yet') %></span>
+    </div>
+    <div class="srvcard__meta muted">
+      <span><%- include('icon', { name: 'pin', size: 13 }) %> <%= f.truncate(where, 44) %></span>
+    </div>
+    <% if (service.is_provider) { %>
+      <span class="badge badge--provider"><%- include('icon', { name: 'shield', size: 13 }) %> <%= f.providerName(service.provider_name, t) %></span>
+    <% } %>
+    <div class="srvcard__foot">
+      <a class="srvcard__seller" href="/u/<%= service.username %>">
+        <%- include('avatar', { u: service, cls: 'avatar--xs' }) %>
+        <span class="muted">@<%= service.username %></span>
+      </a>
+      <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated && typeof currentUser !== 'undefined' && currentUser && currentUser.is_provider && service.user_id !== currentUser.id) { %>
+        <form action="/services/maintenance/<%= service.id %>/claim" method="post" style="display:inline">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn--ghost btn--sm"><%- include('icon', { name: 'flag', size: 13 }) %> <%= t('Claim') %></button>
+        </form>
+      <% } %>
+      <a class="btn btn--ghost btn--sm" href="/services/maintenance/<%= service.id %>"><%= t('Details') %></a>
+      <%- include('share-button', { type: 'service', id: service.id, title: service.title, label: t('Service') }) %>
+    </div>
+  </div>
+</article>

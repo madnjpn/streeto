@@ -1,0 +1,468 @@
+<%
+const v = (name, fallback = '') => (values && values[name] != null ? values[name] : fallback);
+const existing = typeof media !== 'undefined' ? media : [];
+const currencyOptions = currencies.map((c) => ({ value: c.code, label: `${c.code} ${c.symbol}` }));
+const vehicleList = typeof userVehicles !== 'undefined' && userVehicles ? userVehicles : [];
+const linkedId = values && values.linked_vehicle_id != null ? String(values.linked_vehicle_id) : '';
+const certKeys = ['number_plate', 'technical_passport', 'registration_date', 'owner_surname', 'owner_name',
+  'owner_address', 'owner_id', 'owner_of_vehicle', 'expiry_date', 'vehicle_type', 'vin', 'max_laden_mass',
+  'permissible_mass', 'unladen_mass', 'engine_capacity', 'net_power_kw', 'fuel_type', 'engine_number',
+  'power_weight_ratio', 'colour', 'seats', 'standing_places'];
+const hasCert = certKeys.some((key) => values && values[key] != null && values[key] !== '');
+const certPayload = JSON.stringify(vehicleList).replace(/</g, '\\u003c');
+/* The timeline only exists once the build does - a new car has no
+   history yet. */
+const entries = typeof timeline !== 'undefined' && timeline ? timeline : [];
+const summary = typeof timelineSummary !== 'undefined' && timelineSummary ? timelineSummary : null;
+const hasBuild = typeof buildId !== 'undefined' && buildId;
+%>
+<% if (hasBuild) { %>
+  <div class="edittabs" role="tablist" aria-label="<%= t('Edit build') %>">
+    <button class="edittabs__tab is-on" type="button" role="tab" aria-selected="true" data-edit-tab="info">
+      <%- include('icon', { name: 'settings', size: 15 }) %> <%= t('Build info') %>
+    </button>
+    <button class="edittabs__tab" type="button" role="tab" aria-selected="false" data-edit-tab="timeline">
+      <%- include('icon', { name: 'clock', size: 15 }) %> <%= t('Build timeline') %>
+      <% if (entries.length) { %><span class="pip pip--solid"><%= entries.length %></span><% } %>
+    </button>
+  </div>
+<% } %>
+
+<div data-edit-panel="info">
+<form class="card card--form build-form" action="<%= action %>" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+
+  <h2 class="card__title"><%= heading %></h2>
+  <p class="muted"><%= blurb %></p>
+
+  <% if (vehicleList.length) { %>
+    <div class="build-link build-link--certificate">
+      <label class="field">
+        <span class="field__label"><%= t('Registration certificate') %></span>
+        <select name="linked_vehicle_id" id="build-linked-vehicle">
+          <option value=""><%= t('None - keep them separate') %></option>
+          <% vehicleList.forEach(function (vehicle) { %>
+            <option value="<%= vehicle.id %>" <%= linkedId === String(vehicle.id) ? 'selected' : '' %>><%= vehicle.name %><% const sub = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' '); %><% if (sub) { %> (<%= sub %>)<% } %></option>
+          <% }); %>
+        </select>
+        <span class="field__hint"><%= t('Link one of your My Ride vehicles to reuse its registration certificate.') %></span>
+      </label>
+      <label class="build-link__sync" id="pull-certificate-wrap" <%= linkedId ? '' : 'hidden' %>>
+        <input type="checkbox" name="pull_certificate" value="1" <%= values && values.pull_certificate ? 'checked' : '' %>>
+        <span><%= t('Pull the certificate data into this build') %></span>
+      </label>
+    </div>
+  <% } else { %>
+    <p class="muted small"><%= t('Add a vehicle in My Ride to link its registration certificate here.') %></p>
+  <% } %>
+
+  <label class="field <%= errors.title ? 'field--bad' : '' %>">
+    <span class="field__label"><%= t('Build name') %></span>
+    <input type="text" name="title" value="<%= v('title') %>" maxlength="90" required placeholder="<%= t('e.g. The Midnight Skyline') %>">
+    <% if (errors.title) { %><span class="field__error"><%= t(errors.title) %></span><% } %>
+  </label>
+
+  <div class="field-grid field-grid--3">
+    <label class="field">
+      <span class="field__label"><%= t('Make') %></span>
+      <input type="text" name="make" value="<%= v('make') %>" maxlength="40" placeholder="Nissan">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Model') %></span>
+      <input type="text" name="model" value="<%= v('model') %>" maxlength="40" placeholder="Skyline R33">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Year') %></span>
+      <input type="number" name="year" value="<%= v('year') %>" min="1900" max="2099" step="1" placeholder="1995">
+    </label>
+  </div>
+
+  <div class="field-grid field-grid--2">
+    <label class="field">
+      <span class="field__label"><%= t('Engine') %></span>
+      <input type="text" name="engine" value="<%= v('engine') %>" maxlength="80" placeholder="RB26DETT 2.6 twin turbo">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Drivetrain') %></span>
+      <input type="text" name="drivetrain" value="<%= v('drivetrain') %>" maxlength="40" placeholder="AWD / RWD / FWD">
+    </label>
+  </div>
+
+  <div class="field-grid field-grid--2">
+    <label class="field">
+      <span class="field__label"><%= t('Transmission') %></span>
+      <input type="text" name="transmission" value="<%= v('transmission') %>" maxlength="40" placeholder="5-speed manual">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Power (hp)') %></span>
+      <input type="number" name="power_hp" value="<%= v('power_hp') %>" min="0" max="5000" step="1" placeholder="280">
+    </label>
+  </div>
+
+  <div class="field-grid field-grid--2">
+    <label class="field">
+      <span class="field__label"><%= t('Torque (Nm)') %></span>
+      <input type="number" name="torque_nm" value="<%= v('torque_nm') %>" min="0" max="5000" step="1" placeholder="392">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Weight (kg)') %></span>
+      <input type="number" name="weight_kg" value="<%= v('weight_kg') %>" min="0" max="5000" step="1" placeholder="1560">
+    </label>
+  </div>
+
+  <label class="field">
+    <span class="field__label"><%= t('Odometer (km)') %></span>
+    <input type="number" name="odometer_km" value="<%= v('odometer_km') %>" min="0" max="10000000" step="1" placeholder="185000">
+    <span class="field__hint"><%= t('Shared with My Ride when this build is linked to your vehicle.') %></span>
+  </label>
+
+  <details class="cert-fields">
+    <summary><%- include('icon', { name: 'flag', size: 14 }) %> <%= t('Registration certificate details') %></summary>
+    <p class="muted small"><%= t('Copied from the certificate. Owner details stay private and are only shown to you.') %></p>
+    <%- include('certificate-fields', { v: values, exclude: ['make', 'model', 'year'] }) %>
+  </details>
+
+  <label class="field">
+    <span class="field__label"><%= t('Mods & notes') %></span>
+    <textarea name="mods" rows="3" maxlength="1200" placeholder="Turbo-back exhaust, coilovers, big brake kit, semi-slicks..."><%= v('mods') %></textarea>
+  </label>
+
+  <label class="field">
+    <span class="field__label"><%= t('The story') %></span>
+    <textarea name="description" rows="4" maxlength="4000" placeholder="<%= t('Where it started, what you changed, what is next.') %>"><%= v('description') %></textarea>
+  </label>
+
+  <fieldset class="field field--radio">
+    <legend class="field__label"><%= t('Who can see it') %></legend>
+    <label class="choice">
+      <input type="radio" name="visibility" value="public" <%= v('visibility', 'public') !== 'private' ? 'checked' : '' %>>
+      <span><strong><%= t('Public') %></strong><small><%= t('Anyone on the network can see it and vote for it.') %></small></span>
+    </label>
+    <label class="choice">
+      <input type="radio" name="visibility" value="private" <%= v('visibility') === 'private' ? 'checked' : '' %>>
+      <span><strong><%= t('Private') %></strong><small><%= t('Only you can see it. It never appears in the vote.') %></small></span>
+    </label>
+  </fieldset>
+
+  <fieldset class="field field--radio build-sale">
+    <legend class="field__label"><%= t('Sell this build') %></legend>
+    <label class="choice">
+      <input type="checkbox" name="for_sale" value="1" <%= v('for_sale') ? 'checked' : '' %>>
+      <span>
+        <strong><%= t('This car is for sale') %></strong>
+        <small><%= t('It gets listed under Builds > For sale with your asking price. Only public builds appear there.') %></small>
+      </span>
+    </label>
+    <div class="build-sale__price">
+      <div class="field-grid field-grid--2">
+        <label class="field">
+          <span class="field__label"><%= t('Price') %></span>
+          <input type="number" name="price" value="<%= v('price') %>" min="0" max="100000000" step="1" placeholder="<%= t('Leave empty for ask') %>">
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('Currency') %></span>
+          <%- include('select-modal', {
+            name: 'currency',
+            value: v('currency', currency),
+            options: currencyOptions,
+            icon: 'tag'
+          }) %>
+        </label>
+      </div>
+      <label class="field">
+        <span class="field__label"><%= t('Price note') %> <span class="muted"><%= t('(optional)') %></span></span>
+        <input type="text" name="price_note" value="<%= v('price_note') %>" maxlength="40" placeholder="<%= t('e.g. negotiable, swap') %>">
+      </label>
+    </div>
+  </fieldset>
+
+  <label class="field <%= errors.media ? 'field--bad' : '' %>">
+    <span class="field__label"><%= t('Photos & clips') %></span>
+    <input type="file" name="media" accept="image/*,video/*" multiple data-build-media>
+    <span class="field__hint"><%= t('Up to 8 files, {mb} MB each. The first one becomes the cover.', { mb: maxUploadMb }) %></span>
+    <% if (errors.media) { %><span class="field__error"><%= t(errors.media) %></span><% } %>
+  </label>
+  <div class="media-preview" data-build-preview hidden></div>
+
+  <% if (existing.length) { %>
+    <div class="field">
+      <span class="field__label"><%= t('Current gallery') %></span>
+      <div class="media-manage">
+        <% existing.forEach(function (item) { %>
+          <figure class="media-manage__item">
+            <% if (item.media_type === 'photo') { %>
+              <img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 640px"<% } %> alt="" loading="lazy">
+            <% } else { %>
+              <video src="<%= config.uploadUrl %>/<%= item.media_path %>" muted preload="metadata" playsinline></video>
+            <% } %>
+            <button class="media-manage__x" type="submit" form="del-media-<%= item.id %>" aria-label="<%= t('Remove file') %>"><%- include('icon', { name: 'x', size: 14 }) %></button>
+          </figure>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="btnrow">
+    <button class="btn btn--primary" type="submit"><%= submitLabel %></button>
+    <a class="btn btn--ghost" href="<%= cancelHref %>"><%= t('Cancel') %></a>
+  </div>
+</form>
+</div>
+
+<% /* The timeline: the history of the build, in its own tab. */ %>
+<% if (hasBuild) { %>
+<div data-edit-panel="timeline" hidden>
+<form class="card timeline-form" action="/builds/<%= buildId %>/timeline" method="post" enctype="multipart/form-data" data-timeline-form
+      data-add-label="<%= t('Add to the timeline') %>" data-save-label="<%= t('Save the entry') %>">
+  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+  <input type="hidden" name="timeline_id" value="" data-timeline-id>
+  <h2 class="card__title"><%- include('icon', { name: 'clock', size: 17 }) %> <%= t('Build timeline') %></h2>
+  <p class="muted small"><%= t('What was done to the car, and when. This is the story behind the build.') %></p>
+
+  <% if (entries.length) { %>
+    <ol class="timeline timeline--manage">
+      <% entries.forEach(function (item) { %>
+        <li class="timeline__row" data-timeline-row="<%= item.id %>"
+            data-title="<%= item.title %>"
+            data-kind="<%= item.kind || 'other' %>"
+            data-mileage="<%= item.mileage || '' %>"
+            data-cost="<%= item.cost || '' %>"
+            data-date="<%= String(item.changed_at || '').slice(0, 10) %>"
+            data-description="<%= item.description || '' %>">
+          <% if (item.photo) { %>
+            <a class="timeline__photo" href="<%= config.uploadUrl %>/<%= item.photo %>" target="_blank" rel="noopener">
+              <img src="<%= config.uploadUrl %>/<%= item.photo %>"<% if (srcset(item.photo)) { %> srcset="<%= srcset(item.photo) %>" sizes="160px"<% } %> alt="" loading="lazy">
+            </a>
+          <% } %>
+          <div class="timeline__body">
+            <div class="timeline__head">
+              <strong><%= item.title %></strong>
+              <span class="muted small">
+                <% if (item.changed_at) { %><%= String(item.changed_at).slice(0, 10) %><% } %>
+                <% if (item.mileage) { %> · <%= item.mileage %> km<% } %>
+                <% if (item.cost) { %> · <%= money(item.cost, 'GEL') %><% } %>
+              </span>
+            </div>
+            <% if (item.description) { %><p class="timeline__text"><%- f.formatText(item.description) %></p><% } %>
+            <div class="timeline__tools">
+              <button type="button" class="btn btn--ghost btn--sm" data-timeline-edit="<%= item.id %>"><%- include('icon', { name: 'edit', size: 13 }) %> <%= t('Edit') %></button>
+              <button type="submit" form="del-timeline-<%= item.id %>" class="btn btn--danger btn--sm"><%- include('icon', { name: 'trash', size: 13 }) %> <%= t('Delete') %></button>
+            </div>
+          </div>
+        </li>
+      <% }); %>
+    </ol>
+    <% if (summary && summary.entries) { %>
+      <p class="muted small"><%= t('{n} changes, {spent} spent in total.', { n: summary.entries, spent: money(summary.spent || 0, 'GEL') }) %></p>
+    <% } %>
+  <% } %>
+
+  <div class="timeline-form__grid">
+    <label class="field">
+      <span class="field__label"><%= t('What was done') %></span>
+      <input type="text" name="title" maxlength="120" placeholder="<%= t('e.g. Swapped the turbo') %>" data-timeline-title>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Kind') %></span>
+      <select name="kind">
+        <option value="engine"><%= t('Engine') %></option>
+        <option value="suspension"><%= t('Suspension') %></option>
+        <option value="brakes"><%= t('Brakes') %></option>
+        <option value="body"><%= t('Body & paint') %></option>
+        <option value="interior"><%= t('Interior') %></option>
+        <option value="electronics"><%= t('Electronics') %></option>
+        <option value="exhaust"><%= t('Exhaust') %></option>
+        <option value="wheels"><%= t('Wheels & tyres') %></option>
+        <option value="other" selected><%= t('Other') %></option>
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Mileage (km)') %></span>
+      <input type="number" name="mileage" min="0" max="10000000" step="1" inputmode="numeric" placeholder="0">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Cost') %></span>
+      <input type="number" name="cost" min="0" step="0.01" inputmode="decimal" placeholder="0">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Date') %></span>
+      <input type="date" name="changed_at" value="<%= new Date().toISOString().slice(0, 10) %>">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Picture') %></span>
+      <input type="file" name="photo" accept="image/*">
+    </label>
+    <label class="field timeline-form__wide">
+      <span class="field__label"><%= t('Details') %></span>
+      <input type="text" name="description" maxlength="300" placeholder="<%= t('What was done, and what to remember') %>">
+    </label>
+  </div>
+
+  <div class="btnrow">
+    <button class="btn btn--primary" type="submit" data-timeline-submit><%- include('icon', { name: 'plus', size: 15 }) %> <span data-timeline-submit-label><%= t('Add to the timeline') %></span></button>
+    <button class="btn btn--ghost" type="button" data-timeline-cancel hidden><%= t('Cancel') %></button>
+  </div>
+</form>
+</div>
+<% } %>
+
+<% if (hasBuild && entries.length) { %>
+  <% entries.forEach(function (item) { %>
+    <form id="del-timeline-<%= item.id %>" action="/builds/<%= buildId %>/timeline/<%= item.id %>/delete" method="post" data-confirm="<%= t('Remove this entry from the timeline?') %>" hidden>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+    </form>
+  <% }); %>
+<% } %>
+
+<% if (existing.length) { %>
+  <% existing.forEach(function (item) { %>
+    <form id="del-media-<%= item.id %>" action="/builds/<%= buildId %>/media/<%= item.id %>/delete" method="post" data-confirm="<%= t('Remove this file?') %>" hidden>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+    </form>
+  <% }); %>
+<% } %>
+
+<script type="application/json" data-build-certificates><%- certPayload %></script>
+<script>
+  (function () {
+    /* The timeline: the Edit button fills the form with the entry and
+       posts the change to that entry. */
+    var tlForm = document.querySelector('[data-timeline-form]');
+    if (tlForm) {
+      var tlId = tlForm.querySelector('[data-timeline-id]');
+      var tlTitle = tlForm.querySelector('[name="title"]');
+      var tlKind = tlForm.querySelector('[name="kind"]');
+      var tlMileage = tlForm.querySelector('[name="mileage"]');
+      var tlCost = tlForm.querySelector('[name="cost"]');
+      var tlDate = tlForm.querySelector('[name="changed_at"]');
+      var tlDetails = tlForm.querySelector('[name="description"]');
+      var tlLabel = tlForm.querySelector('[data-timeline-submit-label]');
+      var tlCancel = tlForm.querySelector('[data-timeline-cancel]');
+      var baseAction = tlForm.getAttribute('action');
+
+      function resetTimeline() {
+        tlForm.setAttribute('action', baseAction);
+        if (tlId) tlId.value = '';
+        if (tlTitle) tlTitle.value = '';
+        if (tlKind) tlKind.value = 'other';
+        if (tlMileage) tlMileage.value = '';
+        if (tlCost) tlCost.value = '';
+        if (tlDate) tlDate.value = new Date().toISOString().slice(0, 10);
+        if (tlDetails) tlDetails.value = '';
+        if (tlLabel) tlLabel.textContent = tlForm.dataset.addLabel || tlLabel.textContent;
+        if (tlCancel) tlCancel.hidden = true;
+      }
+
+      document.querySelectorAll('[data-timeline-edit]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var row = button.closest('[data-timeline-row]');
+          if (!row) return;
+          var id = button.dataset.timelineEdit;
+          tlForm.setAttribute('action', baseAction + '/' + id);
+          if (tlId) tlId.value = id;
+          if (tlTitle) tlTitle.value = row.dataset.title || '';
+          if (tlKind) tlKind.value = row.dataset.kind || 'other';
+          if (tlMileage) tlMileage.value = row.dataset.mileage || '';
+          if (tlCost) tlCost.value = row.dataset.cost || '';
+          if (tlDate) tlDate.value = row.dataset.date || new Date().toISOString().slice(0, 10);
+          if (tlDetails) tlDetails.value = row.dataset.description || '';
+          if (tlLabel) tlLabel.textContent = tlForm.dataset.saveLabel || tlLabel.textContent;
+          if (tlCancel) tlCancel.hidden = false;
+          tlTitle.focus();
+        });
+      });
+
+      if (tlCancel) tlCancel.addEventListener('click', resetTimeline);
+    }
+
+    /* The build editor has two tabs: the details of the car and the
+       story of how it was built. */
+    var tabs = document.querySelectorAll('[data-edit-tab]');
+    if (tabs.length) {
+      function showTab(name) {
+        tabs.forEach(function (tab) {
+          var on = tab.dataset.editTab === name;
+          tab.classList.toggle('is-on', on);
+          tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('[data-edit-panel]').forEach(function (panel) {
+          panel.hidden = panel.dataset.editPanel !== name;
+        });
+        try {
+          history.replaceState(null, '', '#' + name);
+        } catch (err) { /* the browser said no */ }
+      }
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () { showTab(tab.dataset.editTab); });
+      });
+      if (location.hash === '#timeline') showTab('timeline');
+    }
+
+    var form = document.querySelector('.build-form');
+    var select = document.getElementById('build-linked-vehicle');
+    var wrap = document.getElementById('pull-certificate-wrap');
+    if (!form || !select || !wrap) return;
+
+    var pull = wrap.querySelector('input[type=checkbox]');
+    var dataEl = document.querySelector('[data-build-certificates]');
+    var vehicles = [];
+    try { vehicles = JSON.parse(dataEl.textContent || '[]'); } catch (err) { vehicles = []; }
+
+    var byId = {};
+    vehicles.forEach(function (vehicle) { byId[String(vehicle.id)] = vehicle; });
+
+    function setInput(name, value) {
+      if (value === undefined || value === null || value === '') return;
+      var input = form.querySelector('[name="' + name + '"]');
+      if (input) input.value = value;
+    }
+
+    function engineFrom(vehicle) {
+      if (vehicle.engine_capacity) {
+        return vehicle.engine_capacity + ' cm³' + (vehicle.fuel_type ? ' ' + vehicle.fuel_type : '');
+      }
+      return vehicle.fuel_type || '';
+    }
+
+    var certInputs = ['number_plate', 'technical_passport', 'registration_date', 'owner_surname',
+      'owner_name', 'owner_address', 'owner_id', 'owner_of_vehicle', 'expiry_date', 'vehicle_type',
+      'vin', 'max_laden_mass', 'permissible_mass', 'unladen_mass', 'engine_capacity', 'net_power_kw',
+      'fuel_type', 'engine_number', 'power_weight_ratio', 'colour', 'seats', 'standing_places'];
+
+    function fill(vehicle) {
+      if (!vehicle) return;
+      setInput('make', vehicle.make);
+      setInput('model', vehicle.model);
+      setInput('year', vehicle.year);
+      if (vehicle.net_power_kw) setInput('power_hp', Math.round(vehicle.net_power_kw * 1.34102));
+      setInput('weight_kg', vehicle.unladen_mass);
+      setInput('odometer_km', vehicle.current_mileage);
+      certInputs.forEach(function (key) { setInput(key, vehicle[key]); });
+
+      var title = form.querySelector('[name="title"]');
+      if (title && !title.value) {
+        var make = vehicle.make || '';
+        var model = vehicle.model || '';
+        title.value = make && model ? make + ' ' + model : (make || model);
+      }
+    }
+
+    function update(fillFromLink) {
+      var vehicle = byId[select.value] || null;
+      wrap.hidden = !vehicle;
+      if (!vehicle && pull) pull.checked = false;
+      if (fillFromLink && vehicle) fill(vehicle);
+    }
+
+    select.addEventListener('change', function () {
+      if (pull) pull.checked = Boolean(select.value);
+      update(true);
+    });
+
+    if (pull) {
+      pull.addEventListener('change', function () { update(pull.checked); });
+    }
+
+    update(false);
+  })();
+</script>

@@ -1,0 +1,66 @@
+<%
+  /* Every field printed on a Georgian registration certificate (tech
+     passport). `v` is the vehicle or build row (snake_case) or null when
+     the partial is used inside an empty "Add vehicle" form.
+     `exclude` lets the build form leave out make/model/year because it
+     already has its own spec-sheet inputs for them.
+
+     Fields marked `ge` can also be printed in Georgian script, so they get
+     a second input that keeps the Georgian original next to the Latin one. */
+  const val = (key) => (v && v[key] != null ? v[key] : '');
+  const skip = new Set(Array.isArray(typeof exclude !== 'undefined' ? exclude : null) ? exclude : []);
+
+  const sections = [
+    {
+      title: t('Registration'),
+      fields: [
+        { key: 'number_plate', label: t('Number plate'), code: 'A', type: 'text', attrs: 'maxlength="20"', placeholder: t('e.g. AB-123-CD') },
+        { key: 'technical_passport', label: t('Technical passport number'), code: 'P', type: 'text', attrs: 'maxlength="40"', placeholder: t('e.g. passport number') },
+        { key: 'year', label: t('Manufacture year'), code: 'B', type: 'number', attrs: 'min="1900" max="2099" step="1"', placeholder: '1998' },
+        { key: 'registration_date', label: t('Date of registration'), code: 'I', type: 'date' },
+        { key: 'expiry_date', label: t('Expiration date'), code: 'H', type: 'date' },
+      ],
+    },
+    {
+      title: t('Owner'),
+      fields: [
+        { key: 'owner_surname', label: t('Surname'), code: 'C.1.1', type: 'text', attrs: 'maxlength="80"' },
+        { key: 'owner_name', label: t('Name'), code: 'C.1.2', type: 'text', attrs: 'maxlength="80"' },
+        { key: 'owner_address', label: t('Address'), code: 'C.1.3', type: 'text', attrs: 'maxlength="200"' },
+        { key: 'owner_id', label: t('Personal number / ID code'), code: 'C.1.4', type: 'text', attrs: 'maxlength="40"' },
+        { key: 'owner_of_vehicle', label: t('Owner of the vehicle'), code: 'C.4(a)', type: 'text', attrs: 'maxlength="120"' },
+      ],
+    },
+    {
+      title: t('Vehicle data'),
+      fields: [
+        { key: 'make', label: t('Make'), code: 'D.1', type: 'text', attrs: 'maxlength="40"', placeholder: 'BMW' },
+        { key: 'vehicle_type', label: t('Type'), code: 'D.2', type: 'text', attrs: 'maxlength="40"', placeholder: 'SEDAN' },
+        { key: 'model', label: t('Model'), code: 'D.3', type: 'text', attrs: 'maxlength="40"', placeholder: '316 I' },
+        { key: 'vin', label: t('VIN'), code: 'E', type: 'text', attrs: 'maxlength="40"', placeholder: 'WBACA710X0FL95879' },
+        { key: 'max_laden_mass', label: t('Max tech. permissible laden mass (kg)'), code: 'F.1', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'permissible_mass', label: t('Permissible max mass (kg)'), code: 'F.2', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'unladen_mass', label: t('Unladen mass (kg)'), code: 'G', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'engine_capacity', label: t('Engine capacity (cm³)'), code: 'P.1', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'net_power_kw', label: t('Max net power (kW)'), code: 'P.2', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'fuel_type', label: t('Fuel or power source'), code: 'P.3', type: 'text', attrs: 'maxlength="40"', placeholder: 'Gasoline' },
+        { key: 'engine_number', label: t('Engine identification number'), code: 'P.5', type: 'text', attrs: 'maxlength="60"' },
+        { key: 'power_weight_ratio', label: t('Power / weight ratio (kW/kg)'), code: 'Q', type: 'number', attrs: 'min="0" step="0.001"' },
+        { key: 'colour', label: t('Colour'), code: 'R', type: 'text', attrs: 'maxlength="40"', placeholder: 'GREEN 8/8' },
+        { key: 'seats', label: t('Number of seats'), code: 'S.1', type: 'number', attrs: 'min="0" step="1"' },
+        { key: 'standing_places', label: t('Number of standing places'), code: 'S.2', type: 'number', attrs: 'min="0" step="1"' },
+      ],
+    },
+  ];
+%>
+<% sections.forEach(function (section) { %>
+  <p class="cert-grid__title"><%= section.title %></p>
+  <div class="cert-grid">
+    <% section.fields.forEach(function (field) { if (skip.has(field.key)) return; %>
+      <label>
+        <span><%= field.label %> <b><%= field.code %></b></span>
+        <input type="<%= field.type %>" name="<%= field.key %>"<% if (field.attrs) { %> <%- field.attrs %><% } %> value="<%= val(field.key) %>"<% if (field.placeholder) { %> placeholder="<%= field.placeholder %>"<% } %>>
+      </label>
+    <% }); %>
+  </div>
+<% }); %>

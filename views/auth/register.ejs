@@ -1,0 +1,75 @@
+<div class="auth">
+  <section class="auth__art">
+    <div class="auth__art-inner">
+      <img class="auth__logo" src="/websitelogo.png" alt="<%= config.siteName %>">
+      <p class="eyebrow"><%- include('../partials/icon', { name: 'helmet', size: 14 }) %> <%= t('new member') %></p>
+      <h1 class="display display--xl"><%- t('BUILD YOUR<br>GROUP') %></h1>
+      <p class="lede"><%= t('Post your build, find drivers nearby, organise night runs and keep in touch when things go wrong.') %></p>
+      <ul class="ticks">
+        <li><%- include('../partials/icon', { name: 'shield', size: 16 }) %> <%= t('Open, private or invite-only groups') %></li>
+        <li><%- include('../partials/icon', { name: 'users', size: 16 }) %> <%= t('Friend requests and 1-to-1 chat') %></li>
+        <li><%- include('../partials/icon', { name: 'alert', size: 16 }) %> <%= t('Share SOS locations in one tap') %></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="auth__panel">
+    <form class="card card--form" action="/register" method="post" autocomplete="on" novalidate data-register>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <h2 class="card__title"><%= t('Create your account') %></h2>
+      <p class="muted"><%= t("Three fields and you're on the road.") %></p>
+
+      <label class="field <%= errors.username ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Username') %></span>
+        <input id="username" name="username" type="text" value="<%= values.username %>" autocomplete="username"
+               minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" required data-username-input>
+        <span class="field__hint"><%= t('3-20 characters. Letters, numbers and underscore only - no symbols or spaces.') %></span>
+        <span class="field__note" data-username-note></span>
+        <% if (errors.username) { %><span class="field__error"><%= t(errors.username) %></span><% } %>
+      </label>
+
+      <label class="field <%= errors.display_name ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Display name') %> <span class="muted"><%= t('(optional)') %></span></span>
+        <input id="display_name" name="display_name" type="text" value="<%= values.display_name || '' %>" maxlength="40" placeholder="<%= t('What people see on your posts') %>">
+        <% if (errors.display_name) { %><span class="field__error"><%= t(errors.display_name) %></span><% } %>
+      </label>
+
+      <label class="field <%= errors.email ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Email') %></span>
+        <input id="email" name="email" type="email" value="<%= values.email %>" autocomplete="email" maxlength="254" required>
+        <span class="field__hint"><%= t('Never shown on your profile.') %></span>
+        <% if (errors.email) { %><span class="field__error"><%= t(errors.email) %></span><% } %>
+      </label>
+
+      <label class="field <%= errors.password ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Password') %></span>
+        <span class="field__pw">
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required data-pw>
+          <button type="button" class="field__eye" data-pw-toggle aria-label="<%= t('Show password') %>"><%- include('../partials/icon', { name: 'eye', size: 18 }) %></button>
+        </span>
+        <span class="meter" data-pw-meter aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="field__hint"><%= t('At least 8 characters, with a letter and a number.') %></span>
+        <% if (errors.password) { %><span class="field__error"><%= t(errors.password) %></span><% } %>
+      </label>
+
+      <label class="field <%= errors.confirm ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Confirm password') %></span>
+        <input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        <% if (errors.confirm) { %><span class="field__error"><%= t(errors.confirm) %></span><% } %>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" name="remember" value="1" checked>
+        <span><%= t('Keep me logged in') %></span>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" name="is_provider" value="1">
+        <span><%= t('I offer car services (shop, mechanic, tuner, detailer)') %></span>
+      </label>
+
+      <button class="btn btn--primary btn--block" type="submit"><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Join up') %></button>
+      <p class="muted small"><%= t('Already rolling?') %> <a class="link" href="/login"><%= t('Log in') %></a>.</p>
+    </form>
+  </section>
+</div>

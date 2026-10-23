@@ -1,0 +1,30 @@
+<%
+/* The manual's content. Shared by the public page and the live preview
+   in the admin console, so what the admin sees is exactly what the
+   visitors get. */
+const sections = typeof howSections !== 'undefined' && howSections ? howSections : [];
+%>
+<% sections.forEach(function (section) { %>
+  <h2>
+    <%- include('icon', { name: section.icon || 'bolt', size: 18 }) %>
+    <%- t(section.heading) %>
+  </h2>
+  <%
+    /* Consecutive bullet lines are collected into one list. */
+    let list = [];
+    const flush = () => {
+      if (!list.length) return;
+  %>
+      <ul>
+        <% list.forEach(function (item) { %><li><%- t(item) %></li><% }); %>
+      </ul>
+  <%
+      list = [];
+    };
+  %>
+  <% section.blocks.forEach(function (block) { %>
+    <% if (block.kind === 'li') { list.push(block.body); } else { flush(); %>
+  <p><%- t(block.body) %></p>
+    <% } }); %>
+  <% flush(); %>
+<% }); %>

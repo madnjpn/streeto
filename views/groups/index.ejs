@@ -1,0 +1,42 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('Groups') %></p>
+    <h1 class="display"><%= t('Groups') %></h1>
+    <p class="lede"><%= t('Open rides, private chapters and invite-only clubs.') %></p>
+  </div>
+  <a class="btn btn--primary" href="/groups/new"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Start a group') %></a>
+</div>
+
+<div class="feedtabs">
+  <a class="feedtabs__tab <%= view === 'all' ? 'is-active' : '' %>" href="/groups?view=all"><%= t('Directory') %></a>
+  <a class="feedtabs__tab <%= view === 'mine' ? 'is-active' : '' %>" href="/groups?view=mine"><%= t('My groups') %></a>
+</div>
+
+<% if (view === 'mine') { %>
+  <section class="strip">
+    <% if (myGroups.length) { %>
+      <div class="cards">
+        <% myGroups.forEach(function (group) { %><%- include('../partials/group-card', { group: group }) %><% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'shield', title: t('You are not in a group yet'), text: t('Join an open group or start your own chapter.'), action: '<a class="btn btn--primary" href="/groups/new">' + t('Start a group') + '</a>' }) %>
+    <% } %>
+  </section>
+<% } else { %>
+  <form class="searchbig" action="/groups" method="get" role="search">
+    <%- include('../partials/icon', { name: 'search', size: 20 }) %>
+    <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Search groups by name or member') %>">
+    <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+  </form>
+
+  <section class="strip">
+    <h2 class="section-title"><%= groups.length === 1 ? t('{n} group', { n: groups.length }) : t('{n} groups', { n: groups.length }) %><%= q ? ' ' + t('matching "{q}"', { q: q }) : '' %></h2>
+    <% if (groups.length) { %>
+      <div class="cards">
+        <% groups.forEach(function (group) { %><%- include('../partials/group-card', { group: group }) %><% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'shield', title: t('No groups found'), text: q ? t('Try another name.') : t('Be the first to start one.'), action: '<a class="btn btn--primary" href="/groups/new">' + t('Start a group') + '</a>' }) %>
+    <% } %>
+  </section>
+<% } %>

@@ -1,0 +1,44 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('admin') %></p>
+    <h1 class="display"><%= t('Service Claims') %></h1>
+    <p class="lede"><%= t('Review and approve service ownership claims from providers.') %></p>
+  </div>
+  <a class="btn btn--primary" href="/services/maintenance" target="_blank"><%- include('../partials/icon', { name: 'external-link', size: 16 }) %> <%= t('View services') %></a>
+</div>
+
+<% if (!claims.length) { %>
+  <%- include('../partials/empty', { icon: 'shield', title: t('No pending claims'), text: t('All claims have been reviewed.') }) %>
+<% } else { %>
+  <div class="claim-list">
+    <% claims.forEach(function (c) { %>
+      <article class="card claim-card">
+        <div class="claim-card__head">
+          <div>
+            <h3 class="mini__title"><%= c.service_title %></h3>
+            <p class="muted small"><%= t('Claimed by') %> <strong>@<%= c.claimant_username %></strong> <%= c.claimant_provider_name ? '(' + f.providerName(c.claimant_provider_name, t) + ')' : '' %></p>
+            <p class="muted small"><%= t('Current owner') %>: @<%= c.owner_username %></p>
+          </div>
+          <% if (c.claimant_is_provider) { %>
+            <span class="badge badge--provider"><%- include('../partials/icon', { name: 'shield', size: 13 }) %> <%= t('Service provider') %></span>
+          <% } %>
+        </div>
+        <% if (c.message) { %>
+          <div class="claim-card__message">
+            <p class="muted small"><%= c.message %></p>
+          </div>
+        <% } %>
+        <div class="claim-card__actions">
+          <form action="/admin/service-claims/<%= c.id %>/approve" method="post" style="display:inline">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn--primary btn--sm"><%- include('../partials/icon', { name: 'check', size: 14 }) %> <%= t('Approve') %></button>
+          </form>
+          <form action="/admin/service-claims/<%= c.id %>/reject" method="post" style="display:inline">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn--danger btn--sm"><%- include('../partials/icon', { name: 'x', size: 14 }) %> <%= t('Reject') %></button>
+          </form>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+<% } %>

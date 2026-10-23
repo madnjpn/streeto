@@ -1,0 +1,114 @@
+<%
+/* Shared create/edit form for a parts listing.
+   Locals: action, values, errors, mode, photos (edit), part (edit). */
+const v = (name, fallback = '') => (values && values[name] != null ? values[name] : fallback);
+const existing = typeof photos !== 'undefined' ? photos : [];
+const partId = typeof part !== 'undefined' && part ? part.id : null;
+const catOptions = Object.entries(categories).map(([value, label]) => ({ value, label: t(label) }));
+const currencyOptions = currencies.map((c) => ({ value: c.code, label: `${c.code} ${c.symbol}` }));
+%>
+<form class="card card--form" action="<%= action %>" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+
+  <label class="field <%= errors.title ? 'field--bad' : '' %>">
+    <span class="field__label"><%= t('Part name') %></span>
+    <input type="text" name="title" value="<%= v('title') %>" maxlength="90" required placeholder="<%= t('e.g. RB25DET turbo, 5-speed gearbox') %>">
+    <% if (errors.title) { %><span class="field__error"><%= t(errors.title) %></span><% } %>
+  </label>
+
+  <div class="field-grid field-grid--3">
+    <label class="field">
+      <span class="field__label"><%= t('Category') %></span>
+      <%- include('select-modal', {
+        name: 'category',
+        value: v('category', 'engine'),
+        options: catOptions,
+        icon: 'tag'
+      }) %>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Price') %></span>
+      <input type="number" name="price" value="<%= v('price') %>" min="0" max="100000000" step="1" placeholder="<%= t('Leave empty for ask') %>">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Currency') %></span>
+      <%- include('select-modal', {
+        name: 'currency',
+        value: v('currency', currency),
+        options: currencyOptions,
+        icon: 'tag'
+      }) %>
+    </label>
+  </div>
+
+  <label class="field">
+    <span class="field__label"><%= t('Price note') %> <span class="muted"><%= t('(optional)') %></span></span>
+    <input type="text" name="price_note" value="<%= v('price_note') %>" maxlength="40" placeholder="<%= t('e.g. negotiable, swap, per pair') %>">
+  </label>
+
+  <div class="field-grid field-grid--2">
+    <label class="field <%= errors.phone ? 'field--bad' : '' %>">
+      <span class="field__label"><%= t('Phone') %></span>
+      <input type="tel" name="phone" value="<%= v('phone') %>" maxlength="16" inputmode="tel" autocomplete="tel" placeholder="<%= t('e.g. +995 577 009 096') %>" data-phone>
+      <% if (errors.phone) { %><span class="field__error"><%= t(errors.phone) %></span><% } %>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Location') %> <span class="muted"><%= t('(optional)') %></span></span>
+      <input type="text" name="location" value="<%= v('location') %>" maxlength="120" placeholder="<%= t('e.g. Tbilisi, Saburtalo') %>">
+    </label>
+  </div>
+
+  <label class="field">
+    <span class="field__label"><%= t('Description') %></span>
+    <textarea name="description" rows="4" maxlength="4000" placeholder="<%= t('Condition, fitment, part number, why you are selling.') %>"><%= v('description') %></textarea>
+  </label>
+
+  <% if (mode === 'edit') { %>
+    <label class="field">
+      <%- include('select-modal', {
+        name: 'status',
+        value: v('status', 'available'),
+        options: [
+          { value: 'available', label: t('Available') },
+          { value: 'sold', label: t('Sold') }
+        ],
+        label: t('Status'),
+        icon: 'check'
+      }) %>
+    </label>
+  <% } %>
+
+  <label class="field <%= errors.media ? 'field--bad' : '' %>">
+    <span class="field__label"><%= mode === 'edit' ? t('Add more photos') : t('Photos') %></span>
+    <input type="file" name="media" accept="image/*" multiple>
+    <span class="field__hint"><%= t('Up to 6 photos, {mb} MB each. The first becomes the cover.', { mb: maxUploadMb }) %></span>
+    <% if (errors.media) { %><span class="field__error"><%= t(errors.media) %></span><% } %>
+  </label>
+
+  <% if (existing.length) { %>
+    <div class="field">
+      <span class="field__label"><%= t('Current photos') %></span>
+      <div class="media-manage">
+        <% existing.forEach(function (item) { %>
+          <figure class="media-manage__item">
+            <img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 640px"<% } %> alt="" loading="lazy">
+            <button class="media-manage__x" type="submit" form="del-part-photo-<%= item.id %>" aria-label="<%= t('Remove photo') %>"><%- include('icon', { name: 'x', size: 14 }) %></button>
+          </figure>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="btnrow">
+    <button class="btn btn--primary" type="submit"><%- include('icon', { name: 'tag', size: 16 }) %> <%= mode === 'edit' ? t('Save listing') : t('Publish listing') %></button>
+    <a class="btn btn--ghost" href="<%= partId ? '/services/parts/' + partId : '/services/parts' %>"><%= t('Cancel') %></a>
+  </div>
+</form>
+
+<% if (existing.length && partId) { %>
+  <% existing.forEach(function (item) { %>
+    <form id="del-part-photo-<%= item.id %>" action="/services/parts/<%= partId %>/photos/<%= item.id %>/delete" method="post" data-confirm="<%= t('Remove this photo?') %>" hidden>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+    </form>
+  <% }); %>
+<% } %>

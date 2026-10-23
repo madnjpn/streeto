@@ -1,0 +1,11 @@
+<% if (flashes && flashes.length) { %>
+<div class="flashes" role="status" aria-live="polite">
+  <% flashes.forEach(function (flash) { %>
+    <div class="flash flash--<%= flash.type %>" data-flash>
+      <%- include('icon', { name: flash.type === 'success' ? 'check' : flash.type === 'error' ? 'alert' : flash.type === 'warning' ? 'fire' : 'bolt', size: 18 }) %>
+      <span><%= t(flash.message, flash.vars) %></span>
+      <button type="button" class="flash__close" data-flash-close aria-label="<%= t('Dismiss') %>"><%- include('icon', { name: 'x', size: 16 }) %></button>
+    </div>
+  <% }); %>
+</div>
+<% } %>

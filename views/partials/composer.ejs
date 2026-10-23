@@ -1,0 +1,96 @@
+<%
+/* Wall / group composer. Locals:
+     action  - form target (defaults to /posts)
+     group   - optional group object (adds the group hint)
+     label   - placeholder text                                        */
+const formAction = typeof action !== 'undefined' && action ? action : '/posts';
+const inGroup = typeof group !== 'undefined' ? group : null;
+const placeholder = typeof label !== 'undefined' && label
+  ? label
+  : (inGroup ? t('Post to {name}…', { name: inGroup.name }) : t('What happened on the street tonight?'));
+%>
+<form class="composer" action="<%= formAction %>" method="post" enctype="multipart/form-data" data-composer id="composer">
+  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+  <% /* The browser sends the parts in the order they stand here, so the
+       size choice has to come before the picture itself. */ %>
+  <input type="hidden" name="quality" value="sd" data-quality-input>
+  <input type="hidden" name="post_type" value="text" data-post-type>
+  <input type="hidden" name="lat" value="" data-pin-lat>
+  <input type="hidden" name="lng" value="" data-pin-lng>
+  <input type="hidden" name="zoom" value="" data-pin-zoom>
+  <input type="hidden" name="place_name" value="">
+  <input type="hidden" name="address" value="">
+
+  <div class="composer__top">
+    <%- include('avatar', { u: currentUser, cls: 'avatar--sm' }) %>
+    <textarea name="body" rows="2" maxlength="5000" placeholder="<%= placeholder %>" data-composer-text aria-label="<%= t('Post text') %>"></textarea>
+  </div>
+
+  <% if (inGroup) { %>
+    <p class="composer__scope"><%- include('icon', { name: 'shield', size: 14 }) %> <%= t('Posting inside') %> <strong><%= inGroup.name %></strong> · <span class="muted"><%= t('{privacy} group', { privacy: t(f.PRIVACY_LABELS[inGroup.privacy]) }) %></span></p>
+  <% } else { %>
+    <p class="composer__scope">
+      <%- include('icon', { name: 'users', size: 14 }) %>
+      <%- include('partials/select-modal', {
+        name: 'privacy',
+        value: 'public',
+        options: [
+          { value: 'public', label: t('Public') },
+          { value: 'friends', label: t('Friends only') }
+        ],
+        label: t('Who can see this post'),
+        icon: 'users'
+      }) %>
+      <span class="muted" data-privacy-note><%= t('everyone can see it') %></span>
+    </p>
+  <% } %>
+
+  <div class="composer__preview" data-media-preview hidden></div>
+
+  <div class="picker" data-pin-panel hidden>
+    <%- include('map-picker', { id: 'composer-map' }) %>
+  </div>
+
+  <div class="pollbox" data-poll-panel hidden>
+    <label class="field">
+      <span class="field__label"><%= t('Poll question') %></span>
+      <input type="text" name="poll_question" maxlength="200" placeholder="<%= t('e.g. Which tires?') %>">
+    </label>
+    <div class="pollbox__options" data-poll-options>
+      <label class="field"><span class="field__label"><%= t('Option 1') %></span><input type="text" name="poll_option" maxlength="80" placeholder="<%= t('Option') %>"></label>
+      <label class="field"><span class="field__label"><%= t('Option 2') %></span><input type="text" name="poll_option" maxlength="80" placeholder="<%= t('Option') %>"></label>
+    </div>
+    <button type="button" class="btn btn--ghost btn--sm" data-poll-add-option><%- include('icon', { name: 'plus', size: 14 }) %> <%= t('Add option') %></button>
+  </div>
+
+  <div class="composer__foot">
+    <div class="composer__tools">
+      <label class="toolbtn">
+        <%- include('icon', { name: 'image', size: 18 }) %>
+        <span><%= t('Photo') %></span>
+        <input type="file" name="media" accept="image/*,video/*" data-media-input hidden>
+      </label>
+      <div class="quality" data-quality hidden>
+        <button type="button" class="quality__btn is-on" data-quality-value="sd" title="<%= t('Small and fast - the picture is made for the screen') %>">SD</button>
+        <button type="button" class="quality__btn" data-quality-value="hd" title="<%= t('Full size - a sharp picture, a bigger file') %>">HD</button>
+      </div>
+      <button class="toolbtn" type="button" data-pin-toggle>
+        <%- include('icon', { name: 'pin', size: 18 }) %>
+        <span><%= t('Pin spot') %></span>
+      </button>
+      <button class="toolbtn toolbtn--sos" type="button" data-sos-toggle>
+        <%- include('icon', { name: 'alert', size: 18 }) %>
+        <span>SOS</span>
+      </button>
+      <button class="toolbtn" type="button" data-poll-toggle>
+        <%- include('icon', { name: 'chart', size: 18 }) %>
+        <span><%= t('Poll') %></span>
+      </button>
+    </div>
+    <div class="composer__send">
+      <span class="counter" data-counter>0 / 5000</span>
+      <button class="btn btn--primary" type="submit"><%- include('icon', { name: 'bolt', size: 17 }) %> <span data-submit-label><%= t('Post') %></span></button>
+    </div>
+  </div>
+  <p class="composer__hint muted" data-composer-hint></p>
+</form>

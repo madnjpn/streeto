@@ -1,0 +1,34 @@
+<%
+/* Locals: person, relationship (optional), compact (optional) */
+const rel = typeof relationship !== 'undefined' && relationship ? relationship : null;
+const online = typeof isOnline === 'function' && person && person.id ? isOnline(person.id) : false;
+%>
+<article class="card person">
+  <a class="person__id" href="/u/<%= person.username %>">
+    <span class="person__avatar <%= online ? 'avatar--online' : '' %>">
+      <%- include('avatar', { u: person }) %>
+    </span>
+    <div class="person__text">
+      <strong><%= person.display_name || person.username %></strong>
+      <span class="muted">@<%= person.username %></span>
+      <% if (person.car) { %><span class="person__car"><%- include('icon', { name: 'car', size: 14 }) %> <%= person.car %></span><% } %>
+      <% if (person.city) { %><span class="person__city muted"><%- include('icon', { name: 'pin', size: 13 }) %> <%= person.city %></span><% } %>
+    </div>
+  </a>
+  <div class="person__foot">
+    <% if (typeof person.friend_count !== 'undefined') { %>
+      <span class="muted"><%= t('{n} friends', { n: person.friend_count }) %></span>
+    <% } else if (typeof person.mutual !== 'undefined' && person.mutual) { %>
+      <span class="muted"><%= t('{n} mutual', { n: person.mutual }) %></span>
+    <% } %>
+    <div class="person__actions">
+      <% if (rel) { %><%- include('friend-button', { person: person, relationship: rel }) %><% } %>
+      <% if (currentUser && currentUser.id !== person.id) { %>
+        <form action="/friends/message/<%= person.username %>" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="iconbtn" type="submit" aria-label="<%= t('Message @{user}', { user: person.username }) %>"><%- include('icon', { name: 'chat', size: 17 }) %></button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</article>

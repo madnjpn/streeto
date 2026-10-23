@@ -1,0 +1,35 @@
+<%
+/* Reusable map + street search. Writes into the enclosing form's
+   lat / lng / place_name / address inputs. */
+const pickerId = typeof id !== 'undefined' && id ? id : 'map-picker';
+const lat0 = typeof lat !== 'undefined' && lat !== '' ? lat : '';
+const lng0 = typeof lng !== 'undefined' && lng !== '' ? lng : '';
+%>
+<div class="mapbox" data-map-picker-box data-map-id="<%= pickerId %>">
+  <div class="mapbox__search">
+    <div class="mapbox__input">
+      <%- include('icon', { name: 'search', size: 17 }) %>
+      <input type="text" data-place-q placeholder="<%= t('Street name, venue or postcode…') %>" autocomplete="off" aria-label="<%= t('Search a location') %>">
+      <button type="button" class="btn btn--ghost btn--sm" data-place-search><%= t('Find') %></button>
+    </div>
+    <ul class="mapbox__results" data-place-results hidden></ul>
+    <p class="mapbox__status muted" data-pin-status>
+      <%= t('Tap the map to drop a pin, or use your GPS.') %>
+    </p>
+  </div>
+
+  <div class="mapbox__mapwrap">
+    <div class="mapbox__map" id="<%= pickerId %>" data-map-picker data-lat="<%= lat0 %>" data-lng="<%= lng0 %>" role="application" aria-label="<%= t('Location picker') %>"></div>
+    <div class="mapbox__pinned" data-pin-banner hidden></div>
+  </div>
+
+  <div class="mapbox__actions">
+    <button type="button" class="btn btn--ghost btn--sm" data-gps>
+      <%- include('icon', { name: 'gps', size: 16 }) %> <%= t('Use my GPS') %>
+    </button>
+    <button type="button" class="btn btn--ghost btn--sm" data-pin-clear>
+      <%- include('icon', { name: 'x', size: 16 }) %> <%= t('Clear pin') %>
+    </button>
+    <span class="mapbox__chosen" data-pin-chosen></span>
+  </div>
+</div>

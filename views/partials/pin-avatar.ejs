@@ -1,0 +1,8 @@
+<%
+/* Data attributes for the avatar bubble that floats above a map pin.
+   The map builds the bubble itself from these - nothing is injected as
+   markup, so a name can never turn into HTML. */
+const pinUser = (typeof u !== 'undefined' && u) ? u : {};
+const pinAvatar = pinUser.avatar ? `${config.uploadUrl}/${pinUser.avatar}` : '';
+const pinLabel = pinUser.display_name || pinUser.username || '';
+%>data-avatar="<%= pinAvatar %>" data-initials="<%= f.initials(pinLabel) %>" data-hue="<%= f.hueOf(pinUser.username || pinLabel) %>"

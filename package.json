@@ -1,0 +1,39 @@
+{
+  "name": "streeto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "STREETO - underground street racing social network (Node.js + SQLite)",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env.production server.js",
+    "start:prod": "node --env-file=.env.production server.js",
+    "seed": "node scripts/seed.js",
+    "admin": "node scripts/admin.js",
+    "cert": "node scripts/gen-cert.js",
+    "ddns": "node scripts/cf-ddns.mjs",
+    "golive": "node scripts/go-live.mjs",
+    "prodcheck": "node scripts/prod-check.mjs",
+    "smoke": "node scripts/smoke.js"
+  },
+  "dependencies": {
+    "curl-impersonate": "^0.0.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "free-proxy": "^0.2.1",
+    "http-proxy-agent": "^9.1.0",
+    "https-proxy-agent": "^9.1.0",
+    "maplibre-gl": "^4.7.1",
+    "multer": "^2.0.1",
+    "node-forge": "^1.4.0",
+    "nodemailer": "^10.2.0",
+    "proxifly": "^3.0.1",
+    "sharp": "^0.35.5",
+    "socket.io": "^4.8.4",
+    "web-push": "^3.6.7"
+  }
+}

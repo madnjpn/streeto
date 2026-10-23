@@ -1,0 +1,23 @@
+<%
+/* Friend / follow button. Locals: person, relationship */
+const rel = typeof relationship !== 'undefined' && relationship ? relationship : { status: null, direction: null };
+%>
+<% if (currentUser && currentUser.id !== person.id) { %>
+  <% if (rel.status === 'accepted') { %>
+    <button class="btn btn--ghost btn--sm is-on" type="button" data-unfriend="<%= person.username %>" data-label-off="<%= t('Add friend') %>">
+      <%- include('icon', { name: 'check', size: 15 }) %> <span><%= t('Friends') %></span>
+    </button>
+  <% } else if (rel.status === 'pending' && rel.direction === 'outgoing') { %>
+    <button class="btn btn--ghost btn--sm" type="button" data-friend-cancel="<%= rel.id %>" data-label-off="<%= t('Add friend') %>">
+      <%- include('icon', { name: 'clock', size: 15 }) %> <span><%= t('Requested') %></span>
+    </button>
+  <% } else if (rel.status === 'pending' && rel.direction === 'incoming') { %>
+    <button class="btn btn--primary btn--sm" type="button" data-friend-accept="<%= rel.id %>" data-label-off="<%= t('Accept') %>">
+      <%- include('icon', { name: 'check', size: 15 }) %> <span><%= t('Accept request') %></span>
+    </button>
+  <% } else { %>
+    <button class="btn btn--primary btn--sm" type="button" data-friend-add="<%= person.username %>" data-label-off="<%= t('Add friend') %>">
+      <%- include('icon', { name: 'plus', size: 15 }) %> <span><%= t('Add friend') %></span>
+    </button>
+  <% } %>
+<% } %>

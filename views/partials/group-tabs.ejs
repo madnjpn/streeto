@@ -1,0 +1,44 @@
+<%
+/* Section switch shown on every Group page for staff members. */
+const current = typeof section !== 'undefined' ? section : 'feed';
+%>
+<nav class="srvswitch" aria-label="<%= t('Group sections') %>" data-group-tabs>
+  <a class="srvswitch__tab <%= current === 'feed' ? 'is-active' : '' %>" href="/groups/<%= group.slug %>" data-section="feed"><%- include('icon', { name: 'wall', size: 15 }) %> <%= t('Feed') %></a>
+  <a class="srvswitch__tab <%= current === 'admin' ? 'is-active' : '' %>" href="/groups/<%= group.slug %>/admin" data-section="admin"><%- include('icon', { name: 'settings', size: 15 }) %> <%= t('Admin') %></a>
+  <a class="srvswitch__tab <%= current === 'members' ? 'is-active' : '' %>" href="/groups/<%= group.slug %>/members" data-section="members"><%- include('icon', { name: 'users', size: 15 }) %> <%= t('Members') %></a>
+  <a class="srvswitch__tab <%= current === 'shared' ? 'is-active' : '' %>" href="/groups/<%= group.slug %>/shared" data-section="shared"><%- include('icon', { name: 'pin', size: 15 }) %> <%= t('Pin drops') %></a>
+</nav>
+
+<script type="module">
+  // Highlight active tab based on current URL - works on all screen sizes
+  (() => {
+    const nav = document.querySelector('[data-group-tabs]');
+    if (!nav) return;
+
+    const tabs = nav.querySelectorAll('.srvswitch__tab');
+
+    function highlightActive() {
+      const path = window.location.pathname;
+      tabs.forEach(tab => {
+        tab.classList.remove('is-active');
+        if (tab.getAttribute('href') === path) {
+          tab.classList.add('is-active');
+        }
+      });
+    }
+
+    // Highlight on load
+    highlightActive();
+
+    // Highlight after navigation (for SPA-like behavior if needed)
+    window.addEventListener('popstate', highlightActive);
+
+    // Also highlight on click (for visual feedback before navigation)
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Small delay to let navigation happen, then highlight
+        setTimeout(highlightActive, 50);
+      });
+    });
+  })();
+</script>

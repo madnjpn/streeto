@@ -1,0 +1,52 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('services') %></p>
+    <h1 class="display"><%= t('Services') %></h1>
+    <p class="lede"><%= t('Buy and sell parts, and find the workshops that keep your car on the road.') %></p>
+  </div>
+</div>
+
+<%- include('../partials/services-tabs', { section: '' }) %>
+
+<div class="srvsummary">
+  <span class="srvsummary__item"><%- include('../partials/icon', { name: 'tag', size: 15 }) %> <strong><%= partCount %></strong> <%= t('parts for sale') %></span>
+  <span class="srvsummary__item"><%- include('../partials/icon', { name: 'wrench', size: 15 }) %> <strong><%= serviceCount %></strong> <%= t('services') %></span>
+  <span class="srvsummary__item"><%- include('../partials/icon', { name: 'users', size: 15 }) %> <strong><%= providerCount %></strong> <%= t('providers') %></span>
+</div>
+
+<% if (recentParts.length) { %>
+  <section class="strip">
+    <div class="strip__head">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'tag', size: 17 }) %> <%= t('Latest parts') %></h2>
+      <a class="link" href="/services/parts"><%= t('See all') %></a>
+    </div>
+    <div class="cards">
+      <% recentParts.forEach(function (part) { %>
+        <%- include('../partials/part-card', { part: part, categories: partCategories }) %>
+      <% }); %>
+    </div>
+  </section>
+<% } %>
+
+<% if (topServices.length) { %>
+  <section class="strip">
+    <div class="strip__head">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'wrench', size: 17 }) %> <%= t('Top rated services') %></h2>
+      <a class="link" href="/services/maintenance?sort=rating"><%= t('See all') %></a>
+    </div>
+    <div class="cards">
+      <% topServices.forEach(function (service) { %>
+        <%- include('../partials/service-card', { service: service, categories: serviceCategories, isAuthenticated: isAuthenticated, currentUser: currentUser, csrfField: csrfField, csrfToken: csrfToken }) %>
+      <% }); %>
+    </div>
+  </section>
+<% } %>
+
+<% if (!recentParts.length && !topServices.length) { %>
+  <%- include('../partials/empty', {
+    icon: 'wrench',
+    title: t('Nothing here yet'),
+    text: t('Be the first to sell a part or list a workshop.'),
+    action: isAuthenticated ? '<a class="btn btn--primary" href="/services/parts/new">' + t('Sell a part') + '</a>' : '<a class="btn btn--primary" href="/register">' + t('Join up') + '</a>'
+  }) %>
+<% } %>

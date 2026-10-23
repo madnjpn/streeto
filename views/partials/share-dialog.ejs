@@ -1,0 +1,40 @@
+<%
+/* Share picker: hand a thing to another driver. The list holds the
+   chats that already exist, and the search finds any other driver.
+   The card itself is built on the server, so what is shared is always
+   the real thing. */
+%>
+<dialog class="dialog" id="share-dialog">
+  <div class="dialog__form">
+    <div class="dialog__head">
+      <h2><%= t('Share') %></h2>
+      <button class="iconbtn iconbtn--ghost" type="button" data-dialog-close aria-label="<%= t('Close') %>"><%- include('icon', { name: 'x', size: 17 }) %></button>
+    </div>
+    <div class="dialog__body">
+      <div class="sharepick__what">
+        <span class="sharepick__icon"><%- include('icon', { name: 'share', size: 18 }) %></span>
+        <div class="sharepick__whattext">
+          <strong data-share-title></strong>
+          <small class="muted" data-share-label></small>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field__label"><%= t('Add a note (optional)') %></span>
+        <input type="text" name="note" maxlength="300" data-share-note placeholder="<%= t('Look at this!') %>">
+      </label>
+
+      <label class="field">
+        <span class="field__label"><%= t('Send to') %></span>
+        <input type="search" data-share-search placeholder="<%= t('Find a driver…') %>" autocomplete="off" aria-label="<%= t('Find a driver…') %>">
+      </label>
+
+      <div class="sharepick__list" data-share-list>
+        <p class="muted small"><%= t('Loading…') %></p>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn btn--ghost" type="button" data-dialog-close><%= t('Cancel') %></button>
+    </div>
+  </div>
+</dialog>

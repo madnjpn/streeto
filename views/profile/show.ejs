@@ -1,0 +1,117 @@
+<div class="profile">
+  <header class="card profile__header">
+    <div class="profile__body">
+      <%- include('../partials/avatar', { u: profile, cls: 'avatar--xxl' }) %>
+      <div class="profile__id">
+        <h1 class="profile__name"><%= f.displayName(profile) %></h1>
+        <p class="profile__handle muted">@<%= profile.username %></p>
+        <div class="profile__chips">
+          <% if (profile.car) { %><span class="chip"><%- include('../partials/icon', { name: 'car', size: 14 }) %> <%= profile.car %></span><% } %>
+          <% if (profile.city) { %><span class="chip"><%- include('../partials/icon', { name: 'pin', size: 14 }) %> <%= profile.city %></span><% } %>
+          <span class="chip chip--ghost"><%- include('../partials/icon', { name: 'calendar', size: 14 }) %> <%= t('joined {date}', { date: f.shortDate(profile.created_at) }) %></span>
+          <% if (profile.is_admin) { %><span class="chip chip--admin"><%- include('../partials/icon', { name: 'shield', size: 14 }) %> <%= t('Admin') %></span><% } %>
+          <% if (profile.is_provider) { %><span class="chip chip--provider"><%- include('../partials/icon', { name: 'wrench', size: 14 }) %> <%= f.providerName(profile.provider_name, t) %></span><% } %>
+        </div>
+      </div>
+      <div class="profile__actions">
+        <% if (isMe) { %>
+          <a class="btn btn--outline" href="/settings"><%- include('../partials/icon', { name: 'settings', size: 16 }) %> <%= t('Edit profile') %></a>
+        <% } else if (currentUser) { %>
+          <%- include('../partials/friend-button', { person: profile, relationship: relationship }) %>
+          <form action="/friends/message/<%= profile.username %>" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--outline" type="submit"><%- include('../partials/icon', { name: 'chat', size: 16 }) %> <%= t('Message') %></button>
+          </form>
+          <% if (relationship.status === 'accepted') { %>
+            <button class="iconbtn" type="button" data-unfriend="<%= profile.username %>" aria-label="<%= t('Remove friend') %>"><%- include('../partials/icon', { name: 'x', size: 17 }) %></button>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+    <% if (profile.bio) { %><p class="profile__bio"><%= profile.bio %></p><% } %>
+    <div class="profile__stats">
+      <span><strong><%= stats.posts %></strong><small><%= t('posts') %></small></span>
+      <span><strong><%= friendCount %></strong><small><%= t('friends') %></small></span>
+      <span><strong><%= stats.groups_joined %></strong><small><%= t('groups') %></small></span>
+      <span><strong><%= stats.meetups_hosted %></strong><small><%= t('meetups') %></small></span>
+    </div>
+  </header>
+
+  <div class="profile__grid">
+    <section class="profile__main">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'wall', size: 17 }) %> <%= t('Wall') %></h2>
+
+      <% if (isMe) { %>
+        <%- include('../partials/composer', { action: '/posts', label: t('Post something on your wall…') }) %>
+      <% } %>
+
+      <% if (!items.length) { %>
+        <%- include('../partials/empty', { icon: 'wall', title: isMe ? t('You have not posted yet') : t('No public posts yet'), text: isMe ? t('Your posts show up here and on the wall.') : null }) %>
+      <% } %>
+
+      <% items.forEach(function (post) { %>
+        <%- include('../partials/post', { p: post, commentsHtml: '' }) %>
+      <% }); %>
+
+      <%- include('../partials/pagination', { page: page, hasMore: hasMore, baseQs: '' }) %>
+    </section>
+
+    <aside class="profile__side">
+      <% if (!isMe && mutual) { %>
+        <div class="card mini">
+          <h3 class="mini__title"><%= t('Mutual friends') %></h3>
+          <p class="muted"><%= mutual === 1 ? t('{n} driver you both know.', { n: mutual }) : t('{n} drivers you both know.', { n: mutual }) %></p>
+        </div>
+      <% } %>
+
+      <div class="card mini">
+        <h3 class="mini__title"><%= t('Friends ({n})', { n: friendCount }) %></h3>
+        <% if (friendsPreview.length) { %>
+          <div class="faces faces--grid">
+            <% friendsPreview.forEach(function (person) { %>
+              <a class="faces__item" href="/u/<%= person.username %>" title="@<%= person.username %>">
+                <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+                <span><%= f.truncate(person.display_name || person.username, 12) %></span>
+              </a>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="muted small"><%= t('No friends added yet.') %></p>
+        <% } %>
+      </div>
+
+      <% if (profileGroups.length) { %>
+        <div class="card mini">
+          <h3 class="mini__title"><%= t('Groups') %></h3>
+          <ul class="mini__list">
+            <% profileGroups.forEach(function (g) { %>
+              <li><a href="/groups/<%= g.slug %>"><%- include('../partials/icon', { name: 'shield', size: 15 }) %> <span><%= g.name %></span></a></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <% if (typeof profileServices !== 'undefined' && profileServices.length) { %>
+        <div class="card mini">
+          <h3 class="mini__title"><%- include('../partials/icon', { name: 'wrench', size: 15 }) %> <%= t('Services') %></h3>
+          <ul class="mini__list">
+            <% profileServices.forEach(function (s) { %>
+              <li><a href="/services/maintenance/<%= s.id %>"><%- include('../partials/icon', { name: 'wrench', size: 15 }) %> <span><%= s.title %></span><% if (s.verified) { %> <span class="badge badge--verified badge--tiny"><%- include('../partials/icon', { name: 'check', size: 11 }) %></span><% } %></a></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <% if (hostedMeetups.length) { %>
+        <div class="card mini">
+          <h3 class="mini__title"><%= t('Hosting') %></h3>
+          <ul class="mini__list">
+            <% hostedMeetups.forEach(function (m) { %>
+              <li><a href="/meetups/<%= m.id %>"><%- include('../partials/icon', { name: 'pin', size: 15 }) %> <span><%= f.truncate(m.title, 28) %></span></a></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</div>

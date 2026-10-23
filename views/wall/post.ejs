@@ -1,0 +1,18 @@
+<div class="single">
+  <a class="backlink" href="/"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('Back to the wall') %></a>
+  <%- include('../partials/post', { p: post, commentsHtml: commentsHtml, moderator: false }) %>
+
+  <% if (likedBy.length) { %>
+    <div class="card mini">
+      <h3 class="mini__title"><%= t('Liked by') %></h3>
+      <div class="faces">
+        <% likedBy.forEach(function (person) { %>
+          <a class="faces__item" href="/u/<%= person.username %>" title="@<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+            <span><%= person.display_name || person.username %></span>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+  <% } %>
+</div>

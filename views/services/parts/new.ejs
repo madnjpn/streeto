@@ -1,0 +1,15 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/services/parts"><%- include('../../partials/icon', { name: 'back', size: 15 }) %> <%= t('All parts') %></a>
+
+  <p class="eyebrow"><%= t('services') %></p>
+  <h1 class="display"><%= t('Sell a part') %></h1>
+  <p class="lede"><%= t('Photos, a price and a phone number is all it takes. Buyers will ring you directly.') %></p>
+
+  <%- include('../../partials/part-form', {
+    action: action,
+    values: values,
+    errors: errors,
+    mode: 'new',
+    categories: categories
+  }) %>
+</div>

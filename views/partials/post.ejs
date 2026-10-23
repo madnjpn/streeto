@@ -1,0 +1,181 @@
+<%
+const post = p;
+const canModerate = typeof moderator !== 'undefined' ? moderator : false;
+const canManagePost = Boolean(currentUser) && (currentUser.id === post.user_id || canModerate || currentUser.is_admin);
+const canDeletePost = canManagePost;
+const canComment = Boolean(currentUser);
+const typeLabel = t(post.post_type === 'emergency' ? 'SOS' : post.post_type === 'location' ? 'Pin drop' : post.media_type === 'video' ? 'Clip' : post.media_type === 'photo' ? 'Photo' : 'Post');
+/* The comments of this post, already rendered with their replies. */
+const renderedComments = typeof commentsHtml !== 'undefined' ? commentsHtml : '';
+%>
+<article class="post <%= post.post_type === 'emergency' ? 'post--sos' : '' %>" id="post-<%= post.id %>" data-post="<%= post.id %>">
+  <header class="post__head">
+    <a class="post__avatar" href="/u/<%= post.username %>">
+      <%- include('avatar', { u: { username: post.username, display_name: post.display_name, avatar: post.avatar } }) %>
+    </a>
+    <div class="post__who">
+      <a class="post__name" href="/u/<%= post.username %>"><%= post.display_name || post.username %></a>
+      <span class="post__meta">
+        <span class="muted">@<%= post.username %></span>
+        <span class="dot" aria-hidden="true">•</span>
+        <time datetime="<%= post.created_at %>" title="<%= f.fullDate(post.created_at) %>"><%= f.timeAgo(post.created_at) %><% if (post.edited_at) { %> · <span class="post__edited"><%= t('edited') %></span><% } %></time>
+        <span class="tag tag--type"><%= typeLabel %></span>
+        <% if (post.group_id) { %>
+          <a class="tag" href="/groups/<%= post.group_slug %>"><%- include('icon', { name: 'shield', size: 13 }) %> <%= post.group_name %></a>
+        <% } else if (post.privacy === 'friends') { %>
+          <span class="tag tag--friends"><%- include('icon', { name: 'users', size: 13 }) %> <%= t('Friends') %></span>
+        <% } else { %>
+          <span class="tag tag--ghost"><%- include('icon', { name: 'globe', size: 13 }) %> <%= t('Public') %></span>
+        <% } %>
+      </span>
+    </div>
+    <div class="menu menu--end" data-menu>
+      <button class="iconbtn iconbtn--ghost" type="button" data-menu-toggle aria-label="<%= t('Post options') %>" aria-expanded="false"><%- include('icon', { name: 'more', size: 18 }) %></button>
+      <div class="menu__panel" data-menu-panel hidden>
+        <a class="menu__item" href="/posts/<%= post.id %>"><%- include('icon', { name: 'eye', size: 16 }) %> <%= t('Open post') %></a>
+        <% if (canManagePost) { %>
+          <button class="menu__item" type="button" data-post-edit><%- include('icon', { name: 'edit', size: 16 }) %> <%= t('Edit post') %></button>
+          <form action="/posts/<%= post.id %>/delete" method="post" class="menu__form" data-confirm="<%= t('Delete this post for good?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="menu__item menu__item--danger" type="submit"><%- include('icon', { name: 'trash', size: 16 }) %> <%= t('Delete post') %></button>
+          </form>
+        <% } %>
+        <form action="/reports" method="post" class="menu__form">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <input type="hidden" name="target_type" value="post">
+          <input type="hidden" name="target_id" value="<%= post.id %>">
+          <button class="menu__item" type="submit"><%- include('icon', { name: 'alert', size: 16 }) %> <%= t('Report') %></button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <% if (post.post_type === 'emergency') { %>
+    <div class="sos">
+      <%- include('icon', { name: 'alert', size: 20 }) %>
+      <div>
+        <strong><%= t('SOS - driver needs help here') %></strong>
+        <% if (post.place_name) { %><span><%= post.place_name %></span><% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (post.body) { %>
+    <div class="post__body" data-post-body><%- f.formatText(post.body) %></div>
+  <% } %>
+  <%- include('post-tags', { post }) %>
+
+  <% if (post.share_type && post.share_id) { %>
+    <a class="post__share" href="<%= post.share_url %>" target="_blank" rel="noopener">
+      <div class="post__share-media">
+        <% if (post.share_image) { %>
+          <img src="<%= config.uploadUrl %>/<%= post.share_image %>" alt="" loading="lazy">
+        <% } %>
+      </div>
+      <div class="post__share-info">
+        <span class="post__share-type"><%- include('icon', { name: post.share_type === 'build' ? 'garage' : post.share_type === 'part' ? 'tag' : post.share_type === 'service' ? 'wrench' : 'wall', size: 14 }) %> <%= t(post.share_type === 'build' ? 'Build' : post.share_type === 'part' ? 'Part' : post.share_type === 'service' ? 'Service' : post.share_type === 'post' ? 'Post' : post.share_type) %></span>
+        <strong class="post__share-title"><%= post.share_title %></strong>
+        <% if (post.share_text) { %><span class="post__share-desc"><%= post.share_text %></span><% } %>
+      </div>
+    </a>
+  <% } %>
+
+  <% if (canManagePost) { %>
+    <form class="post__editform" action="/posts/<%= post.id %>/edit" method="post" data-post-edit-form hidden>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <textarea name="body" rows="4" maxlength="5000" data-post-edit-text aria-label="<%= t('Edit post') %>"><%= post.body || '' %></textarea>
+      <div class="post__editacts">
+        <button class="btn btn--ghost btn--sm" type="button" data-post-edit-cancel><%= t('Cancel') %></button>
+        <button class="btn btn--primary btn--sm" type="submit"><%- include('icon', { name: 'check', size: 15 }) %> <%= t('Save') %></button>
+      </div>
+    </form>
+  <% } %>
+
+  <% if (post.poll) { %>
+    <div class="poll" data-poll="<%= post.poll.id %>">
+      <p class="poll__q"><strong><%= post.poll.question %></strong></p>
+      <% post.poll.options.forEach(function (opt) { %>
+        <div class="poll__opt">
+          <form action="/posts/<%= post.id %>/poll/vote" method="post" class="poll__vote" data-poll-vote>
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <input type="hidden" name="option_id" value="<%= opt.id %>">
+            <button type="submit" class="poll__btn <%= post.poll.userVote === opt.id ? 'is-voted' : '' %>">
+              <span class="poll__label"><%= opt.label %></span>
+              <span class="poll__bar" style="width: <%= post.poll.total ? Math.round((opt.votes / post.poll.total) * 100) : 0 %>%"></span>
+              <span class="poll__count"><%= opt.votes %> (<%= post.poll.total ? Math.round((opt.votes / post.poll.total) * 100) : 0 %>%)</span>
+            </button>
+          </form>
+        </div>
+      <% }); %>
+      <p class="muted small"><%= t('{n} votes', { n: post.poll.total }) %></p>
+    </div>
+  <% } %>
+
+  <% if (post.media_path && post.media_type === 'photo') { %>
+    <a class="post__media" href="<%= config.uploadUrl %>/<%= post.media_path %>" data-lightbox>
+      <img src="<%= config.uploadUrl %>/<%= post.media_path %>"<% if (srcset(post.media_path)) { %> srcset="<%= srcset(post.media_path) %>" sizes="(max-width: 760px) 100vw, 700px"<% } %> alt="<%= t('Photo posted by @{user}', { user: post.username }) %>" loading="lazy" decoding="async">
+    </a>
+  <% } else if (post.media_path && post.media_type === 'video') { %>
+    <div class="post__media post__media--video">
+      <video src="<%= config.uploadUrl %>/<%= post.media_path %>" controls preload="metadata" playsinline></video>
+    </div>
+  <% } %>
+
+  <% if (post.lat != null && post.lng != null) { %>
+    <div class="pin">
+      <div class="pin__map" data-map-readonly data-lat="<%= post.lat %>" data-lng="<%= post.lng %>" <%- include('pin-avatar', { u: { username: post.username, display_name: post.display_name, avatar: post.avatar } }) %> data-zoom="<%= post.zoom || 15 %>"></div>
+      <div class="pin__info">
+        <%- include('icon', { name: 'pin', size: 16 }) %>
+        <div>
+          <strong><%= post.place_name || t('Pinned spot') %></strong>
+          <% if (post.address && post.address !== post.place_name) { %><span class="muted"><%= post.address %></span><% } %>
+        </div>
+        <a class="pin__link" href="https://www.google.com/maps/search/?api=1&query=<%= post.lat %>,<%= post.lng %>&zoom=<%= post.zoom || 15 %>" target="_blank" rel="noopener noreferrer"><%= t('Open map') %></a>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (post.media_path && post.lat != null) { %>
+    <div class="pin pin--inline">
+      <%- include('icon', { name: 'pin', size: 15 }) %>
+      <span><%= post.place_name || t('Geotagged') %></span>
+    </div>
+  <% } %>
+
+  <div class="post__stats">
+    <button type="button" class="stat stat--like <%= post.liked ? 'is-on' : '' %>" data-like="<%= post.id %>" aria-pressed="<%= post.liked ? 'true' : 'false' %>" <%= canComment ? '' : 'disabled' %>>
+      <%- include('icon', { name: 'heart', size: 18 }) %>
+      <span data-like-count="<%= post.id %>"><%= post.like_count %></span>
+    </button>
+    <button type="button" class="stat" data-comments-toggle="<%= post.id %>" aria-expanded="false">
+      <%- include('icon', { name: 'comment', size: 18 }) %>
+      <span data-comment-count="<%= post.id %>"><%= post.comment_count %></span>
+    </button>
+    <%- include('share-button', { type: 'post', id: post.id, title: post.body || t('Post'), label: t('Post'), variant: 'stat' }) %>
+    <a class="stat" href="/posts/<%= post.id %>"><%- include('icon', { name: 'eye', size: 17 }) %> <span class="stat__label"><%= t('View') %></span></a>
+  </div>
+
+  <section class="comments" data-comments="<%= post.id %>" <%= post.comment_count ? '' : 'hidden' %>>
+    <div class="comments__list" data-comments-list="<%= post.id %>" data-loaded="<%= renderedComments ? '1' : '0' %>">
+      <%- renderedComments %>
+      <% if (!renderedComments && post.comment_count) { %>
+        <p class="muted comments__loading" data-comments-loading><%= t('Loading comments…') %></p>
+      <% } %>
+    </div>
+
+    <% if (canComment) { %>
+      <form class="comments__form" action="/posts/<%= post.id %>/comments" method="post" enctype="multipart/form-data" data-comment-form="<%= post.id %>">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <%- include('avatar', { u: currentUser, cls: 'avatar--xs' }) %>
+        <input type="text" name="body" placeholder="<%= t('Add a comment…') %>" maxlength="1000" aria-label="<%= t('Write a comment') %>">
+        <label class="comment__attach" title="<%= t('Attach a photo') %>">
+          <%- include('icon', { name: 'image', size: 16 }) %>
+          <input type="file" name="media" accept="image/*,video/*" hidden>
+        </label>
+        <button class="btn btn--primary btn--sm" type="submit"><%- include('icon', { name: 'send', size: 16 }) %><span class="sr-only"><%= t('Send comment') %></span></button>
+      </form>
+    <% } else { %>
+      <p class="comments__login"><a href="/login"><%= t('Log in') %></a> <%= t('to like and comment.') %></p>
+    <% } %>
+  </section>
+</article>

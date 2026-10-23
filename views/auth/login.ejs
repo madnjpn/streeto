@@ -1,0 +1,63 @@
+<div class="auth">
+  <section class="auth__art">
+    <div class="auth__art-inner">
+      <img class="auth__logo" src="/websitelogo.png" alt="<%= config.siteName %>">
+      <p class="eyebrow"><%- include('../partials/icon', { name: 'bolt', size: 14 }) %> <%= t('members only') %></p>
+      <h1 class="display display--xl"><%- t('UNITED ON<br>THE STREETS') %></h1>
+      <p class="lede"><%= t('Your group, your wall, your spots. Log in and pick up where you left off.') %></p>
+      <ul class="ticks">
+        <li><%- include('../partials/icon', { name: 'wall', size: 16 }) %> <%= t('Wall with photos, clips and pin drops') %></li>
+        <li><%- include('../partials/icon', { name: 'chat', size: 16 }) %> <%= t('Direct chat with anyone') %></li>
+        <li><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('Meetups pinned by GPS or street name') %></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="auth__panel">
+    <div class="auth__stack">
+      <form class="card card--form" action="/login" method="post" autocomplete="on" novalidate>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <h2 class="card__title"><%= t('Log in') %></h2>
+        <p class="muted"><%= t('Use your username or email.') %></p>
+
+        <% if (error) { %>
+          <div class="alert alert--error"><%- include('../partials/icon', { name: 'alert', size: 18 }) %> <span><%= error %></span></div>
+        <% } %>
+
+        <label class="field">
+          <span class="field__label"><%= t('Username or email') %></span>
+          <input id="login" name="login" type="text" value="<%= values.login %>" autocomplete="username" required autofocus>
+        </label>
+
+        <label class="field">
+          <span class="field__label"><%= t('Password') %></span>
+          <span class="field__pw">
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="field__eye" data-pw-toggle aria-label="<%= t('Show password') %>"><%- include('../partials/icon', { name: 'eye', size: 18 }) %></button>
+          </span>
+        </label>
+
+        <% if (mailReady) { %>
+        <p class="auth__forgot"><a class="link" href="/forgot"><%= t('Forgot password?') %></a></p>
+        <% } %>
+
+        <label class="check">
+          <input type="checkbox" name="remember" value="1" checked>
+          <span><%= t('Keep me logged in') %></span>
+        </label>
+
+        <button class="btn btn--primary btn--block" type="submit"><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Log in') %></button>
+        <p class="muted small"><%= t('No account yet?') %> <a class="link" href="/register"><%= t('Join the network') %></a>.</p>
+      </form>
+
+      <div class="auth__android">
+        <p class="auth__or" aria-hidden="true"></p>
+        <a class="btn btn--outline btn--block" href="/downloads/STREETO-android.apk" download="STREETO-android.apk">
+          <%- include('../partials/icon', { name: 'download', size: 17 }) %>
+          <span>STREETO.NET | Android</span>
+        </a>
+        <p class="muted small auth__android-note"><%= t('Test build · Android 7.0+') %></p>
+      </div>
+    </div>
+  </section>
+</div>

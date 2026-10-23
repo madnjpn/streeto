@@ -1,0 +1,503 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('control room') %></p>
+    <h1 class="display"><%= t('Admin console') %></h1>
+    <p class="lede"><%= t('Promote drivers, moderate the feed, and keep the database safe.') %></p>
+  </div>
+  <div class="btnrow">
+    <button class="btn btn--primary" type="button" data-dialog-open="backup-dialog">
+      <%- include('../partials/icon', { name: 'database', size: 17 }) %> <%= t('Backups') %>
+    </button>
+  </div>
+</div>
+
+<div class="adminstats">
+  <div class="adminstats__cell"><strong><%= stats.drivers %></strong><small><%= t('Drivers') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.admins %></strong><small><%= t('Admins') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.posts %></strong><small><%= t('Posts') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.meetups %></strong><small><%= t('Meetups') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.groups %></strong><small><%= t('Groups') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.builds %></strong><small><%= t('Builds') %></small></div>
+  <div class="adminstats__cell"><strong><%= stats.messages %></strong><small><%= t('Messages') %></small></div>
+</div>
+
+<div class="feedtabs">
+  <a class="feedtabs__tab <%= tab === 'users' ? 'is-active' : '' %>" href="/admin?tab=users"><%= t('Drivers') %></a>
+  <a class="feedtabs__tab <%= tab === 'content' ? 'is-active' : '' %>" href="/admin?tab=content"><%= t('Content') %></a>
+  <a class="feedtabs__tab <%= tab === 'backups' ? 'is-active' : '' %>" href="/admin?tab=backups"><%= t('Backups') %></a>
+  <a class="feedtabs__tab <%= tab === 'reports' ? 'is-active' : '' %>" href="/admin?tab=reports"><%= t('Reports') %></a>
+  <a class="feedtabs__tab <%= tab === 'appearance' ? 'is-active' : '' %>" href="/admin?tab=appearance"><%= t('Appearance') %></a>
+  <a class="feedtabs__tab <%= tab === 'partners' ? 'is-active' : '' %>" href="/admin/partners"><%= t('Partners') %></a>
+  <a class="feedtabs__tab <%= tab === 'claims' ? 'is-active' : '' %>" href="/admin/service-claims"><%= t('Claims') %><% if (pendingClaims) { %> <span class="pip pip--solid"><%= pendingClaims %></span><% } %></a>
+  <a class="feedtabs__tab" href="/admin/translations"><%= t('Translations') %></a>
+  <a class="feedtabs__tab" href="/admin/how-it-works"><%= t('How it works') %></a>
+</div>
+
+<% if (tab === 'users') { %>
+  <section class="card adminpanel">
+    <form class="inlineform adminfilter" action="/admin" method="get" role="search">
+      <input type="hidden" name="tab" value="users">
+      <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Filter by name, email or city') %>" autocomplete="off">
+      <button class="btn btn--ghost" type="submit"><%= t('Filter') %></button>
+    </form>
+
+    <% if (!members.length) { %>
+      <%- include('../partials/empty', { icon: 'users', title: t('No drivers match that filter'), text: null }) %>
+    <% } %>
+
+    <% members.forEach(function (m) { %>
+      <div class="adminrow">
+        <div class="adminrow__who">
+          <%- include('../partials/avatar', { u: m, cls: 'avatar--sm' }) %>
+          <div>
+            <strong><%= f.displayName(m) %></strong>
+            <span>@<%= m.username %> · <%= m.email %></span>
+          </div>
+        </div>
+        <div class="adminrow__meta">
+          <span><b><%= m.post_count %></b><%= t('posts') %></span>
+          <span><b><%= m.meetup_count %></b><%= t('meetups') %></span>
+          <span><b><%= m.build_count %></b><%= t('builds') %></span>
+        </div>
+        <div class="adminrow__actions">
+          <% if (m.is_admin) { %><span class="tag tag--open"><%- include('../partials/icon', { name: 'shield', size: 12 }) %> <%= t('Admin') %></span><% } %>
+          <form action="/admin/users/<%= m.id %>/admin" method="post" data-confirm="<%= t('Change the admin role for @{user}?', { user: m.username }) %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <input type="hidden" name="admin" value="<%= m.is_admin ? '0' : '1' %>">
+            <button class="btn btn--sm <%= m.is_admin ? 'btn--ghost' : 'btn--outline' %>" type="submit">
+              <%= m.is_admin ? t('Revoke admin') : t('Make admin') %>
+            </button>
+          </form>
+          <% if (!m.is_admin && m.id !== currentUser.id) { %>
+            <form action="/admin/users/<%= m.id %>/transfer" method="post" data-confirm="<%= t('Hand the admin role to @{user}? You will lose access to this console.', { user: m.username }) %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--ghost" type="submit"><%= t('Hand over') %></button>
+            </form>
+          <% } %>
+          <% if (m.id !== currentUser.id) { %>
+            <form action="/admin/users/<%= m.id %>/delete" method="post" data-confirm="<%= t('Delete @{user}, all their posts and every trace of them? This cannot be undone.', { user: m.username }) %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    <% }); %>
+  </section>
+<% } %>
+
+<% if (tab === 'content') { %>
+  <div class="admincols">
+    <section class="card adminpanel">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'wall', size: 15 }) %> <%= t('Recent posts') %></h2>
+      <% if (!posts.length) { %><p class="note"><%= t('Nothing posted yet.') %></p><% } %>
+      <% posts.forEach(function (p) { %>
+        <div class="adminrow">
+          <div class="adminrow__who">
+            <%- include('../partials/avatar', { u: { username: p.username, display_name: p.display_name, avatar: p.avatar }, cls: 'avatar--sm' }) %>
+            <div>
+              <strong>@<%= p.username %></strong>
+              <span><%= f.timeAgo(p.created_at) %> · <%= p.group_id ? t('Group post') : t('Public') %></span>
+            </div>
+          </div>
+          <div class="adminrow__text">
+            <%= f.truncate(p.body || (p.media_type === 'video' ? t('Clip') : t('Photo')), 130) %>
+          </div>
+          <div class="adminrow__actions">
+            <a class="btn btn--sm btn--ghost" href="/posts/<%= p.id %>"><%= t('View') %></a>
+            <form action="/admin/posts/<%= p.id %>/delete" method="post" data-confirm="<%= t('Delete this post for good?') %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </section>
+
+    <section class="card adminpanel">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'pin', size: 15 }) %> <%= t('Recent meetups') %></h2>
+      <% if (!meetups.length) { %><p class="note"><%= t('No meetups yet.') %></p><% } %>
+      <% meetups.forEach(function (m) { %>
+        <div class="adminrow">
+          <div class="adminrow__who">
+            <%- include('../partials/avatar', { u: { username: m.host_username, display_name: m.host_display_name, avatar: m.host_avatar }, cls: 'avatar--sm' }) %>
+            <div>
+              <strong><%= m.title %></strong>
+              <span>@<%= m.host_username %> · <%= t('{n} going', { n: m.going_count }) %></span>
+            </div>
+          </div>
+          <div class="adminrow__actions">
+            <a class="btn btn--sm btn--ghost" href="/meetups/<%= m.id %>"><%= t('View') %></a>
+            <form action="/admin/meetups/<%= m.id %>/delete" method="post" data-confirm="<%= t('Cancel this meetup?') %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </section>
+
+    <section class="card adminpanel">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'shield', size: 15 }) %> <%= t('Recent groups') %></h2>
+      <% if (!groups.length) { %><p class="note"><%= t('No groups yet.') %></p><% } %>
+      <% groups.forEach(function (c) { %>
+        <div class="adminrow">
+          <div class="adminrow__who">
+            <%- include('../partials/avatar', { u: { username: c.owner_username, display_name: c.owner_display_name }, cls: 'avatar--sm' }) %>
+            <div>
+              <strong><%= c.name %></strong>
+              <span>@<%= c.owner_username %> · <%= c.member_count === 1 ? t('{n} member', { n: c.member_count }) : t('{n} members', { n: c.member_count }) %> · <%= t(f.PRIVACY_LABELS[c.privacy]) %></span>
+            </div>
+          </div>
+          <div class="adminrow__actions">
+            <a class="btn btn--sm btn--ghost" href="/groups/<%= c.slug %>"><%= t('View') %></a>
+            <form action="/admin/groups/<%= c.id %>/delete" method="post" data-confirm="<%= t('Delete this group and its posts?') %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </section>
+
+    <section class="card adminpanel">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'car', size: 15 }) %> <%= t('Recent builds') %></h2>
+      <% if (!builds.length) { %><p class="note"><%= t('No builds yet.') %></p><% } %>
+      <% builds.forEach(function (b) { %>
+        <div class="adminrow">
+          <div class="adminrow__who">
+            <%- include('../partials/avatar', { u: { username: b.username, display_name: b.display_name }, cls: 'avatar--sm' }) %>
+            <div>
+              <strong><%= b.title %></strong>
+              <span>@<%= b.username %> · <%= [b.make, b.model].filter(Boolean).join(' ') || t('build') %><% if (b.visibility === 'private') { %> · <%= t('private') %><% } %></span>
+            </div>
+          </div>
+          <div class="adminrow__actions">
+            <a class="btn btn--sm btn--ghost" href="/builds/<%= b.id %>"><%= t('View') %></a>
+            <form action="/admin/builds/<%= b.id %>/delete" method="post" data-confirm="<%= t('Delete this build and all its media?') %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </section>
+  </div>
+<% } %>
+
+<% if (tab === 'reports') { %>
+  <section class="card adminpanel">
+    <h2 class="card__title"><%= t('Open reports') %></h2>
+    <% if (!reports || !reports.length) { %>
+      <p class="muted"><%= t('No open reports. Good.') %></p>
+    <% } else { %>
+      <% reports.forEach(function (r) { %>
+        <div class="adminrow">
+          <div class="adminrow__who">
+            <strong><%= r.target_type %>#<%= r.target_id %></strong>
+            <span class="muted small"><%= t('by @{user}', { user: r.reporter_username }) %> · <%= f.timeAgo(r.created_at) %></span>
+          </div>
+          <div class="adminrow__text"><%= r.reason %></div>
+          <div class="adminrow__actions">
+            <form action="/admin/reports/<%= r.id %>/resolve" method="post">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--ghost btn--sm" type="submit" name="action" value="resolve"><%= t('Resolve') %></button>
+            </form>
+            <form action="/admin/reports/<%= r.id %>/resolve" method="post">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--ghost btn--sm" type="submit" name="action" value="dismiss"><%= t('Dismiss') %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </section>
+<% } %>
+
+<% if (tab === 'backups') { %>
+  <section class="card adminpanel">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'database', size: 15 }) %> <%= t('Database backups') %></h2>
+    <p class="note">
+      <%= t('Snapshots live in {dir}. The server also backs up on its own every {hours} hours and keeps the newest {keep}.', { dir: backupDir, hours: backupIntervalHours, keep: backupKeep }) %>
+    </p>
+    <div class="btnrow">
+      <button class="btn btn--primary" type="button" data-dialog-open="backup-dialog">
+        <%- include('../partials/icon', { name: 'database', size: 16 }) %> <%= t('Open backups') %>
+      </button>
+    </div>
+    <p class="note"><%= backups.length ? t('{n} snapshots on disk.', { n: backups.length }) : t('No backups yet.') %></p>
+  </section>
+
+  <section class="card adminpanel">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'mail', size: 15 }) %> <%= t('The letters') %></h2>
+    <p class="note">
+      <%= t('The site writes to its members on its own: a reminder before a car has to go to the technical inspection, and a weekly letter with what happened on the street. A member can turn either off in their settings.') %>
+    </p>
+    <div class="btnrow">
+      <form action="/admin/mail-jobs" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button class="btn btn--ghost" type="submit">
+          <%- include('../partials/icon', { name: 'mail', size: 16 }) %> <%= t('Send the letters now') %>
+        </button>
+      </form>
+    </div>
+    <p class="note"><%= t('The server sends them once a day on its own; this button sends them right now.') %></p>
+  </section>
+<% } %>
+
+<% if (tab === 'appearance') { %>
+  <section class="card adminpanel">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'palette', size: 15 }) %> <%= t('Appearance') %></h2>
+    <p class="note"><%= t('Choose one font for English and one for Georgian. Both apply at the same time: English letters use the English font, Georgian letters use the Georgian font.') %></p>
+    
+    <h3 class="section-title"><%= t('English font') %> <span class="muted">· <%= t('Latin') %></span></h3>
+    <p class="note"><%= t('Active') %>: <strong><%= currentFont.latin.name %></strong> <span class="muted">(<%= currentFont.latin.heading %> / <%= currentFont.latin.body %>)</span></p>
+    <div class="font-admin-grid" data-slot="latin">
+      <% latinFonts.forEach(function (font) { %>
+        <%
+          const isActive = currentFont.latin.heading === font.heading
+            && currentFont.latin.body === font.body
+            && !currentFont.latin.family;
+          const preview = fontStacks({ latin: font, georgian: currentFont.georgian });
+        %>
+        <div class="font-admin-card <%= isActive ? 'is-current' : '' %>" data-slot="latin">
+          <div class="font-admin-preview">
+            <h3 class="preview-title" style="font-family: <%= preview.head %>">STREETO</h3>
+            <p class="preview-body" style="font-family: <%= preview.body %>">The quick brown fox jumps over the lazy dog.</p>
+            <p class="preview-body" style="font-family: <%= preview.body %>">ქართული ტექსტი - 123</p>
+          </div>
+          <div class="font-admin-info">
+            <strong><%= font.name %></strong>
+            <span class="muted"><%= font.heading %> / <%= font.body %></span>
+            <button class="btn btn--primary btn--sm set-font" data-slot="latin" data-font='<%= JSON.stringify(font) %>'><%= isActive ? t('Active') : t('Set for English') %></button>
+          </div>
+        </div>
+      <% }); %>
+      <% customFonts.filter(function (f) { return f.lang !== 'georgian'; }).forEach(function (f) { %>
+        <%
+          const fontData = {
+            name: f.family + ' (Custom)',
+            heading: f.family,
+            headingFallback: '',
+            body: f.family,
+            bodyFallback: '',
+            family: f.family,
+            weight: f.weight,
+            description: 'Custom uploaded font',
+          };
+          const isActive = currentFont.latin.family === f.family;
+          const preview = fontStacks({ latin: fontData, georgian: currentFont.georgian });
+        %>
+        <div class="font-admin-card <%= isActive ? 'is-current' : '' %>" data-slot="latin">
+          <div class="font-admin-preview">
+            <h3 class="preview-title" style="font-family: <%= preview.head %>"><%= f.family %></h3>
+            <p class="preview-body" style="font-family: <%= preview.body %>">The quick brown fox jumps over the lazy dog.</p>
+            <p class="preview-body" style="font-family: <%= preview.body %>">ქართული ტექსტი - 123</p>
+          </div>
+          <div class="font-admin-info">
+            <strong><%= f.family %></strong>
+            <span class="muted"><%= t('Custom') %> · <%= f.weight %> <%= f.style %></span>
+            <button class="btn btn--primary btn--sm set-font" data-slot="latin" data-font='<%= JSON.stringify(fontData) %>'><%= isActive ? t('Active') : t('Set for English') %></button>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <h3 class="section-title"><%= t('Georgian font') %> <span class="muted">· <%= t('Georgian') %></span></h3>
+    <p class="note"><%= t('Active') %>: <strong><%= currentFont.georgian.name %></strong></p>
+    <div class="font-admin-grid" data-slot="georgian">
+      <% georgianFonts.forEach(function (font) { %>
+        <%
+          const isActive = currentFont.georgian.family === font.family;
+          const preview = fontStacks({ latin: currentFont.latin, georgian: font });
+        %>
+        <div class="font-admin-card <%= isActive ? 'is-current' : '' %>" data-slot="georgian">
+          <div class="font-admin-preview">
+            <h3 class="preview-title" style="font-family: <%= preview.head %>">ქართული</h3>
+            <p class="preview-body" style="font-family: <%= preview.body %>">ქართული ტექსტი 123 - ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ</p>
+            <p class="preview-body" style="font-family: <%= preview.body %>">The quick brown fox jumps over the lazy dog.</p>
+          </div>
+          <div class="font-admin-info">
+            <strong><%= font.name %></strong>
+            <span class="muted"><%= font.family %></span>
+            <button class="btn btn--primary btn--sm set-font" data-slot="georgian" data-font='<%= JSON.stringify(font) %>'><%= isActive ? t('Active') : t('Set for Georgian') %></button>
+          </div>
+        </div>
+      <% }); %>
+      <% customFonts.filter(function (f) { return f.lang !== 'latin'; }).forEach(function (f) { %>
+        <%
+          const fontData = {
+            name: f.family + ' (Custom)',
+            family: f.family,
+            description: 'Custom uploaded font',
+          };
+          const isActive = currentFont.georgian.family === f.family;
+          const preview = fontStacks({ latin: currentFont.latin, georgian: fontData });
+        %>
+        <div class="font-admin-card <%= isActive ? 'is-current' : '' %>" data-slot="georgian">
+          <div class="font-admin-preview">
+            <h3 class="preview-title" style="font-family: <%= preview.head %>"><%= f.family %></h3>
+            <p class="preview-body" style="font-family: <%= preview.body %>">ქართული ტექსტი 123 - ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ</p>
+            <p class="preview-body" style="font-family: <%= preview.body %>">The quick brown fox jumps over the lazy dog.</p>
+          </div>
+          <div class="font-admin-info">
+            <strong><%= f.family %></strong>
+            <span class="muted"><%= t('Custom') %> · <%= f.weight %> <%= f.style %></span>
+            <button class="btn btn--primary btn--sm set-font" data-slot="georgian" data-font='<%= JSON.stringify(fontData) %>'><%= isActive ? t('Active') : t('Set for Georgian') %></button>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <hr style="margin: 24px 0; border-color: var(--line);">
+    
+    <h3 class="section-title"><%- include('../partials/icon', { name: 'upload', size: 16 }) %> <%= t('Custom Fonts') %></h3>
+    <p class="note"><%= t('Upload custom font files (WOFF, WOFF2, TTF, OTF), up to 5 MB each. Each font is offered under the script it covers, so you can put your own font on English, on Georgian, or on both.') %></p>
+    
+    <div class="custom-font-upload">
+      <form action="/admin/font/upload" method="post" enctype="multipart/form-data" class="custom-font-form">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        
+        <div class="field-row">
+          <label class="field">
+            <span class="field__label"><%= t('Font file') %></span>
+            <input type="file" name="font" accept=".woff,.woff2,.ttf,.otf" required>
+          </label>
+          <label class="field">
+            <span class="field__label"><%= t('Font family name') %></span>
+            <input type="text" name="family" maxlength="60" placeholder="<%= t('e.g. My Custom Font') %>" required>
+          </label>
+        </div>
+        
+        <div class="field-row">
+          <label class="field">
+            <%- include('partials/select-modal', {
+              name: 'weight',
+              value: '400',
+              icon: 'type',
+              options: [
+                { value: '100', label: '100 Thin' },
+                { value: '200', label: '200 ExtraLight' },
+                { value: '300', label: '300 Light' },
+                { value: '400', label: '400 Regular' },
+                { value: '500', label: '500 Medium' },
+                { value: '600', label: '600 SemiBold' },
+                { value: '700', label: '700 Bold' },
+                { value: '800', label: '800 ExtraBold' },
+                { value: '900', label: '900 Black' }
+              ],
+              label: t('Font weight')
+            }) %>
+          </label>
+          <label class="field">
+            <%- include('partials/select-modal', {
+              name: 'style',
+              value: 'normal',
+              options: [
+                { value: 'normal', label: t('Normal') },
+                { value: 'italic', label: t('Italic') }
+              ],
+              label: t('Style')
+            }) %>
+          </label>
+        </div>
+        
+        <div class="field-row">
+          <label class="field">
+            <%- include('partials/select-modal', {
+              name: 'lang',
+              value: 'all',
+              options: [
+                { value: 'all', label: t('All languages (Latin + Georgian)') },
+                { value: 'latin', label: t('Latin only (English, etc.)') },
+                { value: 'georgian', label: t('Georgian only') }
+              ],
+              label: t('Language support')
+            }) %>
+            <span class="field__hint"><%= t('An uploaded font only appears under the language it covers.') %></span>
+          </label>
+        </div>
+        
+        <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'upload', size: 16 }) %> <%= t('Upload font') %></button>
+      </form>
+      
+      <% if (customFonts && customFonts.length) { %>
+        <div class="custom-font-list">
+          <h4><%= t('Uploaded fonts') %></h4>
+          <% customFonts.forEach(function (f) { %>
+            <div class="custom-font-item">
+              <span class="custom-font-name" style="font-family: '<%= f.family %>'"><%= f.family %> (<%= f.weight %> <%= f.style %>)</span>
+              <% if (f.lang !== 'georgian') { %>
+                <span class="custom-font-sample" style="font-family: '<%= f.family %>'">Aa Bb 123 - The quick brown fox</span>
+              <% } %>
+              <% if (f.lang !== 'latin') { %>
+                <span class="custom-font-sample" style="font-family: '<%= f.family %>'">ქართული ტექსტი 123</span>
+              <% } %>
+              <span class="custom-font-meta"><%= f.lang === 'all' ? t('All') : f.lang === 'latin' ? t('Latin') : t('Georgian') %> · <%= f.weight %> <%= f.style %></span>
+              <form action="/admin/font/delete" method="post" style="margin: 0;">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <input type="hidden" name="fontId" value="<%= f.id %>">
+                <button class="btn btn--ghost btn--sm btn--icon" type="submit" data-confirm="<%= t('Delete this font?') %>"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+              </form>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+    
+  </section>
+<% } %>
+
+<dialog class="dialog" id="backup-dialog" aria-labelledby="backup-title" <%= tab === 'backups' ? 'data-open' : '' %>>
+  <div class="dialog__head">
+    <%- include('../partials/icon', { name: 'database', size: 20 }) %>
+    <h2 id="backup-title"><%= t('Database backups') %></h2>
+    <button class="iconbtn iconbtn--ghost" type="button" data-dialog-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 18 }) %></button>
+  </div>
+
+  <div class="dialog__body">
+    <p class="note">
+      <%= t('Snapshots live in {dir}. The server also backs up on its own every {hours} hours and keeps the newest {keep}.', { dir: backupDir, hours: backupIntervalHours, keep: backupKeep }) %>
+    </p>
+
+    <form action="/admin/backups" method="post">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'database', size: 16 }) %> <%= t('Back up now') %></button>
+    </form>
+
+    <% if (!backups.length) { %>
+      <p class="note"><%= t('No backups yet.') %></p>
+    <% } else { %>
+      <div class="backuplist">
+        <% backups.forEach(function (b) { %>
+          <div class="backuprow">
+            <div class="backuprow__info">
+              <strong><%= b.name %></strong>
+              <span>
+                <%= f.shortDate(b.createdAt) %> · <%= f.fileSize(b.size) %>
+                <% if (b.auto) { %> · <span class="tag tag--tiny"><%= t('auto') %></span><% } %>
+              </span>
+            </div>
+            <div class="backuprow__actions">
+              <a class="btn btn--sm btn--ghost" href="/admin/backups/<%= b.name %>/download" title="<%= t('Download') %>"><%- include('../partials/icon', { name: 'download', size: 15 }) %></a>
+              <form action="/admin/backups/<%= b.name %>/restore" method="post" data-confirm="<%= t('Restore the whole database from {name}? Current data will be replaced.', { name: b.name }) %>">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--sm btn--outline" type="submit"><%= t('Restore') %></button>
+              </form>
+              <form action="/admin/backups/<%= b.name %>/delete" method="post" data-confirm="<%= t('Delete this backup file?') %>">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--sm btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %></button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <p class="note note--warn"><%= t('Restoring replaces every table with the snapshot. You stay logged in, but drivers and posts added after that snapshot will be gone.') %></p>
+  </div>
+
+  <div class="dialog__foot">
+    <button class="btn btn--ghost" type="button" data-dialog-close><%= t('Close') %></button>
+  </div>
+</dialog>

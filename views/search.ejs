@@ -1,0 +1,119 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('search') %></p>
+    <h1 class="display"><% if (q) { %><%= t('Results for "{q}"', { q: q }) %><% } else { %><%= t('Search the network') %><% } %></h1>
+    <p class="lede"><% if (q) { %><%= total === 1 ? t('{n} match', { n: total }) : t('{n} matches', { n: total }) %><% } else { %><%= t('Drivers, groups, builds, meetups, parts, services and posts.') %><% } %></p>
+  </div>
+</div>
+
+<form class="searchbig" action="/search" method="get" role="search" data-live-search>
+  <%- include('partials/icon', { name: 'search', size: 20 }) %>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Search drivers, groups, builds, meetups, parts, services, posts') %>" autofocus autocomplete="off" data-live-input>
+  <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+</form>
+
+<div class="feedtabs">
+  <a class="feedtabs__tab <%= type === 'all' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=all"><%= t('All') %></a>
+  <a class="feedtabs__tab <%= type === 'people' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=people"><%= t('Drivers') %></a>
+  <a class="feedtabs__tab <%= type === 'groups' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=groups"><%= t('Groups') %></a>
+  <a class="feedtabs__tab <%= type === 'meetups' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=meetups"><%= t('Meetups') %></a>
+  <a class="feedtabs__tab <%= type === 'builds' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=builds"><%= t('Builds') %></a>
+  <a class="feedtabs__tab <%= type === 'parts' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=parts"><%= t('Parts') %></a>
+  <a class="feedtabs__tab <%= type === 'services' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=services"><%= t('Services') %></a>
+  <a class="feedtabs__tab <%= type === 'posts' ? 'is-active' : '' %>" href="/search?q=<%= encodeURIComponent(q) %>&type=posts"><%= t('Posts') %></a>
+</div>
+
+<% if (!q) { %>
+  <section class="strip">
+    <h2 class="section-title"><%= t('Suggested drivers') %></h2>
+    <% if (suggestions.length) { %>
+      <div class="cards cards--persons">
+        <% suggestions.forEach(function (person) { %>
+          <%- include('partials/person-card', { person: person, relationship: { status: null } }) %>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="muted"><%= t('Start typing to search.') %></p>
+    <% } %>
+  </section>
+<% } else { %>
+  <% if (people.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'users', size: 17 }) %> <%= t('Drivers ({n})', { n: people.length }) %></h2>
+      <div class="cards cards--persons">
+        <% people.forEach(function (person) { %>
+          <%- include('partials/person-card', { person: person, relationship: person.relationship }) %>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (groupHits.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'shield', size: 17 }) %> <%= t('Groups ({n})', { n: groupHits.length }) %></h2>
+      <div class="cards">
+        <% groupHits.forEach(function (group) { %><%- include('partials/group-card', { group: group }) %><% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (meetups.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'pin', size: 17 }) %> <%= t('Meetups ({n})', { n: meetups.length }) %></h2>
+      <div class="cards cards--wide">
+        <% meetups.forEach(function (m) { %><%- include('partials/meetup-card', { meetup: m }) %><% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (builds.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'car', size: 17 }) %> <%= t('Builds ({n})', { n: builds.length }) %></h2>
+      <div class="cards cards--builds">
+        <% builds.forEach(function (build) { %><%- include('partials/build-card', { build: build, isAuthenticated: isAuthenticated, currentUser: currentUser, mine: build.user_id === currentUser?.id, csrfField: csrfField, csrfToken: csrfToken }) %><% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (posts.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'wall', size: 17 }) %> <%= t('Posts ({n})', { n: posts.length }) %></h2>
+      <ul class="rows">
+        <% posts.forEach(function (post) { %>
+          <li class="row">
+            <a class="row__id" href="/posts/<%= post.id %>">
+              <%- include('partials/avatar', { u: { username: post.username, display_name: post.display_name, avatar: post.avatar }, cls: 'avatar--sm' }) %>
+              <span>
+                <strong>@<%= post.username %></strong>
+                <span class="muted small"> · <%= f.timeAgo(post.created_at) %></span>
+                <br><span><%= f.truncate(post.body || t('Photo post'), 130) %></span>
+              </span>
+            </a>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+  <% if (parts.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'tag', size: 17 }) %> <%= t('Parts ({n})', { n: parts.length }) %></h2>
+      <div class="cards cards--services">
+        <% parts.forEach(function (part) { %><%- include('partials/part-card', { part: part, categories: partCategories }) %><% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (services.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('partials/icon', { name: 'wrench', size: 17 }) %> <%= t('Services ({n})', { n: services.length }) %></h2>
+      <div class="cards cards--services">
+        <% services.forEach(function (service) { %><%- include('partials/service-card', { service: service, categories: serviceCategories, isAuthenticated: isAuthenticated, currentUser: currentUser, csrfField: csrfField, csrfToken: csrfToken }) %><% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (!people.length && !groupHits.length && !meetups.length && !builds.length && !parts.length && !services.length && !posts.length) { %>
+    <%- include('partials/empty', { icon: 'search', title: t('Nothing found'), text: t('Try a different word, a username without the @, or a city name.') }) %>
+  <% } %>
+<% } %>

@@ -1,0 +1,59 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('services') %></p>
+    <h1 class="display"><%= t('Maintenance') %></h1>
+    <p class="lede"><%= total === 1 ? t('{n} workshop or specialist', { n: total }) : t('{n} workshops and specialists', { n: total }) %></p>
+  </div>
+  <% if (isAuthenticated) { %>
+    <a class="btn btn--primary" href="/services/maintenance/new"><%- include('../../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Offer a service') %></a>
+  <% } %>
+</div>
+
+<%- include('../../partials/services-tabs', { section: 'maintenance' }) %>
+
+<div class="feedtabs" role="tablist">
+  <% Object.entries(scopes).forEach(function ([key, label]) { %>
+    <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/services/maintenance?scope=<%= key %>&sort=<%= sort %><%= category ? '&category=' + category : '' %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
+  <% }); %>
+  <span class="feedtabs__spacer"></span>
+  <% Object.entries(sorts).forEach(function ([key, label]) { %>
+    <a class="feedtabs__tab feedtabs__tab--sm <%= sort === key ? 'is-active' : '' %>" href="/services/maintenance?scope=<%= scope %>&sort=<%= key %><%= category ? '&category=' + category : '' %>"><%= t(label) %></a>
+  <% }); %>
+</div>
+
+<form class="searchbig" action="/services/maintenance" method="get" role="search">
+  <%- include('../../partials/icon', { name: 'search', size: 20 }) %>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Search workshops by name, service or place') %>">
+  <input type="hidden" name="scope" value="<%= scope %>">
+  <input type="hidden" name="sort" value="<%= sort %>">
+  <% if (category) { %><input type="hidden" name="category" value="<%= category %>"><% } %>
+  <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+</form>
+
+<nav class="chips" aria-label="<%= t('Categories') %>">
+  <a class="chip <%= !category ? 'is-active' : '' %>" href="/services/maintenance?scope=<%= scope %>&sort=<%= sort %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= t('All') %></a>
+  <% Object.entries(categories).forEach(function ([key, label]) { %>
+    <a class="chip <%= category === key ? 'is-active' : '' %>" href="/services/maintenance?scope=<%= scope %>&sort=<%= sort %>&category=<%= key %><%= q ? '&q=' + encodeURIComponent(q) : '' %>"><%= t(label) %><% if (counts.get(key)) { %> <span class="chip__n"><%= counts.get(key) %></span><% } %></a>
+  <% }); %>
+</nav>
+
+<% if (!items.length) { %>
+  <%- include('../../partials/empty', {
+    icon: 'wrench',
+    title: scope === 'mine' ? t('You have no listings yet') : t('No services here'),
+    text: scope === 'mine' ? t('Offer a service and it shows up here.') : t('Be the first to list a workshop or specialist.'),
+    action: isAuthenticated ? '<a class="btn btn--primary" href="/services/maintenance/new">' + t('Offer a service') + '</a>' : '<a class="btn btn--primary" href="/register">' + t('Join up') + '</a>'
+  }) %>
+<% } else { %>
+  <div class="cards">
+    <% items.forEach(function (service) { %>
+      <%- include('../../partials/service-card', { service: service, categories: categories, isAuthenticated: isAuthenticated, currentUser: currentUser, csrfField: csrfField, csrfToken: csrfToken }) %>
+    <% }); %>
+  </div>
+<% } %>
+
+<%- include('../../partials/pagination', {
+  page: page,
+  hasMore: hasMore,
+  baseQs: 'scope=' + scope + '&sort=' + sort + (category ? '&category=' + category : '') + (q ? '&q=' + encodeURIComponent(q) : '')
+}) %>

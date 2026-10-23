@@ -1,0 +1,9 @@
+<%
+/* Section switch shown on every Garage page: My Ride <-> Fines. */
+const current = typeof section !== 'undefined' ? section : 'ride';
+%>
+<nav class="srvswitch" aria-label="<%= t('Garage sections') %>">
+  <a class="srvswitch__tab <%= current === 'ride' ? 'is-active' : '' %>" href="/garage/ride"><%- include('icon', { name: 'key', size: 15 }) %> <%= t('My Ride') %></a>
+  <a class="srvswitch__tab <%= current === 'fines' ? 'is-active' : '' %>" href="/garage/fines"><%- include('icon', { name: 'tag', size: 15 }) %> <%= t('Fines') %></a>
+  <button type="button" class="srvswitch__tab srvswitch__tab--add" id="toggle-add-vehicle"><%- include('icon', { name: 'plus', size: 15 }) %></button>
+</nav>

@@ -1,0 +1,42 @@
+<%
+  /* The annual technical inspection badge, shared by My Ride and Builds.
+     `v` is a vehicle or build row with pti_* columns.
+
+     The badge is short on purpose: "PTI.GE | Dec 29, 2024". The colour
+     and the mark say the rest - green with a tick when the inspection
+     holds, red with an exclamation when it has run out. The full wording
+     lives in the tooltip, so the same badge works on a phone and on a
+     big screen. */
+  const state = ptiState(v);
+  const includeUnknown = typeof showUnknown === 'undefined' ? true : Boolean(showUnknown);
+  const includeCheck = typeof showCheck === 'undefined' ? false : Boolean(showCheck);
+  const isCompact = typeof compact === 'undefined' ? false : Boolean(compact);
+  const expires = state.expiresAt ? f.shortDate(state.expiresAt) : '';
+  const checked = state.checkedAt ? f.shortDate(state.checkedAt) : '';
+  const visible = state.status !== 'missing' && (state.status !== 'unknown' || includeUnknown);
+  /* What the badge says: the date, and nothing else. */
+  const dateText =
+    state.status === 'valid' ? (expires || t('Valid'))
+      : state.status === 'expired' ? (expires || t('Expired'))
+        : (checked || t('Not checked'));
+  /* The full sentence, for the tooltip. */
+  const statusText =
+    state.status === 'valid'
+      ? (expires ? t('Valid: {date}', { date: expires }) : t('Valid'))
+      : state.status === 'expired'
+        ? (expires ? t('Expired: {date}', { date: expires }) : t('Expired'))
+        : (checked ? t('Check failed: {date}', { date: checked }) : t('Not checked'));
+  const titleText = `${t('Technical inspection')} - ${statusText}`;
+  const mark = state.status === 'valid' ? 'check' : state.status === 'expired' ? 'alert' : 'clock';
+%>
+<% if (visible) { %>
+  <span class="pti-badge pti-badge--<%= state.status %><%= isCompact ? ' pti-badge--compact' : '' %>" title="<%= titleText %>">
+    <%- include('icon', { name: mark, size: isCompact ? 12 : 13 }) %>
+    <span class="pti-badge__label"><%= t('PTI.GE') %></span>
+    <span class="pti-badge__sep">|</span>
+    <span class="pti-badge__date"><%= dateText %></span>
+    <% if (includeCheck && state.url) { %>
+      <a class="pti-badge__external" href="<%= state.url %>" target="_blank" rel="noopener noreferrer" aria-label="<%= t('Check on pti.ge') %>" title="<%= t('Check on pti.ge') %>"><%- include('icon', { name: 'globe', size: 12 }) %></a>
+    <% } %>
+  </span>
+<% } %>

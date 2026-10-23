@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">STREETO</string>
+    <string name="choose_file">Choose a file</string>
+    <string name="choose_photo">Choose a photo</string>
+    <string name="location_denied">Location permission denied</string>
+    <string name="offline_title">No connection</string>
+    <string name="offline_text">STREETO could not be reached. Check your connection and try again.</string>
+    <string name="retry">Try again</string>
+</resources>

@@ -1,0 +1,69 @@
+<%
+const mine = m.sender_id === currentUser.id;
+const reactions = (m && m.reactions) || [];
+const isOnline = typeof m.online !== 'undefined' ? m.online : false;
+%>
+<div class="msg <%= mine ? 'msg--mine' : '' %>" data-msg="<%= m.id %>" data-sender="<%= m.sender_id %>">
+  <a class="msg__avatar <%= isOnline ? 'is-online' : '' %>" href="/u/<%= m.username %>" title="<%= isOnline ? t('Online') : '@' + m.username %>"><%- include('avatar', { u: { username: m.username, display_name: m.display_name, avatar: m.avatar }, cls: 'avatar--sm' }) %></a>
+  <div class="msg__stack">
+    <% if (m.parent_id && m.parent_username) { %>
+      <div class="msg__quote">
+        <strong>@<%= m.parent_username %></strong>
+        <span><%= f.truncate(m.parent_body || '', 60) %></span>
+      </div>
+    <% } %>
+    <div class="msg__bubble">
+      <% if (m.body) { %><div class="msg__text"><%- f.formatText(m.body) %></div><% } %>
+      <% if (m.share_type) { %>
+        <a class="msg__share" href="<%= shareUrl(m.share_type, m.share_id) %>">
+          <% if (m.share_image) { %>
+            <img class="msg__share-img" src="<%= config.uploadUrl %>/<%= m.share_image %>" alt="" loading="lazy" decoding="async">
+          <% } %>
+          <span class="msg__share-body">
+            <span class="msg__share-kind"><%- include('icon', { name: shareIcon(m.share_type), size: 12 }) %> <%= t(shareLabel(m.share_type)) %></span>
+            <strong class="msg__share-title"><%= m.share_title || '' %></strong>
+            <% if (m.share_text) { %><span class="msg__share-text"><%= m.share_text %></span><% } %>
+          </span>
+        </a>
+      <% } %>
+      <% if (m.media_path && m.media_type === 'photo') { %>
+        <a href="<%= config.uploadUrl %>/<%= m.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= m.media_path %>"<% if (srcset(m.media_path)) { %> srcset="<%= srcset(m.media_path) %>" sizes="(max-width: 760px) 100vw, 340px"<% } %> alt="<%= t('Attachment') %>" loading="lazy"></a>
+      <% } else if (m.media_path && m.media_type === 'video') { %>
+        <video src="<%= config.uploadUrl %>/<%= m.media_path %>" controls preload="metadata" playsinline></video>
+      <% } else if (m.media_path) { %>
+        <a class="msg__file" href="<%= config.uploadUrl %>/<%= m.media_path %>" target="_blank" rel="noopener">
+          <%- include('icon', { name: 'card', size: 18 }) %>
+          <span><strong><%= m.file_name || t('Attachment') %></strong><small><%= m.file_size ? Math.max(1, Math.round(m.file_size / 1024)) + ' KB' : '' %></small></span>
+        </a>
+      <% } %>
+      <div class="msg__reacts" data-reacts="<%= m.id %>">
+        <% reactions.forEach(function (r) { %>
+          <button class="react <%= r.mine ? 'is-mine' : '' %>" type="button" data-react="<%= r.emoji %>" title="<%= r.who.map((w) => '@' + w.username).join(', ') %>"><%= r.emoji %><span><%= r.count %></span></button>
+        <% }); %>
+      </div>
+      <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin) { %>
+        <form action="/chat/message/<%= m.id %>/delete" method="post" class="msg__delete" style="display:none">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button type="submit" class="msg__delete-btn" title="<%= t('Delete this message') %>"><%- include('icon', { name: 'trash', size: 12 }) %></button>
+        </form>
+      <% } %>
+      <div class="msg__meta">
+        <time class="msg__time" datetime="<%= m.created_at %>" title="<%= f.fullDate(m.created_at) %>"><%= f.timeAgo(m.created_at) %><% if (m.edited_at) { %> · <%= t('edited') %><% } %></time>
+      </div>
+    </div>
+    <div class="msg__tools">
+      <button class="msg__tool" type="button" data-msg-react title="<%= t('React') %>"><%- include('icon', { name: 'heart', size: 12 }) %></button>
+      <button class="msg__tool" type="button" data-msg-reply="<%= m.id %>" data-msg-reply-name="@<%= m.username %>"><%= t('Reply') %></button>
+      <% if (mine) { %>
+        <button class="msg__tool" type="button" data-msg-edit="<%= m.id %>"><%= t('Edit') %></button>
+      <% } %>
+    </div>
+    <form class="msg__editform" data-edit-form="<%= m.id %>" hidden>
+      <textarea rows="2" maxlength="4000" data-edit-text><%= m.body || '' %></textarea>
+      <div class="msg__editacts">
+        <button class="btn btn--primary btn--sm" type="submit"><%= t('Save') %></button>
+        <button class="btn btn--ghost btn--sm" type="button" data-edit-cancel><%= t('Cancel') %></button>
+      </div>
+    </form>
+  </div>
+</div>

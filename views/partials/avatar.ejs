@@ -1,0 +1,11 @@
+<%
+/* Avatar: uploaded image when present, otherwise generated initials with
+   a hue derived from the username so everyone looks distinct.
+   `attrs` puts extra attributes on the element - the settings page
+   uses it to swap in a picture the driver has just chosen. */
+const user = typeof u !== 'undefined' ? u : null;
+const label = typeof name !== 'undefined' && name ? name : (user ? (user.display_name || user.username) : '?');
+const cls2 = typeof cls === 'undefined' ? '' : cls;
+const extra = typeof attrs !== 'undefined' && attrs ? attrs : '';
+const hue = f.hueOf(user ? user.username : label);
+%><% if (user && user.avatar) { %><img class="avatar <%= cls2 %>" src="<%= config.uploadUrl %>/<%= user.avatar %>"<% if (srcset(user.avatar)) { %> srcset="<%= srcset(user.avatar) %>" sizes="120px"<% } %> alt="" loading="lazy" decoding="async" <%- extra %>><% } else { %><span class="avatar avatar--gen <%= cls2 %>" style="--h:<%= hue %>" aria-hidden="true" <%- extra %>><%= f.initials(label) %></span><% } %>

@@ -1,0 +1,86 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('services') %></p>
+    <h1 class="display"><%= t('Part search') %></h1>
+    <p class="lede"><%= t('The whole parts catalogue: look a part up by its number, by a cross reference or by name - and see what it costs in every brand that sells it.') %></p>
+  </div>
+</div>
+
+<%- include('../partials/services-tabs', { section: 'partsearch' }) %>
+
+<div class="feedtabs" role="tablist">
+  <button class="feedtabs__tab is-active" type="button" role="tab" data-ps-tab="number" aria-selected="true"><%= t('Part number') %></button>
+  <button class="feedtabs__tab" type="button" role="tab" data-ps-tab="car" aria-selected="false"><%= t('By car') %></button>
+  <button class="feedtabs__tab" type="button" role="tab" data-ps-tab="garage" aria-selected="false"><%= t('From garage') %></button>
+  <button class="feedtabs__tab" type="button" role="tab" data-ps-tab="vin" aria-selected="false"><%= t('By VIN') %></button>
+</div>
+
+<!-- ── by part number ─────────────────────────────────────────── -->
+<section class="pspanel" data-ps-panel="number">
+  <form class="searchbig" data-ps-search role="search">
+    <%- include('../partials/icon', { name: 'search', size: 20 }) %>
+    <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Part number, cross reference or name') %>" autocomplete="off" data-ps-input>
+    <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+  </form>
+  <p class="muted small"><%= t('A part number finds the same part in every brand - that is how you check what a part costs elsewhere.') %></p>
+  <div class="psresults" data-ps-results></div>
+</section>
+
+<!-- ── by car ─────────────────────────────────────────────────── -->
+<section class="pspanel" data-ps-panel="car" hidden>
+  <div class="pssteps">
+    <label class="field">
+      <span class="field__label"><%= t('Make') %></span>
+      <select data-ps-make>
+        <option value=""><%= t('Choose a make') %></option>
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Year') %></span>
+      <select data-ps-year disabled>
+        <option value=""><%= t('Choose a year') %></option>
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Model') %></span>
+      <select data-ps-model disabled>
+        <option value=""><%= t('Choose a model') %></option>
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('Engine') %></span>
+      <select data-ps-engine disabled>
+        <option value=""><%= t('Choose an engine') %></option>
+      </select>
+    </label>
+  </div>
+
+  <div class="psgroups" data-ps-twins hidden>
+    <p class="field__label"><%= t('The same car is sold as') %></p>
+    <div class="chips" data-ps-twin-list></div>
+  </div>
+
+  <div class="psgroups" data-ps-groups hidden>
+    <p class="field__label"><%= t('What are you after?') %></p>
+    <div class="chips" data-ps-group-list></div>
+  </div>
+
+  <div class="psgroups" data-ps-types hidden>
+    <p class="field__label"><%= t('Which kind of part?') %></p>
+    <div class="chips" data-ps-type-list></div>
+  </div>
+
+  <div class="psresults" data-ps-results></div>
+</section>
+
+<!-- ── from the garage ─────────────────────────────────────────── -->
+<section class="pspanel" data-ps-panel="garage" hidden>
+  <div class="psgarage" data-ps-garage>
+    <p class="muted small"><%= t('Pick a car from your garage. The number of the technical passport reads the car for you, engine and all.') %></p>
+  </div>
+</section>
+
+<!-- ── by VIN ─────────────────────────────────────────────────── -->
+<section class="pspanel" data-ps-panel="vin" hidden>
+  <%- include('../partials/vin-reader') %>
+</section>

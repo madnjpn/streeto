@@ -1,0 +1,39 @@
+<div class="pagehead">
+  <p class="eyebrow"><%- include('../partials/icon', { name: 'users', size: 18 }) %></p>
+  <h1 class="display"><%= t('Our Partners') %></h1>
+  <p class="lede"><%= t('Trusted workshops, tuners and shops that support the STREETO community.') %></p>
+</div>
+
+<% if (!partners.length) { %>
+  <%- include('../partials/empty', { icon: 'users', title: t('No partners yet'), text: t('Check back soon!') }) %>
+<% } else { %>
+  <div class="partnerwall">
+    <% partners.forEach(function (p) {
+         const w = Number(p.logo_w || 0);
+         const h = Number(p.logo_h || 0);
+         const ratio = w && h ? w / h : 0;
+         // A banner gets the whole row, a mark on paper becomes its own tile.
+         const wide = ratio > 4;
+         const plate = Number(p.logo_plate || 0);
+         // The real size is given to the browser, so the row does not jump.
+         const dims = (w ? ` width="${w}"` : '') + (h ? ` height="${h}"` : '');
+    %>
+      <article class="partnerwall__card<%= wide ? ' partnerwall__card--wide' : '' %><%= plate === 1 ? ' partnerwall__card--light' : '' %><%= plate === 2 ? ' partnerwall__card--dark' : '' %>">
+        <% if (p.url) { %>
+          <a class="partnerwall__frame" href="<%= p.url %>" target="_blank" rel="noopener noreferrer" aria-label="<%= p.name %>">
+            <img class="partnerwall__logo" src="<%= config.uploadUrl %>/<%= p.logo_path %>"<%- dims %> alt="<%= p.name %>" loading="lazy">
+          </a>
+        <% } else { %>
+          <div class="partnerwall__frame">
+            <img class="partnerwall__logo" src="<%= config.uploadUrl %>/<%= p.logo_path %>"<%- dims %> alt="<%= p.name %>" loading="lazy">
+          </div>
+        <% } %>
+
+        <p class="partnerwall__name">
+          <span><%= p.name %></span>
+          <% if (p.url) { %><%- include('../partials/icon', { name: 'external', size: 13 }) %><% } %>
+        </p>
+      </article>
+    <% }); %>
+  </div>
+<% } %>

@@ -1,0 +1,15 @@
+<% const siteName = config.siteName; %>
+<div class="page-error">
+  <div class="page-error__panel">
+    <p class="eyebrow"><%= t('engine stalled') %></p>
+    <h1 class="display"><%= t(typeof heading !== 'undefined' ? heading : 'Something broke') %></h1>
+    <p class="lede"><%= t(typeof message !== 'undefined' ? message : 'Unexpected detour.') %></p>
+    <div class="btnrow">
+      <a class="btn btn--primary" href="/"><%= t('Back to the wall') %></a>
+      <a class="btn btn--ghost" href="/meetups"><%= t('See meetups') %></a>
+    </div>
+    <% if (typeof status !== 'undefined' && status >= 500) { %>
+      <p class="muted small"><%= t('If it keeps happening, check the server console for the stack trace.') %></p>
+    <% } %>
+  </div>
+</div>

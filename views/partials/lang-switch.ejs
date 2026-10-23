@@ -1,0 +1,11 @@
+<%
+  /* Compact EN / GE picker. Plain links so it also works without JS. */
+%>
+<div class="langswitch" role="group" aria-label="<%= t('Language') %>" title="<%= t('Language') %>">
+  <% langs.forEach(function (l) { %>
+    <a class="langswitch__opt<%= l.code === lang ? ' is-active' : '' %>"
+       href="/lang/<%= l.code %>"
+       hreflang="<%= l.code %>" lang="<%= l.code %>"
+       title="<%= l.native %>"<% if (l.code === lang) { %> aria-current="true"<% } %>><%= l.short %></a>
+  <% }); %>
+</div>

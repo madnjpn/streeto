@@ -1,0 +1,8 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+httpx==0.27.2
+beautifulsoup4==4.12.3
+pydantic==2.9.2
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+rockauto-api==1.0.3

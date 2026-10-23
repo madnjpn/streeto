@@ -1,0 +1,11 @@
+<%
+/* The reader for the number of a car: a full VIN or a chassis code.
+   Shared by the VIN check page and the part search. */
+%>
+<form class="searchbig" data-ps-vin-form role="search">
+  <%- include('icon', { name: 'card', size: 20 }) %>
+  <input type="text" name="vin" placeholder="<%= t('The 17 characters on your car, or the chassis code') %>" autocomplete="off" spellcheck="false" maxlength="24" data-ps-vin>
+  <button class="btn btn--primary" type="submit"><%= t('Read the VIN') %></button>
+</form>
+<p class="muted small"><%= t('The VIN is read with the government register. Its ninth character is a check digit only in North America, so a European or Japanese VIN is still read - the year comes from the number itself, and the model is chosen in the catalogue. A chassis code is read as it stands.') %></p>
+<div class="psvin" data-ps-vin-out></div>

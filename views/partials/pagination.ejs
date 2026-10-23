@@ -1,0 +1,20 @@
+<%
+/* Locals: page (current), hasMore (bool), baseQs (string without ?, may be empty) */
+const qs = typeof baseQs !== 'undefined' && baseQs ? baseQs : '';
+const link = (n) => `${path}?${qs ? qs + '&' : ''}page=${n}`;
+%>
+<% if (page > 1 || hasMore) { %>
+<nav class="pager" aria-label="<%= t('Pagination') %>">
+  <% if (page > 1) { %>
+    <a class="btn btn--ghost btn--sm" href="<%= link(page - 1) %>"><%- include('icon', { name: 'back', size: 15 }) %> <%= t('Newer') %></a>
+  <% } else { %>
+    <span class="btn btn--ghost btn--sm is-disabled" aria-disabled="true"><%- include('icon', { name: 'back', size: 15 }) %> <%= t('Newer') %></span>
+  <% } %>
+  <span class="pager__page muted"><%= t('page {n}', { n: page }) %></span>
+  <% if (hasMore) { %>
+    <a class="btn btn--ghost btn--sm" href="<%= link(page + 1) %>"><%= t('Older') %> <%- include('icon', { name: 'chevron', size: 15, cls: 'icon--rot270' }) %></a>
+  <% } else { %>
+    <span class="btn btn--ghost btn--sm is-disabled" aria-disabled="true"><%= t('Older') %> <%- include('icon', { name: 'chevron', size: 15, cls: 'icon--rot270' }) %></span>
+  <% } %>
+</nav>
+<% } %>

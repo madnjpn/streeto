@@ -1,0 +1,152 @@
+<%
+const nav = [
+  { href: '/', label: 'Wall', icon: 'wall', key: 'wall' },
+  { href: '/explore', label: 'Explore', icon: 'search', key: 'explore' },
+  { href: '/builds', label: 'Builds', icon: 'garage', key: 'builds' },
+  { href: '/groups', label: 'Groups', icon: 'shield', key: 'groups' },
+  { href: '/meetups', label: 'Meetups', icon: 'pin', key: 'meetups' },
+  { href: '/services', label: 'Services', icon: 'wrench', key: 'services' },
+  { href: '/chat', label: 'Chat', icon: 'chat', key: 'chat', badge: unreadMessages },
+  { href: '/people', label: 'Drivers', icon: 'users', key: 'people' },
+];
+const isActive = (key) => (typeof active !== 'undefined' && active === key) ? 'is-active' : '';
+const searchText = typeof q !== 'undefined' ? q : (query.q || '');
+// Pages that bring their own search box hide the header one so there is
+// never a pair of stacked search bars.
+const ownSearch = ['/search', '/people', '/groups', '/meetups', '/chat/new', '/services/parts', '/services/maintenance'];
+const showTopSearch = isAuthenticated && !ownSearch.includes(path);
+%>
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="/" aria-label="<%= t('{site} home', { site: config.siteName }) %>">
+      <img class="brand__logo" src="/websitelogo.png" alt="<%= config.siteName %>" width="188" height="32">
+    </a>
+
+    <% if (showTopSearch) { %>
+      <form class="searchbar" action="/search" method="get" role="search" data-live-search>
+        <%- include('icon', { name: 'search', size: 18 }) %>
+        <input type="search" name="q" placeholder="<%= t('Search drivers, groups, builds') %>" value="<%= searchText %>" aria-label="<%= t('Search') %>" autocomplete="off" data-live-input>
+      </form>
+    <% } %>
+
+    <div class="topbar__end">
+      <% if (isAuthenticated) { %>
+        <div class="topbar__right">
+          <%- include('lang-switch') %>
+          <%- include('currency-switch') %>
+
+          <a class="iconbtn <%= isActive('chat') %>" href="/chat" aria-label="<%= t('Chat') %>">
+            <%- include('icon', { name: 'chat', size: 20 }) %>
+            <% if (unreadMessages) { %><span class="pip pip--dot" data-badge="chat"><%= unreadMessages > 9 ? '9+' : unreadMessages %></span><% } %>
+          </a>
+
+          <a class="iconbtn <%= isActive('meetups') %>" href="/meetups" aria-label="<%= t('Meetups') %>">
+            <%- include('icon', { name: 'pin', size: 20 }) %>
+          </a>
+
+          <a class="iconbtn <%= isActive('activity') %>" href="/notifications" aria-label="<%= t('Activity') %>">
+            <%- include('icon', { name: 'bell', size: 20 }) %>
+            <% if (unreadNotifications) { %><span class="pip pip--dot" data-badge="notifications"><%= unreadNotifications > 99 ? '99+' : unreadNotifications %></span><% } %>
+          </a>
+
+          <div class="menu menu--end" data-menu>
+            <button class="menu__trigger" type="button" data-menu-toggle aria-expanded="false" aria-haspopup="true">
+              <%- include('avatar', { u: currentUser, cls: 'avatar--sm' }) %>
+              <span class="menu__handle">@<%= currentUser.username %></span>
+              <%- include('icon', { name: 'chevron', size: 16 }) %>
+            </button>
+            <div class="menu__panel" data-menu-panel hidden>
+              <div class="menu__head">
+                <%- include('avatar', { u: currentUser }) %>
+                <div>
+                  <strong><%= f.displayName(currentUser) %></strong>
+                  <span class="muted">@<%= currentUser.username %></span>
+                </div>
+              </div>
+              <a class="menu__item" href="/u/<%= currentUser.username %>"><%- include('icon', { name: 'user', size: 17 }) %> <%= t('My profile') %></a>
+              <a class="menu__item" href="/builds"><%- include('icon', { name: 'garage', size: 17 }) %> <%= t('My builds') %></a>
+              <a class="menu__item" href="/friends"><%- include('icon', { name: 'users', size: 17 }) %> <%= t('Friends') %> <% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
+              <a class="menu__item" href="/chat/new"><%- include('icon', { name: 'send', size: 17 }) %> <%= t('New message') %></a>
+              <a class="menu__item" href="/meetups/new"><%- include('icon', { name: 'plus', size: 17 }) %> <%= t('Host a meetup') %></a>
+              <% if (currentUser.is_admin) { %><a class="menu__item" href="/admin"><%- include('icon', { name: 'shield', size: 17 }) %> <%= t('Admin console') %></a><% } %>
+              <a class="menu__item" href="/settings"><%- include('icon', { name: 'settings', size: 17 }) %> <%= t('Settings') %></a>
+              <form action="/logout" method="post" class="menu__form">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="menu__item menu__item--danger" type="submit"><%- include('icon', { name: 'logout', size: 17 }) %> <%= t('Log out') %></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="topbar__cta">
+          <%- include('lang-switch') %>
+          <%- include('currency-switch') %>
+          <a class="btn btn--ghost" href="/login"><%= t('Log in') %></a>
+          <a class="btn btn--primary" href="/register"><%= t('Join up') %></a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</header>
+
+<% if (isAuthenticated) { %>
+<button class="appmenu__trigger" type="button" data-appmenu-toggle aria-label="<%= t('Menu') %>" aria-expanded="false">
+  <%- include('icon', { name: 'menu', size: 22 }) %>
+</button>
+<nav class="appmenu" data-appmenu hidden aria-label="<%= t('Primary') %>">
+  <div class="appmenu__head">
+    <strong><%= t('Menu') %></strong>
+    <button class="iconbtn" type="button" data-appmenu-close aria-label="<%= t('Close') %>"><%- include('icon', { name: 'x', size: 18 }) %></button>
+  </div>
+  <a class="appmenu__link <%= isActive('wall') %>" href="/"><%- include('icon', { name: 'wall', size: 20 }) %><span><%= t('Wall') %></span></a>
+  <a class="appmenu__link <%= isActive('explore') %>" href="/explore"><%- include('icon', { name: 'search', size: 20 }) %><span><%= t('Explore') %></span></a>
+  <a class="appmenu__link <%= isActive('builds') %>" href="/builds"><%- include('icon', { name: 'garage', size: 20 }) %><span><%= t('Builds') %></span></a>
+  <a class="appmenu__link <%= isActive('groups') %>" href="/groups"><%- include('icon', { name: 'shield', size: 20 }) %><span><%= t('Groups') %></span></a>
+  <a class="appmenu__link <%= isActive('meetups') %>" href="/meetups"><%- include('icon', { name: 'pin', size: 20 }) %><span><%= t('Meetups') %></span></a>
+  <a class="appmenu__link <%= isActive('services') %>" href="/services"><%- include('icon', { name: 'wrench', size: 20 }) %><span><%= t('Services') %></span></a>
+  <a class="appmenu__link <%= isActive('chat') %>" href="/chat"><%- include('icon', { name: 'chat', size: 20 }) %><span><%= t('Chat') %></span></a>
+  <a class="appmenu__link <%= isActive('garage') %>" href="/garage"><%- include('icon', { name: 'key', size: 20 }) %><span><%= t('My Garage') %></span></a>
+  <a class="appmenu__link <%= isActive('people') %>" href="/people"><%- include('icon', { name: 'users', size: 20 }) %><span><%= t('Drivers') %></span></a>
+  <a class="appmenu__link <%= isActive('friends') %>" href="/friends"><%- include('icon', { name: 'users', size: 20 }) %><span><%= t('Friends') %></span><% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
+</nav>
+<div class="appmenu__backdrop" data-appmenu-backdrop hidden></div>
+<script>
+  (function() {
+    const trigger = document.querySelector('[data-appmenu-toggle]');
+    const menu = document.querySelector('[data-appmenu]');
+    const backdrop = document.querySelector('[data-appmenu-backdrop]');
+    const closeBtn = document.querySelector('[data-appmenu-close]');
+    if (!trigger || !menu) return;
+    let scrollY = 0;
+    function open() {
+      scrollY = window.scrollY;
+      menu.hidden = false;
+      menu.classList.add('is-open');
+      if (backdrop) backdrop.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      // Stop the page behind the menu from scrolling away.
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    }
+    function close() {
+      menu.classList.remove('is-open');
+      setTimeout(() => { menu.hidden = true; }, 300);
+      if (backdrop) backdrop.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    }
+    trigger.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (backdrop) backdrop.addEventListener('click', close);
+    // Following a link inside the menu should close it.
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  })();
+</script>
+<% } %>

@@ -1,0 +1,108 @@
+<div class="single">
+  <a class="backlink" href="/services/parts"><%- include('../../partials/icon', { name: 'back', size: 15 }) %> <%= t('All parts') %></a>
+  <%- include('../../partials/services-tabs', { section: 'parts' }) %>
+
+  <article class="card srvhero">
+    <div class="srvhero__media">
+      <section class="card gallery" data-gallery>
+        <% if (!photos.length) { %>
+          <div class="gallery__empty">
+            <span class="srvhero__gen" style="--h:<%= f.hueOf(part.title) %>"><%- include('../../partials/icon', { name: 'tag', size: 44 }) %></span>
+            <p class="muted"><%= t('No photos yet.') %></p>
+          </div>
+        <% } else { %>
+          <div class="gallery__stage">
+            <% photos.forEach(function (photo, index) { %>
+              <figure class="gallery__slide <%= index === 0 ? 'is-active' : '' %>" data-slide="<%= index %>">
+                <a href="<%= config.uploadUrl %>/<%= photo.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= photo.media_path %>" alt="" loading="<%= index === 0 ? 'eager' : 'lazy' %>"></a>
+              </figure>
+            <% }); %>
+          </div>
+          <% if (photos.length > 1) { %>
+            <div class="gallery__thumbs" data-thumbs>
+              <% photos.forEach(function (photo, index) { %>
+                <button class="gallery__thumb <%= index === 0 ? 'is-active' : '' %>" type="button" data-thumb="<%= index %>" aria-label="<%= t('Show file {n}', { n: index + 1 }) %>">
+                  <img src="<%= config.uploadUrl %>/<%= photo.media_path %>" alt="" loading="lazy">
+                </button>
+              <% }); %>
+            </div>
+          <% } %>
+        <% } %>
+      </section>
+    </div>
+
+    <div class="srvhero__side">
+      <div class="srvhero__tags">
+        <span class="tag tag--cat"><%- include('../../partials/icon', { name: 'tag', size: 13 }) %> <%= t(categories[part.category] || 'Other') %></span>
+        <% if (part.status === 'sold') { %><span class="tag tag--sold"><%= t('Sold') %></span><% } %>
+      </div>
+
+      <h1 class="display srvhero__title"><%= part.title %></h1>
+
+      <p class="srvhero__price">
+        <% if (part.price != null) { %><strong><%= money(part.price, part.currency) %></strong><% } else { %><strong><%= t('Ask') %></strong><% } %>
+        <% if (moneyAlt(part.price, part.currency)) { %><span class="money__alt"><%= moneyAlt(part.price, part.currency) %></span><% } %>
+        <% if (part.price_note) { %><span class="muted"><%= part.price_note %></span><% } %>
+      </p>
+
+      <p class="srvhero__meta muted">
+        <% if (part.location) { %><span><%- include('../../partials/icon', { name: 'pin', size: 14 }) %> <%= part.location %></span><% } %>
+        <span><%- include('../../partials/icon', { name: 'clock', size: 14 }) %> <%= f.timeAgo(part.created_at, lang) %></span>
+      </p>
+
+      <a class="seller" href="/u/<%= part.username %>">
+        <%- include('../../partials/avatar', { u: part, cls: 'avatar--sm' }) %>
+        <span class="seller__id">
+          <strong><%= part.display_name || part.username %></strong>
+          <span class="muted">@<%= part.username %></span>
+        </span>
+      </a>
+
+      <div class="srvhero__actions">
+        <% if (part.phone) { %>
+          <a class="btn btn--primary btn--block" href="tel:<%= String(part.phone).replace(/[^+\d]/g, '') %>"><%- include('../../partials/icon', { name: 'phone', size: 16 }) %> <%= part.phone %></a>
+        <% } %>
+        <% if (isAuthenticated && !mine) { %>
+          <form action="/friends/message/<%= part.username %>" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--ghost btn--block" type="submit"><%- include('../../partials/icon', { name: 'chat', size: 16 }) %> <%= t('Message the seller') %></button>
+          </form>
+        <% } else { %>
+          <a class="btn btn--ghost btn--block" href="/u/<%= part.username %>"><%- include('../../partials/icon', { name: 'user', size: 16 }) %> @<%= part.username %></a>
+        <% } %>
+      </div>
+
+      <% if (mine || canModerate) { %>
+        <div class="srvhero__manage">
+          <a class="btn btn--ghost btn--sm" href="/services/parts/<%= part.id %>/edit"><%- include('../../partials/icon', { name: 'edit', size: 15 }) %> <%= t('Edit') %></a>
+          <form action="/services/parts/<%= part.id %>/sold" method="post" data-confirm="<%= part.status === 'sold' ? t('Put this back on the market?') : t('Mark this listing as sold?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--ghost btn--sm" type="submit"><%- include('../../partials/icon', { name: 'check', size: 15 }) %> <%= part.status === 'sold' ? t('Mark available') : t('Mark sold') %></button>
+          </form>
+          <form action="/services/parts/<%= part.id %>/delete" method="post" data-confirm="<%= t('Delete this listing for good?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--danger btn--sm" type="submit"><%- include('../../partials/icon', { name: 'trash', size: 15 }) %> <%= t('Delete') %></button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </article>
+
+  <% if (part.description) { %>
+    <section class="card build-note">
+      <h2 class="section-title"><%- include('../../partials/icon', { name: 'flag', size: 17 }) %> <%= t('Details') %></h2>
+      <p><%- f.formatText(part.description) %></p>
+    </section>
+  <% } %>
+
+  <% if (related.length) { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('../../partials/icon', { name: 'tag', size: 17 }) %> <%= t('More in {category}', { category: t(categories[part.category] || 'Other') }) %></h2>
+      <div class="cards">
+        <% related.forEach(function (row) { %>
+          <%- include('../../partials/part-card', { part: row, categories: categories }) %>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+</div>

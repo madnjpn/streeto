@@ -1,0 +1,112 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('network') %></p>
+    <h1 class="display"><%= t('Find drivers') %></h1>
+    <p class="lede"><%= t('Search by username, display name, city or car.') %></p>
+  </div>
+</div>
+
+<form class="searchbig" action="/people" method="get" role="search">
+  <%- include('../partials/icon', { name: 'search', size: 20 }) %>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('e.g. nightrunner, Rotterdam, Supra') %>" autofocus>
+  <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+</form>
+
+<% /* The three tabs: friends, all drivers, suggested. */ %>
+<nav class="srvswitch" role="tablist" aria-label="<%= t('Driver lists') %>">
+  <a class="srvswitch__tab is-active" role="tab" aria-selected="true" data-people-tab="friends" href="#friends"><%- include('../partials/icon', { name: 'users', size: 15 }) %> <%= t('Friends') %> <% if (friendsList.length) { %><span class="pip" data-badge="friends"><%= friendsList.length %></span><% } %></a>
+  <a class="srvswitch__tab" data-people-tab="directory" href="#directory"><%- include('../partials/icon', { name: 'wall', size: 15 }) %> <%= t('All drivers') %> <span class="pip"><%= directoryTotal %></span></a>
+  <a class="srvswitch__tab" data-people-tab="suggestions" href="#suggestions"><%- include('../partials/icon', { name: 'bolt', size: 15 }) %> <%= t('Suggested') %> <span class="pip"><%= suggestions.length %></span></a>
+</nav>
+
+<% if (q) { %>
+  <section class="strip" data-people-panel="search" id="search">
+    <h2 class="section-title"><%= results.length === 1 ? t('{n} result', { n: results.length }) : t('{n} results', { n: results.length }) %> <%= t('for "{q}"', { q: q }) %></h2>
+    <% if (results.length) { %>
+      <div class="cards cards--persons">
+        <% results.forEach(function (person) { %>
+          <%- include('../partials/person-card', { person: person, relationship: person.relationship }) %>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'search', title: t('Nobody matching that'), text: t('Try a username, a city, or part of a car model.') }) %>
+    <% } %>
+  </section>
+<% } else { %>
+  <section class="strip" data-people-panel="friends" id="friends">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= t('Your friends ({n})', { n: friendsList.length }) %></h2>
+    <% if (friendsList.length) { %>
+      <div class="cards cards--persons">
+        <% friendsList.forEach(function (person) { %>
+          <%- include('../partials/person-card', { person: person, relationship: person.relationship }) %>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <p class="muted"><%= t('No friends yet. Add some from the suggested list below.') %></p>
+    <% } %>
+  </section>
+
+  <section class="strip" data-people-panel="directory" hidden id="directory">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'wall', size: 17 }) %> <%= t('All drivers') %> <span class="muted small"><%= t('({n} drivers on the network)', { n: directoryTotal }) %></span></h2>
+    <% if (directory.length) { %>
+      <ul class="driverlist">
+        <% directory.forEach(function (person) { %>
+          <li class="driverlist__row">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+            <a class="driverlist__name" href="/u/<%= person.username %>">
+              <strong><%= person.display_name || person.username %></strong>
+              <span class="muted small">@<%= person.username %></span>
+            </a>
+            <% if (person.city) { %><span class="driverlist__meta muted small"><%= person.city %></span><% } %>
+            <% if (person.car) { %><span class="driverlist__meta muted small"><%= person.car %></span><% } %>
+            <span class="driverlist__count muted small"><%= person.post_count %></span>
+            <a class="btn btn--ghost btn--sm driverlist__msg" href="/friends/message/<%= person.username %>">
+              <%- include('../partials/icon', { name: 'chat', size: 14 }) %> <%= t('Message') %>
+            </a>
+          </li>
+        <% }); %>
+      </ul>
+      <%- include('../partials/pagination', { page: page, hasMore: hasMore, baseQs: baseQs }) %>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'users', title: t('The network is quiet'), text: t('No drivers yet.') }) %>
+    <% } %>
+  </section>
+
+  <section class="strip" data-people-panel="suggestions" hidden id="suggestions">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Suggested drivers') %></h2>
+    <% if (suggestions.length) { %>
+      <div class="cards cards--persons">
+        <% suggestions.forEach(function (person) { %>
+          <%- include('../partials/person-card', { person: person, relationship: { status: null } }) %>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'users', title: t('The network is quiet'), text: t('You have already added everyone here.') }) %>
+    <% } %>
+  </section>
+<% } %>
+
+<script>
+  (function () {
+    var tabs = document.querySelectorAll('.srvswitch__tab');
+    var panels = document.querySelectorAll('[data-people-panel]');
+    function showTab(name) {
+      tabs.forEach(function (tab) {
+        var on = tab.dataset.peopleTab === name;
+        tab.classList.toggle('is-active', on);
+        tab.setAttribute('aria-selected', on);
+      });
+      panels.forEach(function (panel) {
+        panel.hidden = panel.id !== name;
+      });
+      try { history.replaceState(null, '', '#' + name); } catch (e) {}
+    }
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function (e) {
+        e.preventDefault();
+        showTab(tab.dataset.peopleTab);
+      });
+    });
+    if (location.hash) showTab(location.hash.slice(1));
+  })();
+</script>

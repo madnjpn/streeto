@@ -1,0 +1,45 @@
+<%
+const rel = typeof relationship !== 'undefined' ? relationship : null;
+const membershipStatus = group.status && ['active', 'pending', 'invited'].includes(group.status) ? group.status : null;
+%>
+<article class="card groupcard">
+  <a class="group__cover" href="/groups/<%= group.slug %>">
+    <% if (group.avatar) { %>
+      <img src="<%= config.uploadUrl %>/<%= group.avatar %>"<% if (srcset(group.avatar)) { %> srcset="<%= srcset(group.avatar) %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy">
+    <% } else { %>
+      <span class="group__cover-gen" style="--h:<%= f.hueOf(group.slug) %>"><%- include('icon', { name: 'shield', size: 28 }) %></span>
+    <% } %>
+  </a>
+  <div class="group__body">
+    <div class="group__head">
+      <a class="group__name" href="/groups/<%= group.slug %>"><%= group.name %></a>
+      <span class="tag tag--<%= group.privacy %>"><%- include('icon', { name: group.privacy === 'open' ? 'globe' : group.privacy === 'private' ? 'lock' : 'shield', size: 13 }) %> <%= t(f.PRIVACY_LABELS[group.privacy]) %></span>
+    </div>
+    <% if (group.description) { %><p class="group__desc"><%= f.truncate(group.description, 120) %></p><% } %>
+    <div class="group__meta muted">
+      <span><%- include('icon', { name: 'users', size: 14 }) %> <%= group.member_count %></span>
+      <span><%- include('icon', { name: 'wall', size: 14 }) %> <%= group.post_count %></span>
+    </div>
+    <% if (currentUser) { %>
+      <div class="group__foot">
+        <% if (membershipStatus === 'active') { %>
+          <a class="btn btn--ghost btn--sm" href="/groups/<%= group.slug %>"><%- include('icon', { name: 'check', size: 15 }) %> <%= t('View') %></a>
+        <% } else if (membershipStatus === 'pending') { %>
+          <span class="tag tag--pending"><%- include('icon', { name: 'clock', size: 13 }) %> <%= t('Request pending') %></span>
+        <% } else if (membershipStatus === 'invited') { %>
+          <form action="/groups/<%= group.slug %>/join" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--primary btn--sm" type="submit"><%- include('icon', { name: 'check', size: 15 }) %> <%= t('Accept invite') %></button>
+          </form>
+        <% } else { %>
+          <form action="/groups/<%= group.slug %>/join" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn <%= group.privacy === 'open' ? 'btn--primary' : 'btn--outline' %> btn--sm" type="submit">
+              <%= group.privacy === 'open' ? t('Join group') : t('Request to join') %>
+            </button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</article>

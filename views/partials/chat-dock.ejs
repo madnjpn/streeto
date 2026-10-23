@@ -1,0 +1,76 @@
+<%
+/* Floating chat box: a launcher plus a panel that lists recent threads
+   and lets the driver read and answer without leaving the page.
+   The panel is filled in by public/js/chat-dock.js. */
+%>
+<div class="chatdock" data-chat-dock data-upload-url="<%= config.uploadUrl %>">
+  <button class="chatdock__launcher" type="button" data-dock-launcher aria-label="<%= t('Chat') %>" aria-expanded="false">
+    <%- include('icon', { name: 'chat', size: 22 }) %>
+    <span class="pip pip--dot" data-dock-badge hidden></span>
+  </button>
+
+  <section class="chatdock__panel" data-dock-panel hidden aria-label="<%= t('Chat') %>">
+    <header class="chatdock__head">
+      <span class="chatdock__switch" data-dock-switch hidden></span>
+      <button class="iconbtn iconbtn--ghost chatdock__back" type="button" data-dock-back hidden aria-label="<%= t('Back to chats') %>">
+        <%- include('icon', { name: 'back', size: 17 }) %>
+      </button>
+      <button class="chatdock__title" type="button" data-dock-title><%= t('Chat') %></button>
+      <div class="chatdock__headbtns">
+        <button class="iconbtn iconbtn--ghost" type="button" data-dock-min aria-label="<%= t('Minimise') %>">
+          <span class="chatdock__mi" data-dock-icon="min"><%- include('icon', { name: 'minus', size: 17 }) %></span>
+          <span class="chatdock__mx" data-dock-icon="max" hidden><%- include('icon', { name: 'expand', size: 17 }) %></span>
+        </button>
+        <button class="iconbtn iconbtn--ghost" type="button" data-dock-close aria-label="<%= t('Close') %>">
+          <%- include('icon', { name: 'x', size: 17 }) %>
+        </button>
+      </div>
+    </header>
+
+    <div class="chatdock__body">
+      <div class="chatdock__list" data-dock-list>
+        <p class="chatdock__hint muted"><%= t('Loading chats…') %></p>
+      </div>
+
+      <div class="chatdock__thread" data-dock-thread hidden>
+        <div class="chatdock__messages" data-dock-messages></div>
+        <div class="chatdock__replybar" data-dock-replybar hidden>
+          <span data-dock-reply-name></span>
+          <button class="iconbtn iconbtn--ghost" type="button" data-dock-reply-cancel aria-label="<%= t('Cancel') %>">
+            <%- include('icon', { name: 'x', size: 15 }) %>
+          </button>
+        </div>
+        <div class="chatdock__attachbar" data-dock-attachbar hidden>
+          <%- include('icon', { name: 'paperclip', size: 15 }) %>
+          <span class="chatdock__attach-name" data-dock-attach-name></span>
+          <div class="quality quality--tiny" data-quality hidden>
+            <button type="button" class="quality__btn is-on" data-quality-value="sd" title="<%= t('Small and fast - the picture is made for the screen') %>">SD</button>
+            <button type="button" class="quality__btn" data-quality-value="hd" title="<%= t('Full size - a sharp picture, a bigger file') %>">HD</button>
+          </div>
+          <button class="iconbtn iconbtn--ghost" type="button" data-dock-attach-remove aria-label="<%= t('Remove the file') %>">
+            <%- include('icon', { name: 'x', size: 15 }) %>
+          </button>
+        </div>
+        <form class="chatdock__composer" data-dock-form>
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <input type="hidden" name="parent_id" value="" data-dock-parent>
+          <% /* The browser sends the parts in the order they stand here, so the
+               size choice has to come before the file itself. */ %>
+          <input type="hidden" name="quality" value="sd" data-quality-input>
+          <input type="file" name="media" accept="image/*,video/*,.pdf,.txt,text/plain,application/pdf" hidden data-dock-file>
+          <button class="iconbtn iconbtn--ghost" type="button" data-dock-attach aria-label="<%= t('Attach a file') %>" title="<%= t('Attach a file') %>">
+            <%- include('icon', { name: 'paperclip', size: 17 }) %>
+          </button>
+          <input type="text" name="body" placeholder="<%= t('Write a message…') %>" autocomplete="off" aria-label="<%= t('Write a message…') %>" data-dock-input>
+          <button class="iconbtn" type="submit" aria-label="<%= t('Send') %>">
+            <%- include('icon', { name: 'send', size: 17 }) %>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <footer class="chatdock__foot">
+      <a href="/chat/new"><%- include('icon', { name: 'plus', size: 15 }) %> <%= t('New chat') %></a>
+    </footer>
+  </section>
+</div>

@@ -1,0 +1,48 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/groups"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('All groups') %></a>
+  <p class="eyebrow"><%= t('new chapter') %></p>
+  <h1 class="display"><%= t('Start a group') %></h1>
+  <p class="lede"><%= t('Give it a name, choose who can get in, then post the first thing.') %></p>
+
+  <form class="card card--form" action="/groups/new" method="post" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+
+    <label class="field <%= errors.name ? 'field--bad' : '' %>">
+      <span class="field__label"><%= t('Group name') %></span>
+      <input type="text" name="name" value="<%= values.name %>" maxlength="60" required placeholder="<%= t('e.g. Midnight Runners') %>">
+      <% if (errors.name) { %><span class="field__error"><%= t(errors.name) %></span><% } %>
+    </label>
+
+    <label class="field">
+      <span class="field__label"><%= t('What is this group about?') %></span>
+      <textarea name="description" rows="4" maxlength="800" placeholder="<%= t('Who it is for, where you meet, what you drive.') %>"><%= values.description %></textarea>
+    </label>
+
+    <fieldset class="field">
+      <legend class="field__label"><%= t('Privacy') %></legend>
+      <div class="radiocards">
+        <% privacies.forEach(function (p) { %>
+          <label class="radiocard <%= values.privacy === p ? 'is-on' : '' %>">
+            <input type="radio" name="privacy" value="<%= p %>" <%= values.privacy === p ? 'checked' : '' %>>
+            <span class="radiocard__icon"><%- include('../partials/icon', { name: p === 'open' ? 'globe' : p === 'private' ? 'lock' : 'shield', size: 20 }) %></span>
+            <span class="radiocard__text">
+              <strong><%= t(f.PRIVACY_LABELS[p]) %></strong>
+              <span class="muted"><%= t(f.PRIVACY_HINTS[p]) %></span>
+            </span>
+          </label>
+        <% }); %>
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <span class="field__label"><%= t('Group logo') %> <span class="muted"><%= t('(optional)') %></span></span>
+      <input type="file" name="avatar" accept="image/*" data-avatar-input data-avatar-target="#newgrouplogo">
+      <span class="field__hint"><%= t('Any image up to {mb} MB.', { mb: maxUploadMb }) %></span>
+      <span class="logopreview" id="newgrouplogo" data-avatar-preview hidden>
+        <span data-avatar-img></span>
+      </span>
+    </label>
+
+    <button class="btn btn--primary btn--block" type="submit"><%- include('../partials/icon', { name: 'shield', size: 17 }) %> <%= t('Create group') %></button>
+  </form>
+</div>

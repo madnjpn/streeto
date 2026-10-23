@@ -1,0 +1,66 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('pick a driver') %></p>
+    <h1 class="display"><%= t('New message') %></h1>
+    <p class="lede"><%= t('Search anyone on the network, or pick a friend.') %></p>
+  </div>
+</div>
+
+<form class="searchbig" action="/chat/new" method="get" role="search">
+  <%- include('../partials/icon', { name: 'search', size: 20 }) %>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Username, city or car') %>" autofocus>
+  <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+</form>
+
+<% if (q) { %>
+  <section class="strip">
+    <h2 class="section-title"><%= results.length === 1 ? t('{n} result', { n: results.length }) : t('{n} results', { n: results.length }) %></h2>
+    <% if (results.length) { %>
+      <div class="cards cards--persons">
+        <% results.forEach(function (person) { %>
+          <article class="card person">
+            <a class="person__id" href="/u/<%= person.username %>">
+              <%- include('../partials/avatar', { u: person }) %>
+              <div class="person__text">
+                <strong><%= person.display_name || person.username %></strong>
+                <span class="muted">@<%= person.username %></span>
+                <% if (person.car) { %><span class="person__car"><%- include('../partials/icon', { name: 'car', size: 14 }) %> <%= person.car %></span><% } %>
+              </div>
+            </a>
+            <div class="person__foot">
+              <span class="muted"><%= t('{n} friends', { n: person.friend_count }) %></span>
+              <form action="/friends/message/<%= person.username %>" method="post">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--primary btn--sm" type="submit"><%- include('../partials/icon', { name: 'chat', size: 15 }) %> <%= t('Message') %></button>
+              </form>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'search', title: t('No drivers found'), text: t('Try part of a username or a city.') }) %>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="strip">
+  <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= t('Your friends') %></h2>
+  <% if (friendsList.length) { %>
+    <ul class="rows">
+      <% friendsList.forEach(function (person) { %>
+        <li class="row">
+          <a class="row__id" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+            <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>
+          </a>
+          <form action="/friends/message/<%= person.username %>" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'chat', size: 15 }) %> <%= t('Message') %></button>
+          </form>
+        </li>
+      <% }); %>
+    </ul>
+  <% } else { %>
+    <%- include('../partials/empty', { icon: 'users', title: t('No friends yet'), text: t('Search above - you can message anyone, friend or not.'), action: '<a class="btn btn--primary" href="/people">' + t('Find drivers') + '</a>' }) %>
+  <% } %>
+</section>

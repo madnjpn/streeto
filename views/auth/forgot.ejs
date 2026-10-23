@@ -1,0 +1,72 @@
+<div class="auth">
+  <section class="auth__art">
+    <div class="auth__art-inner">
+      <img class="auth__logo" src="/websitelogo.png" alt="<%= config.siteName %>">
+      <p class="eyebrow"><%- include('../partials/icon', { name: 'shield', size: 14 }) %> <%= t('account recovery') %></p>
+      <h1 class="display display--xl"><%- t('BACK ON<br>THE STREETS') %></h1>
+      <p class="lede"><%= t('Lost the password? The inbox on the account is the only way back in - and it takes a minute.') %></p>
+      <ul class="ticks">
+        <li><%- include('../partials/icon', { name: 'bolt', size: 16 }) %> <%= t('The link works once and dies after an hour') %></li>
+        <li><%- include('../partials/icon', { name: 'mail', size: 16 }) %> <%= t('It only goes to the inbox on the account') %></li>
+        <li><%- include('../partials/icon', { name: 'lock', size: 16 }) %> <%= t('A new password logs out every old session') %></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="auth__panel">
+    <% if (step === 'sent') { %>
+      <div class="card card--form">
+        <h2 class="card__title"><%= t('Check your inbox') %></h2>
+        <p class="muted"><%= t('If that name or email is registered, the link is on its way. It is good for {minutes} minutes and works once.', { minutes }) %></p>
+
+        <% if (masked) { %>
+          <p class="auth__mail"><%- include('../partials/icon', { name: 'mail', size: 16 }) %> <span><%= masked %></span></p>
+        <% } %>
+
+        <a class="btn btn--primary btn--block" href="/login"><%- include('../partials/icon', { name: 'back', size: 17 }) %> <%= t('Back to log in') %></a>
+        <p class="muted small"><%= t('Nothing there?') %> <a class="link" href="/forgot"><%= t('Try again') %></a>.</p>
+      </div>
+    <% } else { %>
+      <form class="card card--form" action="<%= step === 'confirm' ? '/forgot/confirm' : '/forgot' %>" method="post" novalidate>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <% if (step === 'confirm') { %>
+          <input type="hidden" name="login" value="<%= login %>">
+        <% } %>
+        <h2 class="card__title"><%= t('Recover the account') %></h2>
+
+        <% if (step === 'confirm') { %>
+          <p class="muted"><%= t('This is the inbox on the account:') %></p>
+          <p class="auth__mail"><%- include('../partials/icon', { name: 'mail', size: 16 }) %> <span><%= masked %></span></p>
+          <p class="muted"><%= t('The link is good for {minutes} minutes and works once.', { minutes }) %></p>
+        <% } else { %>
+          <p class="muted"><%= t('Type your username or email. A username shows the inbox it is registered to before anything is sent.') %></p>
+        <% } %>
+
+        <% if (error) { %>
+          <div class="alert alert--error"><%- include('../partials/icon', { name: 'alert', size: 18 }) %> <span><%= error %></span></div>
+        <% } %>
+        <% if (notice) { %>
+          <div class="alert alert--info"><%- include('../partials/icon', { name: 'mail', size: 18 }) %> <span><%= notice %></span></div>
+        <% } %>
+
+        <% if (step !== 'confirm') { %>
+          <label class="field">
+            <span class="field__label"><%= t('Username or email') %></span>
+            <input id="login" name="login" type="text" value="<%= login %>" autocomplete="username" required autofocus>
+          </label>
+        <% } %>
+
+        <button class="btn btn--primary btn--block" type="submit">
+          <%- include('../partials/icon', { name: step === 'confirm' ? 'mail' : 'bolt', size: 17 }) %>
+          <%= step === 'confirm' ? t('Send the link there') : t('Continue') %>
+        </button>
+
+        <% if (step === 'confirm') { %>
+          <p class="muted small"><%= t('Not my account?') %> <a class="link" href="/forgot"><%= t('Use another name') %></a>.</p>
+        <% } else { %>
+          <p class="muted small"><%= t('Remembered it?') %> <a class="link" href="/login"><%= t('Back to log in') %></a>.</p>
+        <% } %>
+      </form>
+    <% } %>
+  </section>
+</div>

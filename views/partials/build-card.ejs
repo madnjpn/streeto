@@ -1,0 +1,63 @@
+<%
+const cover = build.cover ? `${config.uploadUrl}/${build.cover}` : null;
+    const coverSet = build.cover ? srcset(build.cover) : '';
+const subtitle = [build.year, build.make, build.model].filter(Boolean).join(' ');
+%>
+<article class="card build-card">
+  <div class="build-card__media-wrap">
+    <a class="build-card__media" href="/builds/<%= build.id %>">
+      <% if (cover) { %>
+        <img src="<%= cover %>"<% if (coverSet) { %> srcset="<%= coverSet %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="<%= build.title %>" loading="lazy" decoding="async">
+      <% } else { %>
+        <span class="build-card__gen" style="--h:<%= f.hueOf(build.title) %>"><%- include('icon', { name: 'car', size: 36 }) %></span>
+      <% } %>
+      <span class="build-card__badges">
+        <% if (build.visibility === 'private') { %><span class="tag tag--invite"><%- include('icon', { name: 'lock', size: 12 }) %> <%= t('Private') %></span><% } %>
+        <% if (build.for_sale) { %><span class="tag tag--sale"><%- include('icon', { name: 'tag', size: 12 }) %> <%= t('For sale') %></span><% } %>
+        <% if (build.week_votes) { %><span class="tag tag--hot"><%- include('icon', { name: 'bolt', size: 12 }) %> <%= t('{n} this week', { n: build.week_votes }) %></span><% } %>
+      </span>
+    </a>
+    <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated && typeof mine !== 'undefined' && !mine && !build.for_sale) { %>
+      <form class="build-card__watch" action="/builds/<%= build.id %>/watch" method="post" data-watch-form>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn--icon <%= build.watching ? 'is-on' : '' %>" data-watch-btn aria-pressed="<%= Boolean(build.watching) %>">
+          <%- include('icon', { name: 'bell', size: 16 }) %>
+        </button>
+      </form>
+    <% } %>
+  </div>
+  <div class="build-card__body">
+    <a class="build-card__title" href="/builds/<%= build.id %>"><%= build.title %></a>
+    <% if (subtitle) { %><p class="build-card__sub muted"><%= subtitle %></p><% } %>
+    <% if (build.for_sale) { %>
+      <p class="build-card__price">
+        <% if (build.price != null) { %><strong><%= money(build.price, build.currency) %></strong><% } else { %><strong><%= t('Ask') %></strong><% } %>
+        <% if (moneyAlt(build.price, build.currency)) { %><span class="money__alt"><%= moneyAlt(build.price, build.currency) %></span><% } %>
+        <% if (build.price_note) { %><span class="muted small"><%= build.price_note %></span><% } %>
+      </p>
+    <% } %>
+    <div class="build-card__specs">
+      <% if (build.engine) { %><span class="spec"><%- include('icon', { name: 'settings', size: 13 }) %> <%= f.truncate(build.engine, 22) %></span><% } %>
+      <% if (build.power_hp) { %><span class="spec"><%- include('icon', { name: 'bolt', size: 13 }) %> <%= build.power_hp %> hp</span><% } %>
+      <% if (build.drivetrain) { %><span class="spec"><%- include('icon', { name: 'git-merge', size: 13 }) %> <%= build.drivetrain %></span><% } %>
+      <% if (build.weight_kg) { %><span class="spec"><%- include('icon', { name: 'weight', size: 13 }) %> <%= build.weight_kg %> kg</span><% } %>
+      <% if (build.odometer_km) { %><span class="spec"><svg class="odometer-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h10M7 14h10"/><circle cx="7" cy="10" r="1.5" fill="currentColor"/><circle cx="17" cy="14" r="1.5" fill="currentColor"/></svg> <%= build.odometer_km %> km</span><% } %>
+      <% if (build.media_count) { %><span class="spec"><%- include('icon', { name: 'image', size: 13 }) %> <%= build.media_count %></span><% } %>
+      <%- include('pti-badge', { v: build, compact: false, showUnknown: true, showCheck: false }) %>
+    </div>
+    <div class="build-card__foot">
+      <a class="build-card__owner" href="/u/<%= build.username %>">
+        <%- include('avatar', { u: { username: build.username, display_name: build.display_name, avatar: build.avatar }, cls: 'avatar--xs' }) %>
+        <span class="muted">@<%= build.username %></span>
+      </a>
+      <form action="/builds/<%= build.id %>/vote" method="post" class="build-card__vote">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn--ghost btn--sm <%= build.voted_this_week ? 'is-on' : '' %>" title="<%= t('Vote for build of the week') %>">
+          <%- include('icon', { name: 'star', size: 14 }) %> <%= build.vote_count %>
+          <% if (build.voted_this_week) { %><%- include('icon', { name: 'check', size: 10, cls: 'vote-check' }) %><% } %>
+        </button>
+      </form>
+      <%- include('share-button', { type: 'build', id: build.id, title: build.title, label: t('build') }) %>
+    </div>
+  </div>
+</article>

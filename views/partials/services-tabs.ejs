@@ -1,0 +1,9 @@
+<%
+/* Section switch shown on every Services page. */
+const current = typeof section !== 'undefined' ? section : 'parts';
+%>
+<nav class="srvswitch" aria-label="<%= t('Services sections') %>">
+  <a class="srvswitch__tab <%= current === 'parts' ? 'is-active' : '' %>" href="/services/parts"><%- include('icon', { name: 'tag', size: 15 }) %> <%= t('Parts') %></a>
+  <a class="srvswitch__tab <%= current === 'maintenance' ? 'is-active' : '' %>" href="/services/maintenance"><%- include('icon', { name: 'wrench', size: 15 }) %> <%= t('Maintenance') %></a>
+  <a class="srvswitch__tab <%= current === 'partsearch' ? 'is-active' : '' %>" href="/services/part-search"><%- include('icon', { name: 'search', size: 15 }) %> <%= t('Part search') %></a>
+</nav>

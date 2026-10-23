@@ -1,0 +1,77 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('your people') %></p>
+    <h1 class="display"><%= t('Friends') %></h1>
+    <p class="lede"><%= t('{n} in your group', { n: friendsList.length }) %> · <a class="link" href="/people"><%= t('find more drivers') %></a></p>
+  </div>
+  <a class="btn btn--primary" href="/people"><%- include('../partials/icon', { name: 'search', size: 17 }) %> <%= t('Find drivers') %></a>
+</div>
+
+<% if (incoming.length) { %>
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'bell', size: 17 }) %> <%= t('Requests waiting ({n})', { n: incoming.length }) %></h2>
+    <div class="cards cards--persons">
+      <% incoming.forEach(function (person) { %>
+        <article class="card person">
+          <a class="person__id" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: { username: person.username, display_name: person.display_name, avatar: person.avatar } }) %>
+            <div class="person__text">
+              <strong><%= person.display_name || person.username %></strong>
+              <span class="muted">@<%= person.username %></span>
+              <% if (person.car) { %><span class="person__car"><%- include('../partials/icon', { name: 'car', size: 14 }) %> <%= person.car %></span><% } %>
+            </div>
+          </a>
+          <div class="person__foot">
+            <span class="muted"><%= f.timeAgo(person.created_at) %></span>
+            <div class="person__actions">
+              <button class="btn btn--primary btn--sm" type="button" data-friend-accept="<%= person.id %>" data-label-off="<%= t('Accept') %>"><%- include('../partials/icon', { name: 'check', size: 15 }) %> <%= t('Accept') %></button>
+              <button class="btn btn--ghost btn--sm" type="button" data-friend-decline="<%= person.id %>" data-label-off="<%= t('Decline') %>"><%= t('Decline') %></button>
+            </div>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+  </section>
+<% } %>
+
+<% if (outgoing.length) { %>
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'clock', size: 17 }) %> <%= t('Sent requests') %></h2>
+    <ul class="rows">
+      <% outgoing.forEach(function (person) { %>
+        <li class="row">
+          <a class="row__id" href="/u/<%= person.username %>">
+            <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+            <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>
+          </a>
+          <span class="muted small"><%= f.timeAgo(person.created_at) %></span>
+          <button class="btn btn--ghost btn--sm" type="button" data-friend-cancel="<%= person.id %>" data-label-off="<%= t('Withdraw') %>"><%= t('Withdraw') %></button>
+        </li>
+      <% }); %>
+    </ul>
+  </section>
+<% } %>
+
+<section class="strip">
+  <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= t('My group ({n})', { n: friendsList.length }) %></h2>
+  <% if (friendsList.length) { %>
+    <div class="cards cards--persons">
+      <% friendsList.forEach(function (person) { %>
+        <%- include('../partials/person-card', { person: person, relationship: { status: 'accepted' } }) %>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../partials/empty', { icon: 'users', title: t('No friends yet'), text: t('Search for drivers by username, city or car and send a request.'), action: '<a class="btn btn--primary" href="/people">' + t('Find drivers') + '</a>' }) %>
+  <% } %>
+</section>
+
+<% if (suggestions.length) { %>
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Drivers you may know') %></h2>
+    <div class="cards cards--persons">
+      <% suggestions.forEach(function (person) { %>
+        <%- include('../partials/person-card', { person: person, relationship: { status: null } }) %>
+      <% }); %>
+    </div>
+  </section>
+<% } %>

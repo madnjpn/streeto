@@ -1,0 +1,14 @@
+<div class="single single--narrow">
+  <p class="eyebrow"><%= t('manual') %></p>
+  <h1 class="display"><%= t('How {site} works', { site: config.siteName }) %></h1>
+  <p class="lede"><%= t('Everything in the app, in plain language.') %></p>
+
+  <div class="prose">
+    <%- include('../partials/how-it-works-content', { howSections: howSections }) %>
+  </div>
+
+  <div class="btnrow">
+    <a class="btn btn--primary" href="/register"><%= t('Join up') %></a>
+    <a class="btn btn--ghost" href="/"><%= t('Back to the front page') %></a>
+  </div>
+</div>

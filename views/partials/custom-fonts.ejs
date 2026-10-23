@@ -1,0 +1,24 @@
+<%
+  /* Uploaded fonts are locked to their script with `unicode-range`, so
+     a Georgian font can never take over Latin letters (and vice versa)
+     even when the file contains both. `all` fonts stay unrestricted and
+     act as a general fallback. */
+  const ranges = {
+    georgian: 'U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F, U+10D0-10FF',
+    latin: 'U+0000-024F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF, U+2100-214F, U+2190-21FF, U+2200-22FF, U+25A0-25FF, U+2600-26FF, U+FEFF, U+FFFD',
+  };
+%>
+<% if (typeof customFonts !== 'undefined' && customFonts && customFonts.length) { %>
+<style id="custom-fonts">
+  <% customFonts.forEach(function (f) { %>
+  @font-face {
+    font-family: '<%= f.family %>';
+    src: url('<%= f.url %>') format('<%= f.format %>');
+    font-weight: <%= f.weight %>;
+    font-style: <%= f.style %>;
+    font-display: swap;<% if (ranges[f.lang]) { %>
+    unicode-range: <%= ranges[f.lang] %>;<% } %>
+  }
+  <% }); %>
+</style>
+<% } %>

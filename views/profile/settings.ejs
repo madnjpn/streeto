@@ -1,0 +1,146 @@
+<div class="single single--narrow">
+  <p class="eyebrow"><%= t('garage') %></p>
+  <h1 class="display"><%= t('Settings') %></h1>
+  <p class="lede"><%= t('Your profile, your password, your data.') %></p>
+
+  <section class="card card--form">
+    <h2 class="card__title"><%= t('Profile') %></h2>
+    <form action="/settings" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+
+      <div class="avatarrow">
+        <div class="avatarrow__pic" id="avatarpic" data-avatar-preview data-avatar-class="avatar avatar--lg">
+          <%- include('../partials/avatar', { u: currentUser, cls: 'avatar--lg', attrs: 'data-avatar-img' }) %>
+        </div>
+        <label class="btn btn--ghost btn--sm">
+          <%- include('../partials/icon', { name: 'image', size: 16 }) %> <%= t('Change avatar') %>
+          <input type="file" name="avatar" accept="image/*" hidden data-avatar-input data-avatar-target="#avatarpic">
+        </label>
+        <span class="muted small"><%= t('JPG, PNG, WebP, GIF or AVIF up to {mb} MB.', { mb: maxUploadMb }) %></span>
+        <span class="avatarrow__note small" data-avatar-note hidden><%= t('Preview - not saved yet') %></span>
+      </div>
+
+      <label class="field">
+        <span class="field__label"><%= t('Display name') %></span>
+        <input type="text" name="display_name" value="<%= values.display_name %>" maxlength="40" placeholder="<%= currentUser.username %>">
+      </label>
+
+      <label class="field">
+        <span class="field__label"><%= t('Bio') %></span>
+        <textarea name="bio" rows="3" maxlength="600" placeholder="<%= t('What you drive, what you\'re building, where you ride.') %>"><%= values.bio %></textarea>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label"><%= t('Car') %></span>
+          <input type="text" name="car" value="<%= values.car %>" maxlength="80" placeholder="<%= t('e.g. 1998 Integra Type R') %>">
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('City') %></span>
+          <input type="text" name="city" value="<%= values.city %>" maxlength="80" placeholder="<%= t('e.g. Rotterdam') %>">
+        </label>
+      </div>
+
+      <fieldset class="field field--radio">
+        <legend class="field__label"><%= t('Service provider') %></legend>
+        <label class="choice">
+          <input type="checkbox" name="is_provider" value="1" <%= values.is_provider ? 'checked' : '' %>>
+          <span><strong><%= t('I offer car services') %></strong><small><%= t('Shops, mechanics, tuners, detailers - tick this to show a provider badge on your profile and list services under Maintenance.') %></small></span>
+        </label>
+        <% if (values.is_provider) { %>
+          <p class="provider-earned">
+            <span class="badge badge--provider"><%- include('../partials/icon', { name: 'shield', size: 13 }) %> <%= f.providerName(values.provider_name, t) %></span>
+          </p>
+          <p class="muted small"><%= t('Your provider badge is earned by claiming a service - the name is set from the listing you verified, so it cannot be typed in by hand.') %></p>
+        <% } %>
+      </fieldset>
+
+      <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'check', size: 17 }) %> <%= t('Save profile') %></button>
+    </form>
+  </section>
+
+  <section class="card card--form">
+    <h2 class="card__title"><%= t('Theme') %></h2>
+    <p class="muted small"><%= t('Pick how STREETO looks. It follows you to every device you log in from.') %></p>
+    <div class="themegrid" role="group" aria-label="<%= t('Theme') %>">
+      <% themes.forEach(function (th) { %>
+        <a class="themecard<%= theme === th.code ? ' is-active' : '' %>"
+           href="/theme/<%= th.code %>"
+           title="<%= t(th.label) %>"<% if (theme === th.code) { %> aria-current="true"<% } %>>
+          <span class="themecard__swatch themecard__swatch--<%= th.code %>" aria-hidden="true"></span>
+          <span class="themecard__meta">
+            <strong><%= t(th.label) %></strong>
+            <small class="muted"><%= t(th.desc) %></small>
+          </span>
+          <% if (theme === th.code) { %><span class="themecard__check"><%- include('../partials/icon', { name: 'check', size: 14 }) %></span><% } %>
+        </a>
+      <% }); %>
+    </div>
+  </section>
+
+  <section class="card card--form">
+    <h2 class="card__title"><%= t('Letters') %></h2>
+    <p class="muted small"><%= t('The site can write to you now and then - a weekly letter with what happened on the street, and a reminder before a car has to go to the technical inspection.') %></p>
+    <form action="/settings/letters" method="post">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <label class="check">
+        <input type="checkbox" name="mail_digest" value="1" <%= currentUser.mail_digest === 0 ? '' : 'checked' %>>
+        <span><%= t('Send me the weekly letter') %></span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="mail_pti" value="1" <%= currentUser.mail_pti === 0 ? '' : 'checked' %>>
+        <span><%= t('Remind me before the technical inspection') %></span>
+      </label>
+      <div class="btnrow">
+        <button class="btn btn--primary" type="submit"><%= t('Save') %></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card card--form">
+    <h2 class="card__title"><%= t('Account') %></h2>
+    <p class="muted small"><%= t('Username and email are fixed after sign-up. Contact an admin if you need them changed.') %></p>
+    <div class="kv">
+      <span><%= t('Username') %></span><strong>@<%= currentUser.username %></strong>
+      <span><%= t('Email') %></span><strong><%= currentUser.email %></strong>
+      <span><%= t('Member since') %></span><strong><%= f.fullDate(currentUser.created_at) %></strong>
+    </div>
+  </section>
+
+  <section class="card card--form">
+    <h2 class="card__title"><%= t('Change password') %></h2>
+    <form action="/settings/password" method="post">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <label class="field">
+        <span class="field__label"><%= t('Current password') %></span>
+        <input type="password" name="current_password" autocomplete="current-password" required>
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span class="field__label"><%= t('New password') %></span>
+          <input type="password" name="new_password" autocomplete="new-password" minlength="8" maxlength="128" required data-pw>
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('Confirm new password') %></span>
+          <input type="password" name="confirm_password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        </label>
+      </div>
+      <span class="meter" data-pw-meter aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="field__hint"><%= t('At least 8 characters with a letter and a number.') %></span>
+      <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'key', size: 17 }) %> <%= t('Update password') %></button>
+    </form>
+  </section>
+
+  <section class="card card--danger">
+    <h2 class="card__title"><%= t('Danger zone') %></h2>
+    <p class="muted"><%= t('Deleting your account removes your posts, comments, likes, chats and group memberships. This cannot be undone.') %></p>
+    <form action="/settings/delete" method="post" data-confirm="<%= t('Delete your account and everything in it? This cannot be undone.') %>">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <label class="field">
+        <span class="field__label"><%= t('Confirm with your password') %></span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 17 }) %> <%= t('Delete my account') %></button>
+    </form>
+  </section>
+</div>

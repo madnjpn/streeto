@@ -1,0 +1,10 @@
+<%
+/* Renders 1-5 stars for a rating value. Locals: rating, size (optional). */
+const score = Math.round(Number(rating) || 0);
+const iconSize = typeof size !== 'undefined' ? size : 14;
+%>
+<span class="stars" role="img" aria-label="<%= score %> / 5"><%
+  for (let i = 1; i <= 5; i++) {
+    %><%- include('icon', { name: 'star', size: iconSize, cls: i <= score ? 'star--on' : 'star--off' }) %><%
+  }
+%></span>

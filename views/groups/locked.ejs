@@ -1,0 +1,33 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/groups"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('All groups') %></a>
+
+  <div class="card locked">
+    <div class="locked__mark"><%- include('../partials/icon', { name: group.privacy === 'invite' ? 'shield' : 'lock', size: 30 }) %></div>
+    <h1 class="display"><%= group.name %></h1>
+    <p class="tag tag--<%= group.privacy %>"><%- include('../partials/icon', { name: group.privacy === 'private' ? 'lock' : 'shield', size: 13 }) %> <%= t('{privacy} group', { privacy: t(f.PRIVACY_LABELS[group.privacy]) }) %></p>
+    <% if (group.description) { %><p class="lede"><%= group.description %></p><% } %>
+    <p class="muted"><%= group.member_count === 1 ? t('{n} member', { n: group.member_count }) : t('{n} members', { n: group.member_count }) %> · <%= group.post_count === 1 ? t('{n} post', { n: group.post_count }) : t('{n} posts', { n: group.post_count }) %></p>
+
+    <% if (!currentUser) { %>
+      <div class="btnrow">
+        <a class="btn btn--primary" href="/login"><%= t('Log in to join') %></a>
+        <a class="btn btn--ghost" href="/register"><%= t('Create an account') %></a>
+      </div>
+    <% } else if (membership && membership.status === 'pending') { %>
+      <p class="tag tag--pending"><%- include('../partials/icon', { name: 'clock', size: 13 }) %> <%= t('Your request is waiting for an admin') %></p>
+    <% } else if (membership && membership.status === 'invited') { %>
+      <form action="/groups/<%= group.slug %>/join" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('Accept invite') %></button>
+      </form>
+    <% } else if (group.privacy === 'private') { %>
+      <form action="/groups/<%= group.slug %>/join" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'lock', size: 16 }) %> <%= t('Request to join') %></button>
+      </form>
+      <p class="muted small"><%= t('A group admin has to approve you.') %></p>
+    <% } else { %>
+      <p class="muted"><%= t('This group is invite only. Ask someone inside to send you an invite.') %></p>
+    <% } %>
+  </div>
+</div>

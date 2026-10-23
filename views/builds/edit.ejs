@@ -1,0 +1,19 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('garage') %></p>
+    <h1 class="display"><%= t('Edit build') %></h1>
+    <p class="lede"><%= build.title %></p>
+  </div>
+  <a class="btn btn--ghost" href="/builds/<%= build.id %>"><%- include('../partials/icon', { name: 'eye', size: 17 }) %> <%= t('View build') %></a>
+</div>
+
+<div class="narrow">
+  <%- include('../partials/build-form', {
+    action: `/builds/${build.id}`,
+    heading: t('Update your build'),
+    blurb: t('Changes go live straight away.'),
+    submitLabel: t('Save changes'),
+    cancelHref: `/builds/${build.id}`,
+    buildId: build.id
+  }) %>
+</div>

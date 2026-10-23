@@ -1,0 +1,10 @@
+<%
+/* The hashtags under a post. Shared by the post itself and the editor
+   that changes the words of a post - the tags follow the text. */
+%><% if (post.tags_csv) { %>
+  <div class="post__tags">
+    <% post.tags_csv.split(',').filter(Boolean).forEach(function (tag) { %>
+      <a class="tag tag--type" href="/search?q=%23<%= encodeURIComponent(tag) %>&type=posts">#<%= tag %></a>
+    <% }); %>
+  </div>
+<% } %>

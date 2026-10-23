@@ -1,0 +1,49 @@
+<%
+const status = typeof mine !== 'undefined' ? mine : null;
+const isPast = f.toDate(meetup.starts_at) < new Date();
+const where = meetup.place_name || meetup.address || (meetup.lat != null ? meetup.lat.toFixed(4) + ', ' + meetup.lng.toFixed(4) : t('Location TBA'));
+// Private and invite-only spots are for logged-in drivers only.
+const showWhere = meetup.privacy === 'open' || Boolean(currentUser);
+%>
+<article class="card meetup <%= isPast ? 'meetup--past' : '' %>">
+  <div class="meetup__when">
+    <span class="meetup__day"><%= f.dayNum(meetup.starts_at) %></span>
+    <span class="meetup__month"><%= f.monthShort(meetup.starts_at).toUpperCase() %></span>
+    <span class="meetup__time"><%= f.timeShort(meetup.starts_at) %></span>
+  </div>
+  <div class="meetup__body">
+    <div class="meetup__head">
+      <a class="meetup__title" href="/meetups/<%= meetup.id %>"><%= meetup.title %></a>
+      <span class="tag tag--<%= meetup.privacy %>"><%- include('icon', { name: meetup.privacy === 'open' ? 'globe' : meetup.privacy === 'private' ? 'lock' : 'shield', size: 13 }) %> <%= t(f.PRIVACY_LABELS[meetup.privacy]) %></span>
+      <% if (meetup.group_id) { %>
+        <a class="tag tag--group" href="/groups/<%= meetup.group_slug %>"><%- include('icon', { name: 'shield', size: 13 }) %> <%= meetup.group_name %></a>
+      <% } %>
+    </div>
+    <div class="meetup__meta muted">
+      <% if (showWhere) { %>
+        <span><%- include('icon', { name: 'pin', size: 14 }) %> <%= f.truncate(where, 60) %></span>
+      <% } else { %>
+        <span class="meetup__hidden"><%- include('icon', { name: 'lock', size: 14 }) %> <%= t('Location hidden') %></span>
+      <% } %>
+      <span><%- include('icon', { name: 'clock', size: 14 }) %> <%= f.relativeFuture(meetup.starts_at) %></span>
+      <span><%- include('icon', { name: 'users', size: 14 }) %> <%= meetup.going_count %></span>
+    </div>
+    <% if (meetup.going_avatars) { %>
+      <div class="meetup__faces">
+        <% meetup.going_avatars.split(',').slice(0, 6).forEach(function (av) { %>
+          <img class="meetup__face" src="<%= config.uploadUrl %>/<%= av %>" alt="" loading="lazy">
+        <% }); %>
+        <% if (meetup.going_count > 6) { %><span class="meetup__face-more">+<%= meetup.going_count - 6 %></span><% } %>
+      </div>
+    <% } %>
+    <% if (meetup.description) { %><p class="meetup__desc"><%= f.truncate(meetup.description, 130) %></p><% } %>
+    <div class="meetup__foot">
+      <a class="meetup__host" href="/u/<%= meetup.host_username %>">
+        <%- include('avatar', { u: { username: meetup.host_username, display_name: meetup.host_display_name, avatar: meetup.host_avatar }, cls: 'avatar--xs' }) %>
+        <span class="muted"><%= t('hosted by @{user}', { user: meetup.host_username }) %></span>
+      </a>
+      <a class="btn btn--ghost btn--sm" href="/meetups/<%= meetup.id %>"><%= t('Details') %> <%- include('icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      <%- include('share-button', { type: 'meetup', id: meetup.id, title: meetup.title, label: t('Meetup') }) %>
+    </div>
+  </div>
+</article>

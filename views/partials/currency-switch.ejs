@@ -1,0 +1,11 @@
+<%
+  /* Compact GEL / USD picker. Plain links so it also works without JS.
+     Shares the language-switcher styling so the two sit together. */
+%>
+<div class="langswitch currencyswitch" role="group" aria-label="<%= t('Currency') %>" title="<%= t('Currency') %>">
+  <% currencies.forEach(function (c) { %>
+    <a class="langswitch__opt<%= currency === c.code ? ' is-active' : '' %>"
+       href="/currency/<%= c.code %>"
+       title="<%= t(c.label) %>"<% if (currency === c.code) { %> aria-current="true"<% } %>><%= c.symbol %></a>
+  <% }); %>
+</div>

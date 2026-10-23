@@ -1,0 +1,17 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('garage') %></p>
+    <h1 class="display"><%= t('Add a build') %></h1>
+    <p class="lede"><%= t('Show the network what you drive - photos, a clip and the spec sheet.') %></p>
+  </div>
+</div>
+
+<div class="narrow">
+  <%- include('../partials/build-form', {
+    action: '/builds',
+    heading: t('Your build'),
+    blurb: t('You can edit any of this later and add more shots whenever you like.'),
+    submitLabel: t('Publish build'),
+    cancelHref: '/builds'
+  }) %>
+</div>

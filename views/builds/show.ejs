@@ -1,0 +1,283 @@
+<%
+const cover = build.cover ? `${config.uploadUrl}/${build.cover}` : null;
+    const coverSet = build.cover ? srcset(build.cover) : '';
+const specs = [
+  [t('Engine'), build.engine],
+  [t('Drivetrain'), build.drivetrain],
+  [t('Transmission'), build.transmission],
+  [t('Power'), build.power_hp ? `${build.power_hp} hp` : null],
+  [t('Torque'), build.torque_nm ? `${build.torque_nm} Nm` : null],
+  [t('Weight'), build.weight_kg ? `${build.weight_kg} kg` : null],
+  [t('Odometer'), build.odometer_km ? `${build.odometer_km} km` : null],
+  [t('Year'), build.year],
+  // Registration-certificate specs that are safe to show publicly. Owner
+  // details, the passport number, VIN, plate and engine number stay private.
+  [t('Type'), build.vehicle_type],
+  [t('Colour'), build.colour],
+  [t('Engine capacity'), build.engine_capacity ? `${build.engine_capacity} cm³` : null],
+  [t('Net power'), build.net_power_kw ? `${build.net_power_kw} kW` : null],
+  [t('Fuel'), build.fuel_type],
+  [t('Seats'), build.seats],
+  [t('Standing places'), build.standing_places],
+  [t('Unladen mass'), build.unladen_mass ? `${build.unladen_mass} kg` : null],
+  [t('Max laden mass'), build.max_laden_mass ? `${build.max_laden_mass} kg` : null],
+  [t('Permissible mass'), build.permissible_mass ? `${build.permissible_mass} kg` : null],
+  [t('Power / weight'), build.power_weight_ratio ? `${build.power_weight_ratio} kW/kg` : null],
+].filter(([, value]) => value);
+const certSource = linkedVehicle || build;
+// Public visitors read only the build's own stored snapshot (the plate is
+// never printed). The owner can fall back to the linked vehicle's snapshot
+// when the build has no plate of its own.
+const ptiRow = mine && linkedVehicle && !build.number_plate ? linkedVehicle : build;
+const certKeys = ['number_plate', 'technical_passport', 'registration_date', 'owner_surname', 'owner_name',
+  'owner_address', 'owner_id', 'owner_of_vehicle', 'expiry_date', 'vehicle_type', 'vin', 'max_laden_mass',
+  'permissible_mass', 'unladen_mass', 'engine_capacity', 'net_power_kw', 'fuel_type', 'engine_number',
+  'power_weight_ratio', 'colour', 'seats', 'standing_places'];
+const showCertificate = Boolean(mine && certSource && certKeys.some((key) => certSource[key] != null && certSource[key] !== ''));
+const leading = standings.length && standings[0].id === build.id;
+%>
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('build') %><% if (build.visibility === 'private') { %> · <%= t('private') %><% } %><% if (build.for_sale) { %> · <%= t('For sale') %><% } %></p>
+    <h1 class="display"><%= build.title %></h1>
+    <p class="lede">
+      <a class="link" href="/u/<%= build.username %>">@<%= build.username %></a>
+      <% if (build.make || build.model || build.year) { %>
+        · <%= [build.year, build.make, build.model].filter(Boolean).join(' ') %>
+      <% } %>
+      · <%= t('added {when}', { when: f.timeAgo(build.created_at) }) %>
+    </p>
+    <% const pti = ptiState(ptiRow); %>
+    <% if (pti.status !== 'missing') { %>
+      <div class="pagehead__meta">
+        <%- include('../partials/pti-badge', { v: ptiRow, showCheck: mine, showUnknown: true }) %>
+      </div>
+    <% } %>
+  </div>
+  <div class="pagehead__actions">
+    <% if (mine) { %>
+      <a class="btn btn--ghost" href="/builds/<%= build.id %>/edit"><%- include('../partials/icon', { name: 'settings', size: 17 }) %> <%= t('Edit') %></a>
+    <% } %>
+    <% if (mine || (currentUser && currentUser.is_admin)) { %>
+      <form action="/builds/<%= build.id %>/delete" method="post" data-confirm="<%= build.linked_vehicle_id ? t('Delete this build and its linked My Ride vehicle?') : t('Delete this build and all its media?') %>">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <button class="btn btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 17 }) %> <%= t('Delete') %></button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<% if (awards.length) { %>
+  <div class="awards">
+    <% awards.forEach(function (award) { %>
+      <span class="award award--<%= award.kind %>">
+        <%- include('../partials/icon', { name: award.kind === 'year' ? 'star' : award.kind === 'month' ? 'calendar' : 'bolt', size: 15 }) %>
+        <%= t(periodLabels[award.kind]) %> · <%= award.period %> (<%= award.votes === 1 ? t('{n} vote', { n: award.votes }) : t('{n} votes', { n: award.votes }) %>)
+      </span>
+    <% }); %>
+  </div>
+<% } %>
+
+<div class="build-view">
+  <div class="build-view__main">
+    <section class="card gallery" data-gallery>
+      <% if (!media.length) { %>
+        <div class="gallery__empty">
+          <span class="build-card__gen" style="--h:<%= f.hueOf(build.title) %>"><%- include('../partials/icon', { name: 'car', size: 44 }) %></span>
+          <p class="muted"><%= t('No photos yet.') %></p>
+        </div>
+      <% } else { %>
+        <div class="gallery__stage">
+          <% media.forEach(function (item, index) { %>
+            <figure class="gallery__slide <%= index === 0 ? 'is-active' : '' %>" data-slide="<%= index %>">
+              <% if (item.media_type === 'photo') { %>
+                <a href="<%= config.uploadUrl %>/<%= item.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="<%= index === 0 ? 'eager' : 'lazy' %>"></a>
+              <% } else { %>
+                <video src="<%= config.uploadUrl %>/<%= item.media_path %>" controls preload="metadata" playsinline></video>
+              <% } %>
+            </figure>
+          <% }); %>
+        </div>
+        <% if (media.length > 1) { %>
+          <div class="gallery__thumbs" data-thumbs>
+            <% media.forEach(function (item, index) { %>
+              <button class="gallery__thumb <%= index === 0 ? 'is-active' : '' %>" type="button" data-thumb="<%= index %>" aria-label="<%= t('Show file {n}', { n: index + 1 }) %>">
+                <% if (item.media_type === 'photo') { %>
+                  <img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="lazy">
+                <% } else { %>
+                  <span class="gallery__thumb-video"><%- include('../partials/icon', { name: 'video', size: 18 }) %></span>
+                <% } %>
+              </button>
+            <% }); %>
+          </div>
+        <% } %>
+      <% } %>
+    </section>
+
+    <% if (build.description) { %>
+      <section class="card build-note">
+        <h2 class="section-title"><%- include('../partials/icon', { name: 'flag', size: 17 }) %> <%= t('The story') %></h2>
+        <p><%- f.formatText(build.description) %></p>
+      </section>
+    <% } %>
+
+    <% if (build.mods) { %>
+      <section class="card build-note">
+        <h2 class="section-title"><%- include('../partials/icon', { name: 'settings', size: 17 }) %> <%= t('Mods & notes') %></h2>
+        <p><%- f.formatText(build.mods) %></p>
+      </section>
+    <% } %>
+
+    <% /* The history behind the build: what was done, and when. */ %>
+    <% if (timeline && timeline.length) { %>
+      <section class="card build-timeline">
+        <h2 class="section-title">
+          <%- include('../partials/icon', { name: 'clock', size: 17 }) %> <%= t('Build timeline') %>
+          <% if (timelineSummary && timelineSummary.entries) { %>
+            <span class="muted small"><%= t('{n} changes', { n: timelineSummary.entries }) %></span>
+          <% } %>
+        </h2>
+
+        <ol class="timeline">
+          <% timeline.forEach(function (item) { %>
+            <li class="timeline__row">
+              <% if (item.photo) { %>
+                <a class="timeline__photo" href="<%= config.uploadUrl %>/<%= item.photo %>" data-lightbox>
+                  <img src="<%= config.uploadUrl %>/<%= item.photo %>"<% if (srcset(item.photo)) { %> srcset="<%= srcset(item.photo) %>" sizes="(max-width: 760px) 40vw, 220px"<% } %> alt="" loading="lazy">
+                </a>
+              <% } %>
+              <div class="timeline__body">
+                <div class="timeline__head">
+                  <strong><%= item.title %></strong>
+                  <% if (item.kind && item.kind !== 'other') { %>
+                    <span class="tag tag--tiny">
+                      <% if (item.kind === 'engine') { %><%= t('Engine') %>
+                      <% } else if (item.kind === 'suspension') { %><%= t('Suspension') %>
+                      <% } else if (item.kind === 'brakes') { %><%= t('Brakes') %>
+                      <% } else if (item.kind === 'body') { %><%= t('Body & paint') %>
+                      <% } else if (item.kind === 'interior') { %><%= t('Interior') %>
+                      <% } else if (item.kind === 'electronics') { %><%= t('Electronics') %>
+                      <% } else if (item.kind === 'exhaust') { %><%= t('Exhaust') %>
+                      <% } else { %><%= t('Wheels & tyres') %><% } %>
+                    </span>
+                  <% } %>
+                </div>
+                <p class="timeline__meta muted small">
+                  <% if (item.changed_at) { %><%= String(item.changed_at).slice(0, 10) %><% } %>
+                  <% if (item.mileage) { %> · <%= item.mileage %> km<% } %>
+                  <% if (item.cost) { %> · <%= money(item.cost, 'GEL') %><% } %>
+                </p>
+                <% if (item.description) { %><p class="timeline__text"><%- f.formatText(item.description) %></p><% } %>
+              </div>
+            </li>
+          <% }); %>
+        </ol>
+      </section>
+    <% } %>
+  </div>
+
+  <aside class="build-view__side">
+    <% if (build.for_sale) { %>
+      <div class="card sale-card">
+        <h3 class="mini__title"><%- include('../partials/icon', { name: 'tag', size: 16 }) %> <%= t('For sale') %></h3>
+        <p class="sale-card__price">
+          <% if (build.price != null) { %><strong><%= money(build.price, build.currency) %></strong><% } else { %><strong><%= t('Ask') %></strong><% } %>
+          <% if (moneyAlt(build.price, build.currency)) { %><span class="money__alt"><%= moneyAlt(build.price, build.currency) %></span><% } %>
+          <% if (build.price_note) { %><span class="muted"><%= build.price_note %></span><% } %>
+        </p>
+        <div class="sale-card__actions">
+          <% if (isAuthenticated && !mine) { %>
+            <form action="/friends/message/<%= build.username %>" method="post">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--primary btn--block" type="submit"><%- include('../partials/icon', { name: 'chat', size: 16 }) %> <%= t('Message the seller') %></button>
+            </form>
+          <% } else { %>
+            <a class="btn btn--ghost btn--block" href="/u/<%= build.username %>"><%- include('../partials/icon', { name: 'user', size: 16 }) %> @<%= build.username %></a>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="card vote-card">
+      <h3 class="mini__title"><%= t('{label} vote', { label: weekLabel }) %></h3>
+      <p class="vote-card__count"><strong data-vote-count><%= build.week_votes %></strong> <span class="muted"><%= build.week_votes === 1 ? t('{n} vote', { n: build.week_votes }) : t('{n} votes', { n: build.week_votes }) %> <%= t('this week') %></span></p>
+      <p class="muted small"><span data-vote-total><%= build.vote_count %></span> <%= t('total') %> · <%= leading ? t('leading the week') : t('vote once a week, change any time') %></p>
+
+      <% if (!isAuthenticated) { %>
+        <a class="btn btn--primary btn--block" href="/login"><%= t('Log in to vote') %></a>
+      <% } else if (mine) { %>
+        <p class="mini__note muted small"><%= t('This is your build - others do the voting.') %></p>
+      <% } else { %>
+        <form action="/builds/<%= build.id %>/vote" method="post" data-vote-form>
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--block <%= build.voted_this_week ? 'btn--outline is-on' : 'btn--primary' %>" type="submit" data-vote-btn aria-pressed="<%= build.voted_this_week %>">
+            <%- include('../partials/icon', { name: build.voted_this_week ? 'check' : 'bolt', size: 17 }) %>
+            <span data-vote-label><%= build.voted_this_week ? t('Voted this week') : t('Vote build of the week') %></span>
+          </button>
+        </form>
+        <% if (myVote && myVote.build_id !== build.id) { %>
+          <p class="mini__note muted small"><%- t('Your vote is on {name}. Voting here moves it.', { name: '<a class="link" href="/builds/' + myVote.build_id + '">' + f.truncate(myVote.title, 26) + '</a>' }) %></p>
+        <% } %>
+      <% } %>
+    </div>
+
+    <% if (isAuthenticated && !mine && !build.for_sale) { %>
+      <div class="card mini watch-card">
+        <h3 class="mini__title"><%- include('../partials/icon', { name: 'bell', size: 16 }) %> <%= t('Keep an eye on it') %></h3>
+        <p class="muted small"><%= t('Want this car? Get an alert the moment it is put up for sale.') %></p>
+        <form action="/builds/<%= build.id %>/watch" method="post" data-watch-form>
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--block <%= build.watching ? 'btn--outline is-on' : 'btn--ghost' %>" type="submit" data-watch-btn aria-pressed="<%= Boolean(build.watching) %>">
+            <%- include('../partials/icon', { name: build.watching ? 'check' : 'bell', size: 17 }) %>
+            <span data-watch-label><%= build.watching ? t('You are watching this car') : t('Notify me when it is for sale') %></span>
+          </button>
+        </form>
+        <% if (build.watcher_count) { %>
+          <p class="mini__note muted small"><%= build.watcher_count === 1 ? t('{n} driver is watching', { n: build.watcher_count }) : t('{n} drivers are watching', { n: build.watcher_count }) %></p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="card mini">
+      <h3 class="mini__title"><%= t('Spec sheet') %></h3>
+      <% if (specs.length) { %>
+        <dl class="specs">
+          <% specs.forEach(function ([label, value]) { %>
+            <div class="specs__row"><dt><%= label %></dt><dd><%= value %></dd></div>
+          <% }); %>
+        </dl>
+      <% } else { %>
+        <p class="muted small"><%= t('No specs filled in yet.') %></p>
+      <% } %>
+    </div>
+
+    <% if (showCertificate) { %>
+      <div class="card mini">
+        <h3 class="mini__title"><%- include('../partials/icon', { name: 'flag', size: 16 }) %> <%= t('Registration certificate') %></h3>
+        <p class="muted small"><%= t('Only you can see the certificate and its owner details.') %></p>
+        <%- include('../partials/certificate-badge', { v: certSource }) %>
+        <div class="btnrow">
+          <a class="btn btn--ghost btn--sm" href="/garage/ride"><%- include('../partials/icon', { name: 'key', size: 15 }) %> <%= t('Open in My Ride') %></a>
+        </div>
+        <% if (build.linked_vehicle_id) { %>
+          <p class="mini__note muted small"><%= t('Linked to one of your My Ride vehicles.') %></p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <% if (standings.length) { %>
+      <div class="card mini">
+        <h3 class="mini__title"><%= t("This week's standings") %></h3>
+        <ol class="standings">
+          <% standings.forEach(function (row, index) { %>
+            <li class="standings__row <%= row.id === build.id ? 'is-self' : '' %>">
+              <span class="standings__rank"><%= index + 1 %></span>
+              <a class="standings__name" href="/builds/<%= row.id %>"><%= f.truncate(row.title, 20) %></a>
+              <span class="standings__votes"><%= row.votes %></span>
+            </li>
+          <% }); %>
+        </ol>
+      </div>
+    <% } %>
+  </aside>
+</div>

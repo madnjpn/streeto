@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  rockauto-service:
+    build: .
+    container_name: streeto-rockauto
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Include in main docker-compose with STREETO app
+  # streeto-app:
+  #   build: ..
+  #   depends_on:
+  #     - rockauto-service
+  #   environment:
+  #     - ROCKAUTO_SERVICE_URL=http://rockauto-service:8001

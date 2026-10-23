@@ -1,0 +1,24 @@
+<%
+/* Modal-styled select. Locals:
+     name       - field name (required)
+     value      - currently selected value (required)
+     options    - [{ value, label }] (required)
+     label      - trigger label override (defaults to current option label)
+     icon       - optional icon name for the trigger
+     id         - optional element id                                   */
+const cur = (options.find((o) => o.value === value) || options[0]) || { label: '' };
+const triggerLabel = typeof label !== 'undefined' && label ? label : cur.label;
+const pickerId = typeof id !== 'undefined' && id ? id : `sm-${name}-${Math.random().toString(36).slice(2, 8)}`;
+%>
+<span class="selectmodal" data-selectmodal id="<%= pickerId %>">
+  <select name="<%= name %>" data-selectmodal-input hidden>
+    <% options.forEach(function (o) { %>
+      <option value="<%= o.value %>" <%= o.value === value ? 'selected' : '' %>><%= o.label %></option>
+    <% }); %>
+  </select>
+  <button type="button" class="selectmodal__trigger btn btn--ghost btn--sm" data-selectmodal-trigger aria-haspopup="dialog">
+    <% if (typeof icon !== 'undefined' && icon) { %><%- include('icon', { name: icon, size: 14 }) %><% } %>
+    <span data-selectmodal-label><%- triggerLabel %></span>
+    <%- include('icon', { name: 'chevron', size: 13, cls: 'icon--rot270' }) %>
+  </button>
+</span>

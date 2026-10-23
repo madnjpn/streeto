@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Runtime data
+data/
+uploads/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# TLS certificates and private keys (the Cloudflare Origin CA key and the
+# local self-signed pair are secrets - never commit them)
+certs/
+*.pem
+*.key
+*.crt
+
+# Logs / OS noise
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Local scratch (a curl cookie jar holds a live session cookie)
+cookies.txt
+*.cookies
+_tmp_*
+uploads-smoke/
+desktop.ini
+=
+
+# Android build outputs (the source lives in android/)
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/captures/
+*.apk
+*.aab
+
+# Signing material (never commit)
+*.jks
+*.keystore
+keystore.properties
+
+# The APK served by the login page is a build artifact, not source
+public/downloads/*.apk
+
+# Python service runtime / caches
+rockauto-service/python-portable/
+**/__pycache__/

@@ -1,0 +1,139 @@
+<%
+  const headStack = (typeof fontHeadStack !== 'undefined' && fontHeadStack)
+    ? fontHeadStack
+    : "'Oswald', 'Noto Sans Georgian', 'Arial Narrow', Impact, system-ui, sans-serif";
+  const bodyStack = (typeof fontBodyStack !== 'undefined' && fontBodyStack)
+    ? fontBodyStack
+    : "'Inter', 'Noto Sans Georgian', 'Segoe UI', Roboto, Arial, system-ui, sans-serif";
+  const monoStack = (typeof fontMonoStack !== 'undefined' && fontMonoStack)
+    ? fontMonoStack
+    : "'JetBrains Mono', ui-monospace, Consolas, 'Noto Sans Georgian', monospace";
+  const themeName = (typeof theme !== 'undefined' && theme) ? theme : 'street';
+  const metaThemeColor = themeName === 'light' ? '#f7f5ef' : themeName === 'gold' ? '#0a0806' : '#07080b';
+%>
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="<%= themeName %>" style="--font-head: <%= headStack %>; --font-body: <%= bodyStack %>; --font-mono: <%= monoStack %>;">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="<%= themeName === 'light' ? 'light' : 'dark' %>">
+<meta name="theme-color" content="<%= metaThemeColor %>">
+<meta name="csrf-token" content="<%= csrfToken %>">
+<meta name="description" content="<%= config.siteName %> - <%= t(config.tagline) %>. <%= t('Groups, meetups, street maps and a wall built for car people.') %>">
+<title><%= typeof title !== 'undefined' ? title : config.siteName %></title>
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Georgian:wght@400;500;600;700&family=Noto+Serif+Georgian:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&family=Fira+Sans+Condensed:wght@400;500;600;700&family=Roboto+Serif:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/<%= assetStamp %>/css/style.css">
+<% if (typeof maplibreAvailable !== 'undefined' && maplibreAvailable) { %>
+<link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
+<% } %>
+<!-- Camera modal styles for certificate scanning -->
+<link rel="stylesheet" href="/assets/<%= assetStamp %>/css/camera-modal.css">
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>" data-authed="<%= isAuthenticated ? '1' : '0' %>">
+<a class="skip-link" href="#main"><%= t('Skip to content') %></a>
+
+<div class="noise" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+
+<%- include('partials/i18n-data') %>
+<%- include('partials/custom-fonts') %>
+
+<%- include('partials/nav') %>
+
+<div class="layout-shell">
+  <% if (isAuthenticated) { %>
+  <aside class="layout-sidebar">
+    <div class="card nav-card">
+      <nav class="sidenav" aria-label="<%= t('Main') %>">
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'wall' ? 'is-active' : '' %>" href="/"><%- include('partials/icon', { name: 'wall', size: 19 }) %> <span><%= t('Wall') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'explore' ? 'is-active' : '' %>" href="/explore"><%- include('partials/icon', { name: 'search', size: 19 }) %> <span><%= t('Explore') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'builds' ? 'is-active' : '' %>" href="/builds"><%- include('partials/icon', { name: 'garage', size: 19 }) %> <span><%= t('Builds') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'groups' ? 'is-active' : '' %>" href="/groups"><%- include('partials/icon', { name: 'shield', size: 19 }) %> <span><%= t('Groups') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'meetups' ? 'is-active' : '' %>" href="/meetups"><%- include('partials/icon', { name: 'pin', size: 19 }) %> <span><%= t('Meetups') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'services' ? 'is-active' : '' %>" href="/services"><%- include('partials/icon', { name: 'wrench', size: 19 }) %> <span><%= t('Services') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'chat' ? 'is-active' : '' %>" href="/chat"><%- include('partials/icon', { name: 'chat', size: 19 }) %> <span><%= t('Chat') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'garage' ? 'is-active' : '' %>" href="/garage"><%- include('partials/icon', { name: 'key', size: 19 }) %> <span><%= t('My Garage') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'people' ? 'is-active' : '' %>" href="/people"><%- include('partials/icon', { name: 'users', size: 19 }) %> <span><%= t('Drivers') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'friends' ? 'is-active' : '' %>" href="/friends"><%- include('partials/icon', { name: 'users', size: 19 }) %> <span><%= t('Friends') %></span><% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
+      </nav>
+    </div>
+    <% if (typeof myGroups !== 'undefined' && Array.isArray(myGroups) && myGroups.length) { %>
+    <div class="card mini sticky-groups">
+      <h3 class="mini__title"><%= t('My groups') %></h3>
+      <ul class="mini__list">
+        <% myGroups.forEach(function (g) { %>
+          <li>
+            <a href="/groups/<%= g.slug %>">
+              <%- include('partials/icon', { name: 'shield', size: 15 }) %>
+              <span><%= g.name %></span>
+              <% if (g.role !== 'member') { %><span class="tag tag--tiny"><%= t(g.role) %></span><% } %>
+            </a>
+          </li>
+        <% }); %>
+      </ul>
+      <a class="mini__more" href="/groups?view=mine"><%= t('All my groups') %> <%- include('partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+    </div>
+    <% } %>
+  </aside>
+  <% } %>
+  <main id="main" class="shell <%= typeof wide !== 'undefined' && wide ? 'shell--wide' : '' %>">
+    <%- include('partials/flashes') %>
+    <%- body %>
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <span class="footer__brand"><img class="footer__logo" src="/websitelogo.png" alt="<%= config.siteName %>"> </span>
+    <span class="footer__note"><%= t('Build it, Drive it, Share it.') %></span>
+    <nav class="footer__links">
+      <a href="/about"><%= t('How it works') %></a>
+      <a href="/meetups"><%= t('Meetups') %></a>
+      <a href="/groups"><%= t('Groups') %></a>
+      <a href="/partners"><%= t('Partners') %></a>
+    </nav>
+  </div>
+</footer>
+
+<% if (isAuthenticated) { %>
+<div class="onboarding" hidden data-onboarding>
+  <p class="onboarding__text"><%- t('Welcome to <strong>STREETO.NET</strong> — have fun!') %></p>
+  <div class="onboarding__actions">
+    <button class="btn btn--ghost btn--sm" data-onboarding-dismiss><%= t('Got it') %></button>
+    <a class="btn btn--primary btn--sm" href="/about"><%- include('partials/icon', { name: 'info', size: 15 }) %> <%= t('How it works') %></a>
+  </div>
+</div>
+<% } %>
+
+<% const inChat = typeof path !== 'undefined' && typeof path === 'string' && path.startsWith('/chat'); %>
+<% if (isAuthenticated) { %>
+  <%- include('partials/share-dialog') %>
+<% } %>
+<% if (isAuthenticated && !inChat) { %>
+<%- include('partials/chat-dock') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/assets/<%= assetStamp %>/js/chat-dock.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/push-init.js" type="module"></script>
+<% } %>
+
+<script src="/assets/<%= assetStamp %>/js/app.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/chat.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/search-live.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/meetup-weather.js" type="module"></script>
+<% if (isAuthenticated) { %>
+<script src="/assets/<%= assetStamp %>/js/share.js" type="module"></script>
+<% } %>
+<% if (typeof maplibreAvailable !== 'undefined' && maplibreAvailable) { %>
+<script src="/vendor/maplibre/maplibre-gl.js"></script>
+<script src="/assets/<%= assetStamp %>/js/map-picker.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/touge-route-picker.js" type="module"></script>
+<% } %>
+<% if (typeof pageScripts !== 'undefined' && pageScripts.length) { %>
+  <% pageScripts.forEach(function (src) { %><script src="<%= src %>" type="module"></script><% }); %>
+<% } %>
+</body>
+</html>

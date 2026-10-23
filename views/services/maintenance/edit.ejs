@@ -1,0 +1,18 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/services/maintenance/<%= service.id %>"><%- include('../../partials/icon', { name: 'back', size: 15 }) %> <%= t('Back to listing') %></a>
+
+  <p class="eyebrow"><%= t('services') %></p>
+  <h1 class="display"><%= t('Edit service') %></h1>
+  <p class="lede"><%= t('Update the details, move the pin, or swap the photo.') %></p>
+
+  <%- include('../../partials/service-form', {
+    action: action,
+    values: values,
+    errors: errors,
+    mode: 'edit',
+    service: service,
+    categories: categories,
+    isProvider: Boolean(currentUser && currentUser.is_provider),
+    providerName: currentUser ? (currentUser.provider_name || '') : ''
+  }) %>
+</div>

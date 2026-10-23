@@ -1,0 +1,1556 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%- include('../partials/icon', { name: 'key', size: 14 }) %> <%= t('garage') %></p>
+    <h1 class="display"><%= t('My Ride') %></h1>
+    <p class="lede"><%= t('Add your personal vehicle from its registration certificate and track maintenance, oil changes, and parts replaced.') %></p>
+  </div>
+</div>
+
+<%- include('../partials/garage-tabs', { section: 'ride' }) %>
+
+<% if (vehicles && vehicles.length) { %>
+  <div class="garage-carousel" role="region" aria-label="<%= t('Your vehicles') %>" tabindex="0">
+    <div class="garage-carousel__track">
+      <% vehicles.forEach(function (v) { %>
+        <%
+          const subtitle = [v.year, v.make, v.model].filter(Boolean).join(' ');
+        %>
+        <article class="garage-vehicle" data-vehicle-id="<%= v.id %>">
+          <!-- Delete button in top corner -->
+          <form class="garage-vehicle__delete" action="/garage/ride/<%= v.id %>/delete" method="post" data-confirm="<%= v.linked_build_id ? t('Remove this vehicle and its linked build from your garage?') : t('Remove this vehicle from your garage?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn--ghost btn--sm" aria-label="<%= t('Delete vehicle') %>"><%- include('../partials/icon', { name: 'trash', size: 16 }) %></button>
+          </form>
+
+          <header class="garage-id garage-vehicle__drag-handle">
+            <span class="garage-id__photo">
+              <% if (v.photo) { %>
+                <img src="<%= config.uploadUrl %>/<%= v.photo %>"<% if (srcset(v.photo)) { %> srcset="<%= srcset(v.photo) %>" sizes="(max-width: 760px) 100vw, 640px"<% } %> alt="<%= v.name %>" loading="lazy" decoding="async">
+              <% } else { %>
+                <span class="garage-id__gen" style="--h:<%= f.hueOf(v.name || 'car') %>"><%- include('../partials/icon', { name: 'car', size: 30 }) %></span>
+              <% } %>
+              <button type="button" class="garage-id__photo-edit" data-photo-pick aria-label="<%= t(v.photo ? 'Change cover photo' : 'Add cover photo') %>" title="<%= t(v.photo ? 'Change cover photo' : 'Add cover photo') %>">
+                <%- include('../partials/icon', { name: 'camera', size: 13 }) %>
+              </button>
+            </span>
+            <div class="garage-id__body">
+              <h2 class="garage-id__name"><%= v.name %></h2>
+              <% if (subtitle) { %><p class="garage-id__sub muted"><%= subtitle %></p><% } %>
+              <div class="garage-id__meta">
+                <!-- Odometer: click the reading to edit it. Saving it here
+                     also updates a linked build. -->
+                <span class="spec odometer" data-odometer data-vehicle-id="<%= v.id %>" data-mileage="<%= v.current_mileage %>">
+                  <svg class="odometer-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="6" width="18" height="12" rx="2"/>
+                    <path d="M7 10h10M7 14h10"/>
+                    <circle cx="7" cy="10" r="1.5" fill="currentColor"/>
+                    <circle cx="17" cy="14" r="1.5" fill="currentColor"/>
+                  </svg>
+                  <button type="button" class="odometer__display" data-odometer-display aria-label="<%= t('Edit odometer') %>" title="<%= t('Edit odometer') %>"><span data-odometer-value><%= v.current_mileage %></span> km</button>
+                  <input type="number" class="odometer__input" data-odometer-input value="<%= v.current_mileage %>" min="0" max="10000000" step="1" inputmode="numeric" aria-label="<%= t('Odometer (km)') %>" hidden>
+                </span>
+                <% if (v.linked_build_id) { %>
+                  <a class="spec spec--link" href="/builds/<%= v.linked_build_id %>" aria-label="<%= t('Linked build') %>">
+                    <span class="linked-badge"><%- include('../partials/icon', { name: 'check', size: 12 }) %></span>
+                    <%= t('Linked build') %>
+                  </a>
+                <% } %>
+                <%- include('../partials/pti-badge', { v, showCheck: true, showUnknown: true }) %>
+              </div>
+            </div>
+          </header>
+
+          <form class="sr-only" action="/garage/ride/<%= v.id %>/photo" method="post" enctype="multipart/form-data" data-photo-form>
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <input type="file" name="photo" accept="image/*" data-photo-input tabindex="-1">
+          </form>
+
+          <div class="garage-vehicle__content">
+            <section class="garage-pane garage-pane--cert">
+              <h3 class="garage-pane__title"><%- include('../partials/icon', { name: 'flag', size: 14 }) %> <%= t('Registration certificate') %></h3>
+              <%- include('../partials/registration-certificate', { v }) %>
+            </section>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+  </div>
+<% } %>
+
+<!-- Add Vehicle Modal -->
+<div class="modal" id="add-vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="add-vehicle-modal-title" hidden>
+  <div class="modal__overlay" tabindex="-1"></div>
+  <div class="modal__panel modal__panel--form">
+    <header class="modal__header">
+      <h2 id="add-vehicle-modal-title"><%- include('../partials/icon', { name: 'plus', size: 18 }) %> <%= t('Add vehicle') %></h2>
+      <button type="button" class="modal__close btn btn--ghost btn--sm" aria-label="<%= t('Close') %>" data-modal-close><%- include('../partials/icon', { name: 'x', size: 18 }) %></button>
+    </header>
+    <form class="cert-form modal__form" action="/garage/ride" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+
+      <div class="modal__scroll" data-modal-scroll>
+        <div class="cert-grid cert-grid--scan">
+          <label>
+            <span><%= t('Vehicle name') %></span>
+            <input type="text" name="title" maxlength="90" placeholder="<%= t('e.g. The Midnight Skyline (optional)') %>">
+          </label>
+          <button type="button" class="btn btn--ghost cert-scan-btn" data-modal-scan title="<%= t('Scan registration certificate') %>">
+            <%- include('../partials/icon', { name: 'camera', size: 16 }) %> <%= t('Scan Certificate') %>
+          </button>
+        </div>
+        <p class="cert-scan-hint"><%= t('Scan the back first (make, model, VIN), then the front (plate, owner).') %></p>
+
+        <% if (userBuilds && userBuilds.length) { %>
+          <div class="build-link">
+            <label class="cert-grid__title" for="linked-build-id" style="margin: 0 0 6px;"><%= t('Link to a build') %></label>
+            <select name="linked_build_id" id="linked-build-id">
+              <option value=""><%= t('None - keep them separate') %></option>
+              <% userBuilds.forEach(function (b) { %>
+                <option value="<%= b.id %>"><%= b.title %> (<%= [b.year, b.make, b.model].filter(Boolean).join(' ') %>)</option>
+              <% }); %>
+            </select>
+            <label class="build-link__sync" id="sync-build-wrap" hidden>
+              <input type="checkbox" name="sync_build" value="1" checked>
+              <span><%= t('Copy the certificate data into that build') %></span>
+            </label>
+          </div>
+        <% } %>
+
+        <div class="build-link">
+          <label class="build-link__sync" id="create-build-wrap">
+            <input type="checkbox" name="create_build" value="1" id="create-build-box">
+            <span><%= t('Also create a build from this vehicle') %></span>
+          </label>
+          <div id="create-build-visibility" hidden style="margin-top: 6px;">
+            <label class="cert-grid__title" style="margin: 0 0 6px;"><%= t('Build visibility') %></label>
+            <select name="build_visibility" id="build-visibility">
+              <option value="public"><%= t('Public') %></option>
+              <option value="private"><%= t('Private') %></option>
+            </select>
+          </div>
+        </div>
+
+        <%- include('../partials/certificate-fields', { v: null }) %>
+
+        <div class="cert-photo">
+          <label class="cert-grid__title" for="vehicle-photo"><%= t('Photo') %></label>
+          <input type="file" name="photo" id="vehicle-photo" accept="image/*">
+        </div>
+      </div>
+
+      <div class="modal__footer btnrow">
+        <button type="button" class="btn btn--ghost" data-modal-close><%= t('Cancel') %></button>
+        <button class="btn btn--primary" type="submit"><%= t('Add vehicle') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // Build link: reveal the "copy certificate data" option once a build
+    // is selected.
+    var buildSelect = document.getElementById('linked-build-id');
+    var syncWrap = document.getElementById('sync-build-wrap');
+    if (buildSelect && syncWrap) {
+      var syncBox = syncWrap.querySelector('input[type=checkbox]');
+      var updateSync = function() {
+        var linked = Boolean(buildSelect.value);
+        syncWrap.hidden = !linked;
+        if (!linked && syncBox) syncBox.checked = false;
+        if (linked && syncBox) syncBox.checked = true;
+      };
+      buildSelect.addEventListener('change', updateSync);
+      updateSync();
+    }
+
+    // Create-build: reveal the visibility picker when the box is ticked.
+    // Hide the create-build option entirely when a build is already linked.
+    (function() {
+      var createBox = document.getElementById('create-build-box');
+      var visWrap = document.getElementById('create-build-visibility');
+      var createWrap = document.getElementById('create-build-wrap');
+      var linkedSelect = document.getElementById('linked-build-id');
+      if (!createBox || !visWrap || !createWrap) return;
+      var update = function() {
+        var linked = Boolean(linkedSelect.value);
+        // Hide the entire create-build option when a build is already linked
+        createWrap.hidden = linked;
+        visWrap.hidden = !createBox.checked;
+        if (linkedSelect) linkedSelect.disabled = createBox.checked;
+      };
+      createBox.addEventListener('change', update);
+      linkedSelect.addEventListener('change', update);
+      update();
+    })();
+    var modal = document.getElementById('add-vehicle-modal');
+    // The modal markup sits inside <main class="shell">, which is a stacking
+    // context (z-index: 2). That let the sticky top bar and page footer paint
+    // over the modal. Move it to <body> so it is always on top.
+    if (modal && modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+    var openBtn = document.getElementById('toggle-add-vehicle');
+    var closeBtns = modal.querySelectorAll('[data-modal-close]');
+
+    function openModal() {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      var scroller = modal.querySelector('[data-modal-scroll]');
+      if (scroller) scroller.scrollTop = 0;
+      // Don't pop the keyboard open on phones - it would hide half the form.
+      var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      if (!coarse) {
+        setTimeout(function() {
+          var firstInput = modal.querySelector('input:not([type="hidden"]):not([type="file"]), select');
+          if (!firstInput) return;
+          try { firstInput.focus({ preventScroll: true }); } catch (err) { firstInput.focus(); }
+        }, 120);
+      }
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', openModal);
+    }
+
+    closeBtns.forEach(function(btn) {
+      btn.addEventListener('click', closeModal);
+    });
+
+    // The technical passport number is letters and digits only. Dots and
+    // apostrophes are punctuation (from the printed "A." field code or OCR
+    // noise), never part of the value.
+    var sanitizePassport = function(input) {
+      var cleaned = String(input.value || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      if (cleaned !== input.value) input.value = cleaned;
+    };
+    document.querySelectorAll('input[name="technical_passport"]').forEach(sanitizePassport);
+    document.addEventListener('input', function(event) {
+      var target = event.target;
+      if (target && target.tagName === 'INPUT' && target.name === 'technical_passport') {
+        sanitizePassport(target);
+      }
+    });
+
+    // Close on overlay click
+    modal.querySelector('.modal__overlay').addEventListener('click', closeModal);
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
+    });
+
+    // Horizontal carousel swipe for vehicles - only on drag handles
+    (function initCarousel() {
+      var carousel = document.querySelector('.garage-carousel');
+      if (!carousel) return;
+
+      var track = carousel.querySelector('.garage-carousel__track');
+      var startX = null, moved = false, threshold = 50;
+      var activeCard = null;
+      var moveHandler = null, endHandler = null;
+
+      function handleStart(e) {
+        var handle = e.target.closest('.garage-vehicle__drag-handle');
+        if (!handle) return;
+        if (e.target.closest('button, a, input, select, .cert-form, [data-cert-tab], .cert-edit, [data-odometer]')) return;
+        activeCard = handle.closest('.garage-vehicle');
+        var touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        moved = false;
+
+        // Attach window listeners only when dragging starts on handle
+        moveHandler = function(e) {
+          if (startX === null) return;
+          var touch = e.touches ? e.touches[0] : e;
+          var dx = touch.clientX - startX;
+          if (Math.abs(dx) > 8) {
+            moved = true;
+            track.style.transform = 'translateX(' + dx + 'px)';
+            track.style.transition = 'none';
+          }
+        };
+        endHandler = function(e) {
+          if (startX === null || !moved) { startX = null; track.style.transform = ''; track.style.transition = ''; activeCard = null; cleanup(); return; }
+          var touch = e.changedTouches ? e.changedTouches[0] : e;
+          var dx = touch.clientX - startX;
+          if (Math.abs(dx) > threshold) {
+            var cards = track.querySelectorAll('.garage-vehicle');
+            var cardWidth = cards[0] ? cards[0].getBoundingClientRect().width + 16 : 0;
+            var scrollAmount = cardWidth * (dx > 0 ? -1 : 1);
+            track.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            track.style.transform = 'translateX(' + scrollAmount + 'px)';
+            setTimeout(function() {
+              track.style.transform = '';
+              track.style.transition = '';
+              carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }, 300);
+          } else {
+            track.style.transform = '';
+            track.style.transition = '';
+          }
+          startX = null;
+          activeCard = null;
+          cleanup();
+        };
+        function cleanup() {
+          window.removeEventListener('touchmove', moveHandler, { passive: true });
+          window.removeEventListener('mousemove', moveHandler);
+          window.removeEventListener('touchend', endHandler);
+          window.removeEventListener('mouseup', endHandler);
+          window.removeEventListener('touchcancel', endHandler);
+          moveHandler = null;
+          endHandler = null;
+        }
+        window.addEventListener('touchmove', moveHandler, { passive: true });
+        window.addEventListener('mousemove', moveHandler);
+        window.addEventListener('touchend', endHandler);
+        window.addEventListener('mouseup', endHandler);
+        window.addEventListener('touchcancel', endHandler);
+      }
+
+      function handleMove(e) { /* never called directly */ }
+      function handleEnd(e) { /* never called directly */ }
+
+      // Attach to drag handles only
+      document.querySelectorAll('.garage-vehicle__drag-handle').forEach(function(handle) {
+        handle.addEventListener('touchstart', handleStart, { passive: true });
+        handle.addEventListener('mousedown', handleStart);
+      });
+
+      // Keyboard navigation
+      carousel.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') carousel.scrollBy({ left: -300, behavior: 'smooth' });
+        else if (e.key === 'ArrowRight') carousel.scrollBy({ left: 300, behavior: 'smooth' });
+      });
+    })();
+
+    // Registration certificate: front / back toggle + swipe / drag + inline edit.
+    function showFace(root, name) {
+      var tabs = root.querySelectorAll('[data-cert-tab]');
+      var faces = root.querySelectorAll('[data-cert-face]');
+      tabs.forEach(function(t) {
+        var active = t.getAttribute('data-cert-tab') === name;
+        t.classList.toggle('is-active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      faces.forEach(function(f) {
+        f.hidden = f.getAttribute('data-cert-face') !== name;
+      });
+    }
+
+    function attachSwipe(root) {
+      var startX = null, moved = false;
+      var threshold = 50;
+      var moveHandler = null, endHandler = null;
+
+      function handleStart(e) {
+        // Only start drag on the certificate face, not on buttons/inputs
+        if (e.target.closest('[data-cert-tab], .cert-edit, .cert-form, input, select, button, a')) return;
+        var touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        moved = false;
+
+        moveHandler = function(e) {
+          if (startX === null) return;
+          var touch = e.touches ? e.touches[0] : e;
+          var dx = touch.clientX - startX;
+          if (Math.abs(dx) > 8) {
+            moved = true;
+            var face = root.querySelector('[data-cert-face]:not([hidden])');
+            if (face) face.style.transform = 'translateX(' + dx + 'px)';
+          }
+        };
+        endHandler = function(e) {
+          if (startX === null || !moved) { startX = null;
+            var face = root.querySelector('[data-cert-face]:not([hidden])');
+            if (face) face.style.transform = '';
+            cleanup();
+            return;
+          }
+          var touch = e.changedTouches ? e.changedTouches[0] : e;
+          var dx = touch.clientX - startX;
+          var frontVisible = !root.querySelector('[data-cert-face="front"]').hidden;
+          if (frontVisible && dx < -threshold) showFace(root, 'back');
+          else if (!frontVisible && dx > threshold) showFace(root, 'front');
+          var face = root.querySelector('[data-cert-face]:not([hidden])');
+          if (face) face.style.transform = '';
+          startX = null;
+          cleanup();
+        };
+        function cleanup() {
+          window.removeEventListener('touchmove', moveHandler, { passive: true });
+          window.removeEventListener('mousemove', moveHandler);
+          window.removeEventListener('touchend', endHandler);
+          window.removeEventListener('mouseup', endHandler);
+          window.removeEventListener('touchcancel', endHandler);
+          moveHandler = null;
+          endHandler = null;
+        }
+        window.addEventListener('touchmove', moveHandler, { passive: true });
+        window.addEventListener('mousemove', moveHandler);
+        window.addEventListener('touchend', endHandler);
+        window.addEventListener('mouseup', endHandler);
+        window.addEventListener('touchcancel', endHandler);
+      }
+
+      function handleMove(e) { /* never called directly */ }
+      function handleEnd(e) { /* never called directly */ }
+
+      root.addEventListener('touchstart', handleStart, { passive: true });
+      root.addEventListener('mousedown', handleStart);
+    }
+
+    // Inline edit for registration certificate. The pencil tab itself is
+    // the toggle: first tap reveals the inputs, second tap saves. Escape
+    // still cancels.
+    function attachInlineEdit(root) {
+      var editBtn = root.querySelector('[data-cert-edit-toggle]');
+      var csrfInput = root.querySelector('.cert-edit-csrf');
+      var titleInput = root.querySelector('.cert-edit-title');
+      var vehicleId = root.getAttribute('data-vehicle-id');
+      var originalValues = {};
+      var saving = false;
+
+      function setButtonState(mode) {
+        if (mode === 'edit') {
+          editBtn.setAttribute('aria-label', '<%= t("Edit certificate") %>');
+          editBtn.title = '<%= t("Edit certificate") %>';
+          editBtn.classList.remove('is-saving');
+          editBtn.disabled = false;
+        } else {
+          editBtn.setAttribute('aria-label', '<%= t("Save certificate") %>');
+          editBtn.title = '<%= t("Save certificate") %>';
+        }
+      }
+
+      function enterEditMode() {
+        // Store original values for cancel
+        root.querySelectorAll('.regcert__edit-input').forEach(function(input) {
+          originalValues[input.name] = input.value;
+          input.hidden = false;
+        });
+        if (titleInput) originalValues.title = titleInput.value;
+
+        root.setAttribute('data-edit-mode', 'true');
+        setButtonState('save');
+        // Focus first input
+        var firstInput = root.querySelector('.regcert__edit-input:not([hidden])');
+        if (firstInput) firstInput.focus();
+      }
+
+      function exitEditMode(save) {
+        if (!save) {
+          // Restore original values in inputs
+          Object.keys(originalValues).forEach(function(name) {
+            var input = root.querySelector('.regcert__edit-input[name="' + name + '"]');
+            if (input) {
+              input.value = originalValues[name];
+              input.hidden = true;
+            }
+          });
+        } else {
+          // Update displayed values from inputs
+          root.querySelectorAll('.regcert__edit-input').forEach(function(input) {
+            var display = input.closest('.regcert__row').querySelector('.regcert__value');
+            if (display) display.textContent = input.value || '—';
+            input.hidden = true;
+          });
+        }
+        root.removeAttribute('data-edit-mode');
+        setButtonState('edit');
+        originalValues = {};
+      }
+
+      function saveCertificate() {
+        if (saving) return;
+        saving = true;
+        editBtn.disabled = true;
+        editBtn.classList.add('is-saving');
+
+        var formData = new URLSearchParams();
+        formData.set('<%= csrfField %>', csrfInput.value);
+        formData.set('title', titleInput ? titleInput.value : '');
+
+        root.querySelectorAll('.regcert__edit-input').forEach(function(input) {
+          formData.set(input.name, input.value);
+        });
+
+        fetch('/garage/ride/' + vehicleId + '/certificate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData.toString()
+        }).then(function(res) {
+          if (res.ok || res.redirected) {
+            exitEditMode(true);
+            // Refresh the page to get updated data (simpler than patching everything)
+            window.location.reload();
+          } else {
+            throw new Error('Save failed');
+          }
+        }).catch(function(err) {
+          alert('<%= t("Failed to save certificate") %>');
+          // Stay in edit mode so the typed values are not lost.
+          saving = false;
+          editBtn.disabled = false;
+          editBtn.classList.remove('is-saving');
+        });
+      }
+
+      editBtn.addEventListener('click', function() {
+        if (root.hasAttribute('data-edit-mode')) {
+          saveCertificate();
+        } else {
+          enterEditMode();
+        }
+      });
+
+      // Enter key in any input saves, Escape cancels
+      root.addEventListener('keydown', function(e) {
+        if (!root.hasAttribute('data-edit-mode')) return;
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          saveCertificate();
+        } else if (e.key === 'Escape') {
+          exitEditMode(false);
+        }
+      });
+    }
+
+    document.querySelectorAll('[data-regcert]').forEach(function(root) {
+      var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-cert-tab]'));
+      var faces = Array.prototype.slice.call(root.querySelectorAll('[data-cert-face]'));
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          var name = tab.getAttribute('data-cert-tab');
+          showFace(root, name);
+        });
+      });
+      attachSwipe(root);
+      attachInlineEdit(root);
+    });
+
+    // Cover photo for a vehicle that is already in the garage. The camera
+    // button sits on the thumbnail; picking a file uploads it immediately.
+    document.querySelectorAll('[data-photo-form]').forEach(function(form) {
+      var input = form.querySelector('[data-photo-input]');
+      var card = form.closest('.garage-vehicle');
+      var pick = card ? card.querySelector('[data-photo-pick]') : null;
+      if (!input) return;
+      if (pick) {
+        pick.addEventListener('click', function() {
+          input.click();
+        });
+      }
+      input.addEventListener('change', function() {
+        if (!input.files || !input.files.length) return;
+        if (pick) {
+          pick.disabled = true;
+          pick.classList.add('is-uploading');
+        }
+        form.submit();
+      });
+    });
+
+    // Odometer: tap the reading, type, press Enter (or click away) to save.
+    // The same number is written to a linked build by the server.
+    document.querySelectorAll('[data-odometer]').forEach(function(root) {
+      var display = root.querySelector('[data-odometer-display]');
+      var input = root.querySelector('[data-odometer-input]');
+      var valueEl = root.querySelector('[data-odometer-value]');
+      var vehicleId = root.getAttribute('data-vehicle-id');
+      if (!display || !input || !valueEl) return;
+      var saving = false;
+      var editing = false;
+
+      function currentMileage() {
+        var n = Number(root.getAttribute('data-mileage'));
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function startEdit() {
+        if (saving) return;
+        editing = true;
+        input.value = currentMileage();
+        input.hidden = false;
+        display.hidden = true;
+        try { input.focus({ preventScroll: true }); } catch (err) { input.focus(); }
+        input.select();
+      }
+
+      function cancelEdit() {
+        editing = false;
+        input.hidden = true;
+        display.hidden = false;
+        input.disabled = false;
+        saving = false;
+      }
+
+      function finish(mileage) {
+        editing = false;
+        valueEl.textContent = String(mileage);
+        root.setAttribute('data-mileage', String(mileage));
+        input.value = mileage;
+        input.hidden = true;
+        display.hidden = false;
+        input.disabled = false;
+        saving = false;
+      }
+
+      function save() {
+        if (saving) return;
+        var raw = String(input.value || '').replace(/[^\d]/g, '');
+        if (!raw) { cancelEdit(); return; }
+        var mileage = parseInt(raw, 10);
+        if (!isFinite(mileage) || mileage < 0 || mileage > 10000000) {
+          cancelEdit();
+          return;
+        }
+        if (mileage === currentMileage()) { finish(mileage); return; }
+
+        saving = true;
+        input.disabled = true;
+        var body = new URLSearchParams();
+        body.set('<%= csrfField %>', '<%= csrfToken %>');
+        body.set('mileage', String(mileage));
+
+        fetch('/garage/ride/' + vehicleId + '/odometer', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'fetch'
+          },
+          body: body.toString()
+        }).then(function(res) {
+          if (!res.ok) throw new Error('Save failed');
+          return res.json();
+        }).then(function(data) {
+          finish(Number(data.mileage));
+        }).catch(function() {
+          alert('<%= t("Failed to save the odometer") %>');
+          cancelEdit();
+        });
+      }
+
+      display.addEventListener('click', startEdit);
+      input.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          save();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelEdit();
+        }
+      });
+      input.addEventListener('blur', function() {
+        if (!editing) return;
+        save();
+      });
+    });
+
+    // ── Certificate scan: camera → OCR → auto-fill ────────────────────
+    // Everything lives here (no ES module) so a stale module cache can
+    // never leave the scan buttons without a click handler.
+
+    var FIELD_FOR_CODE = {
+      'A': 'number_plate', 'B': 'year', 'I': 'registration_date',
+      'C.1.1': 'owner_surname', 'C.1.2': 'owner_name', 'C.1.3': 'owner_address',
+      'C.1.4': 'owner_id', 'C.4(a)': 'owner_of_vehicle', 'H': 'expiry_date',
+      'D.1': 'make', 'D.2': 'vehicle_type', 'D.3': 'model', 'E': 'vin',
+      'F.1': 'max_laden_mass', 'F.2': 'permissible_mass', 'G': 'unladen_mass',
+      'P': 'technical_passport',
+      'P.1': 'engine_capacity', 'P.2': 'net_power_kw', 'P.3': 'fuel_type',
+      'P.5': 'engine_number', 'Q': 'power_weight_ratio', 'R': 'colour',
+      'S.1': 'seats', 'S.2': 'standing_places'
+    };
+    var CODE_FOR_FIELD = {};
+    Object.keys(FIELD_FOR_CODE).forEach(function(code) {
+      CODE_FOR_FIELD[FIELD_FOR_CODE[code]] = code;
+    });
+    // The technical passport is printed as row P on this card; it has no
+    // code in FIELD_FOR_CODE (that maps P.1/P.2... to engine fields).
+    CODE_FOR_FIELD.technical_passport = 'P';
+
+    var FRONT_FIELDS = ['number_plate', 'year', 'registration_date', 'owner_surname',
+      'owner_name', 'owner_address', 'owner_id', 'owner_of_vehicle',
+      'expiry_date', 'technical_passport'];
+
+    // Big banner over the camera so nobody scans the wrong side of the card.
+    // Both languages are always shown, exactly like on the paper document.
+    var SIDE_TITLES = {
+      back: 'BACK SIDE OF THE REGISTRATION CERTIFICATE - რეგისტრაციის მოწმობის უკანა მხარე',
+      front: 'FRONT SIDE OF THE REGISTRATION CERTIFICATE - რეგისტრაციის მოწმობის წინა მხარე'
+    };
+
+    // ── fill ──────────────────────────────────────────────────────────
+    var displayFor = function(field, value) {
+      if (field === 'registration_date' || field === 'expiry_date') {
+        var parts = String(value).split('-');
+        return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value;
+      }
+      if (field === 'max_laden_mass' || field === 'permissible_mass' || field === 'unladen_mass') return value + ' kg';
+      if (field === 'engine_capacity') return value + ' cm³';
+      if (field === 'net_power_kw') return value + ' kW';
+      if (field === 'power_weight_ratio') return value + ' kW/kg';
+      return value;
+    };
+
+    var buildTitle = function(fields) {
+      var make = fields.make || '';
+      var model = fields.model || '';
+      if (!make) return model;
+      if (!model) return make;
+      return model.toUpperCase().indexOf(make.toUpperCase()) === 0 ? model : make + ' ' + model;
+    };
+
+    function applyFields(target, fields) {
+      var filled = [];
+      if (!target || !target.querySelector) return filled;
+      var isCard = target.hasAttribute && target.hasAttribute('data-regcert');
+
+      Object.keys(fields).forEach(function(field) {
+        var value = fields[field];
+        if (value === undefined || value === null || value === '') return;
+        var input = target.querySelector('[name="' + field + '"]');
+        if (!input) return;
+        input.value = value;
+        try {
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (err) { /* older browsers */ }
+
+        if (isCard) {
+          var row = target.querySelector('.regcert__row[data-field="' + field + '"]');
+          if (row) {
+            var display = row.querySelector('.regcert__value');
+            if (display) display.textContent = displayFor(field, value);
+          }
+        }
+        filled.push({ field: field, value: value });
+      });
+
+      if (!isCard && (fields.make || fields.model)) {
+        var titleInput = target.querySelector('[name="title"]');
+        if (titleInput && !titleInput.value) titleInput.value = buildTitle(fields);
+      }
+      return filled;
+    }
+
+    // ── overlays ──────────────────────────────────────────────────────
+    var scanTarget = null;
+    var scanMode = 'manual';   // 'add' (guided back then front) or 'manual'
+    var scanSide = 'front';    // 'front' | 'back'
+    var camEl = null;
+    var videoEl = null;
+    var camStream = null;
+    var camFacing = 'environment';
+    var fileInputEl = null;
+    var progressEl = null;
+    var resultEl = null;
+    var savedOverflow = '';
+
+    var escHtml = function(value) {
+      return String(value).replace(/[&<>"']/g, function(ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+      });
+    };
+
+    function ensureProgress() {
+      if (progressEl) return;
+      progressEl = document.createElement('div');
+      progressEl.className = 'scan-progress';
+      progressEl.hidden = true;
+      progressEl.innerHTML =
+        '<div class="scan-progress__panel" role="status" aria-live="polite">' +
+          '<div class="scan-progress__spinner" aria-hidden="true"></div>' +
+          '<p class="scan-progress__text">Reading the certificate…</p>' +
+          '<div class="scan-progress__bar"><span></span></div>' +
+          '<p class="scan-progress__hint">This can take up to a minute on a phone. Keep this screen open.</p>' +
+        '</div>';
+      document.body.appendChild(progressEl);
+    }
+
+    function showProgress(message) {
+      ensureProgress();
+      progressEl.hidden = false;
+      setProgress(0.02, message || 'Preparing the image…');
+    }
+
+    function setProgress(ratio, message) {
+      if (!progressEl) return;
+      var pct = Math.max(2, Math.min(100, Math.round(ratio * 100)));
+      var bar = progressEl.querySelector('.scan-progress__bar span');
+      if (bar) bar.style.width = pct + '%';
+      var text = progressEl.querySelector('.scan-progress__text');
+      if (text && message) text.textContent = message;
+    }
+
+    function hideProgress() {
+      if (progressEl) progressEl.hidden = true;
+    }
+
+    function ensureResult() {
+      if (resultEl) return;
+      resultEl = document.createElement('div');
+      resultEl.className = 'camera-modal camera-modal--result';
+      resultEl.hidden = true;
+      resultEl.innerHTML =
+        '<div class="camera-modal__overlay" data-result-close></div>' +
+        '<div class="camera-modal__panel" role="dialog" aria-modal="true" aria-label="Scan result">' +
+          '<header class="camera-modal__header">' +
+            '<h3>Scan result</h3>' +
+            '<button type="button" class="camera-modal__close" data-result-close aria-label="Close">' +
+              '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>' +
+            '</button>' +
+          '</header>' +
+          '<div class="scan-result">' +
+            '<p class="scan-result__summary" data-summary></p>' +
+            '<ul class="scan-result__list" data-list></ul>' +
+            '<details class="scan-result__raw"><summary>Recognised text</summary><pre data-raw></pre></details>' +
+          '</div>' +
+          '<div class="camera-controls">' +
+            '<button type="button" class="btn btn--secondary" data-result-retry>Scan again</button>' +
+            '<button type="button" class="btn btn--primary" data-result-next hidden>Next: scan the front</button>' +
+            '<button type="button" class="btn btn--primary" data-result-done>Done</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(resultEl);
+      resultEl.querySelectorAll('[data-result-close]').forEach(function(el) {
+        el.addEventListener('click', hideResult);
+      });
+      resultEl.querySelector('[data-result-retry]').addEventListener('click', function() {
+        hideResult();
+        openScanner(scanTarget, { side: scanSide });
+      });
+      resultEl.querySelector('[data-result-next]').addEventListener('click', function() {
+        var next = scanSide === 'front' ? 'back' : 'front';
+        hideResult();
+        openScanner(scanTarget, { side: next });
+      });
+      resultEl.querySelector('[data-result-done]').addEventListener('click', function() {
+        var target = scanTarget;
+        hideResult();
+        if (!target) return;
+        var isCard = target.hasAttribute && target.hasAttribute('data-regcert');
+        if (isCard) {
+          if (!target.hasAttribute('data-edit-mode')) {
+            var editBtn = target.querySelector('[data-cert-edit-toggle]');
+            if (editBtn) editBtn.click();
+          }
+        } else {
+          var first = target.querySelector('input[name="number_plate"]') || target.querySelector('input');
+          if (first) {
+            try { first.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (err) { /* ignore */ }
+            try { first.focus({ preventScroll: true }); } catch (err2) { /* ignore */ }
+          }
+        }
+      });
+    }
+
+    function hideResult() {
+      if (resultEl) resultEl.hidden = true;
+    }
+
+    function showResult(fields, filled, text, error) {
+      ensureResult();
+      var summaryEl = resultEl.querySelector('[data-summary]');
+      var listEl = resultEl.querySelector('[data-list]');
+      var rawEl = resultEl.querySelector('[data-raw]');
+      var details = resultEl.querySelector('.scan-result__raw');
+      var panel = resultEl.querySelector('.camera-modal__panel');
+      var nextBtn = resultEl.querySelector('[data-result-next]');
+      var doneBtn = resultEl.querySelector('[data-result-done]');
+
+      var sideLabel = scanSide === 'back' ? 'Back side' : 'Front side';
+      var otherSide = scanSide === 'front' ? 'back' : 'front';
+
+      nextBtn.textContent = (scanMode === 'add' ? 'Next: scan the ' : 'Scan the ') + otherSide;
+      nextBtn.hidden = scanMode === 'add' && scanSide === 'front';
+      nextBtn.className = 'btn ' +
+        (scanMode === 'add' && scanSide === 'back' ? 'btn--primary' : 'btn--secondary');
+      doneBtn.className = 'btn ' +
+        (scanMode === 'add' && scanSide === 'back' ? 'btn--secondary' : 'btn--primary');
+
+      panel.classList.remove('is-ok', 'is-warn', 'is-error');
+      if (error) {
+        panel.classList.add('is-error');
+        summaryEl.textContent = sideLabel + ' scan failed: ' + (error.message || String(error));
+      } else if (!filled.length) {
+        panel.classList.add('is-warn');
+        summaryEl.textContent = sideLabel + ': no certificate fields were recognised. Try again with more ' +
+          'light and the whole card inside the blue frame.';
+      } else {
+        panel.classList.add('is-ok');
+        summaryEl.textContent = sideLabel + ': filled ' + filled.length + ' field' +
+          (filled.length === 1 ? '' : 's') + ' from the certificate.' +
+          (scanMode === 'add' && scanSide === 'back'
+            ? ' Now scan the front of the card for the plate and owner details.'
+            : ' Check the values before saving.');
+      }
+
+      listEl.innerHTML = filled.map(function(item) {
+        var code = CODE_FOR_FIELD[item.field] || '';
+        return '<li><span class="scan-result__code">' + escHtml(code) + '</span>' +
+          '<span class="scan-result__value">' + escHtml(item.value) + '</span></li>';
+      }).join('');
+      listEl.hidden = !filled.length;
+
+      rawEl.textContent = text || '(the OCR returned no text)';
+      details.open = !filled.length || Boolean(error);
+      resultEl.hidden = false;
+    }
+
+    function ensureFileInput() {
+      if (fileInputEl) return fileInputEl;
+      fileInputEl = document.createElement('input');
+      fileInputEl.type = 'file';
+      fileInputEl.accept = 'image/*';
+      fileInputEl.setAttribute('capture', 'environment');
+      fileInputEl.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;';
+      fileInputEl.addEventListener('change', function() {
+        var file = fileInputEl.files && fileInputEl.files[0];
+        try { fileInputEl.value = ''; } catch (err) { /* ignore */ }
+        if (file) handleFile(file);
+      });
+      document.body.appendChild(fileInputEl);
+      return fileInputEl;
+    }
+
+    function canUseCamera() {
+      return Boolean(window.isSecureContext && navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getUserMedia === 'function');
+    }
+
+    function setCamStatus(message) {
+      if (!camEl) return;
+      var el = camEl.querySelector('[data-cam-status]');
+      if (el) el.textContent = message;
+    }
+
+    function ensureCamera() {
+      if (camEl) return;
+      camEl = document.createElement('div');
+      camEl.className = 'camera-modal camera-modal--scanner';
+      camEl.hidden = true;
+      camEl.innerHTML =
+        '<div class="camera-modal__overlay" data-cam-close></div>' +
+        '<div class="camera-modal__panel" role="dialog" aria-modal="true" aria-label="Scan registration certificate">' +
+          '<header class="camera-modal__header">' +
+            '<h3>' +
+              '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.2A2 2 0 0 1 10.2 5h3.6a2 2 0 0 1 1.6.8L17 8h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg>' +
+              ' Scan certificate' +
+            '</h3>' +
+            '<button type="button" class="camera-side" data-cam-side aria-label="Certificate side">BACK</button>' +
+            '<button type="button" class="camera-modal__close" data-cam-close aria-label="Close">' +
+              '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>' +
+            '</button>' +
+          '</header>' +
+          '<div class="camera-modal__body">' +
+            '<div class="camera-view">' +
+              '<video id="cert-camera-video" autoplay playsinline muted></video>' +
+              '<div class="camera-frame" aria-hidden="true">' +
+                '<svg class="camera-frame__guide" data-guide="front" viewBox="0 0 600 400" preserveAspectRatio="none">' +
+                  '<g fill="none" stroke="rgba(30, 144, 255, 0.7)" stroke-width="1.5">' +
+                    '<line x1="0" y1="78" x2="600" y2="78"/>' +
+                    '<line x1="0" y1="128" x2="600" y2="128"/>' +
+                    '<line x1="0" y1="168" x2="600" y2="168"/>' +
+                    '<line x1="0" y1="208" x2="600" y2="208"/>' +
+                    '<line x1="0" y1="248" x2="600" y2="248"/>' +
+                    '<line x1="0" y1="288" x2="600" y2="288"/>' +
+                    '<line x1="0" y1="328" x2="600" y2="328"/>' +
+                    '<line x1="230" y1="78" x2="230" y2="328"/>' +
+                  '</g>' +
+                  '<g fill="rgba(30, 144, 255, 0.8)" font-family="monospace" font-size="14">' +
+                    '<text x="10" y="52" font-weight="bold">FRONT</text>' +
+                    '<text x="10" y="108">A</text><text x="10" y="150">B</text>' +
+                    '<text x="10" y="190">I</text><text x="10" y="230">C.1</text>' +
+                    '<text x="10" y="270">C.4</text><text x="10" y="310">H</text>' +
+                    '<text x="244" y="108">value</text>' +
+                  '</g>' +
+                '</svg>' +
+                '<svg class="camera-frame__guide" data-guide="back" viewBox="0 0 600 400" preserveAspectRatio="none" hidden>' +
+                  '<g fill="none" stroke="rgba(30, 144, 255, 0.7)" stroke-width="1.5">' +
+                    '<line x1="0" y1="28" x2="600" y2="28"/>' +
+                    '<line x1="0" y1="49.3" x2="600" y2="49.3"/>' +
+                    '<line x1="0" y1="70.7" x2="600" y2="70.7"/>' +
+                    '<line x1="0" y1="92" x2="600" y2="92"/>' +
+                    '<line x1="0" y1="113.3" x2="600" y2="113.3"/>' +
+                    '<line x1="0" y1="134.7" x2="600" y2="134.7"/>' +
+                    '<line x1="0" y1="156" x2="600" y2="156"/>' +
+                    '<line x1="0" y1="177.3" x2="600" y2="177.3"/>' +
+                    '<line x1="0" y1="198.7" x2="600" y2="198.7"/>' +
+                    '<line x1="0" y1="220" x2="600" y2="220"/>' +
+                    '<line x1="0" y1="241.3" x2="600" y2="241.3"/>' +
+                    '<line x1="0" y1="262.7" x2="600" y2="262.7"/>' +
+                    '<line x1="0" y1="284" x2="600" y2="284"/>' +
+                    '<line x1="0" y1="305.3" x2="600" y2="305.3"/>' +
+                    '<line x1="0" y1="326.7" x2="600" y2="326.7"/>' +
+                    '<line x1="0" y1="348" x2="600" y2="348"/>' +
+                    '<line x1="250" y1="28" x2="250" y2="348"/>' +
+                    '<line x1="292" y1="28" x2="292" y2="348"/>' +
+                    '<rect x="474" y="152" width="94" height="94" rx="4"/>' +
+                  '</g>' +
+                  '<g fill="rgba(30, 144, 255, 0.75)" font-family="monospace" font-size="11">' +
+                    '<text x="10" y="52" font-weight="bold">BACK</text>' +
+                    '<text x="10" y="42">D.1</text><text x="10" y="63.3">D.2</text>' +
+                    '<text x="10" y="84.7">D.3</text><text x="10" y="106">E</text>' +
+                    '<text x="10" y="127.3">F.1</text><text x="10" y="148.7">F.2</text>' +
+                    '<text x="10" y="170">G</text><text x="10" y="191.3">P.1</text>' +
+                    '<text x="10" y="212.7">P.2</text><text x="10" y="234">P.3</text>' +
+                    '<text x="10" y="255.3">P.5</text><text x="10" y="276.7">Q</text>' +
+                    '<text x="10" y="298">R</text><text x="10" y="319.3">S.1</text>' +
+                    '<text x="10" y="340.7">S.2</text>' +
+                    '<text x="255" y="42">value</text><text x="297" y="42">QR</text>' +
+                  '</g>' +
+                  '<g fill="rgba(255,255,255,0.35)" font-family="monospace" font-size="10">' +
+                    '<text x="521" y="205" text-anchor="middle">QR</text>' +
+                  '</g>' +
+                '</svg>' +
+                '<span class="camera-frame__corner tl"></span>' +
+                '<span class="camera-frame__corner tr"></span>' +
+                '<span class="camera-frame__corner bl"></span>' +
+                '<span class="camera-frame__corner br"></span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="camera-notes">' +
+              '<p class="camera-side-title" data-cam-side-title></p>' +
+              '<p class="camera-status" data-cam-status>Starting camera…</p>' +
+            '</div>' +
+            '<div class="camera-controls">' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-cam-file title="Use the phone camera app instead">Camera app</button>' +
+              '<button type="button" class="btn btn--secondary btn--sm" data-cam-switch>Switch</button>' +
+              '<button type="button" class="btn btn--primary" data-cam-shot>Capture</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-cam-cancel>Cancel</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(camEl);
+      videoEl = camEl.querySelector('video');
+
+      camEl.querySelectorAll('[data-cam-close], [data-cam-cancel]').forEach(function(el) {
+        el.addEventListener('click', hideCamera);
+      });
+      camEl.querySelector('[data-cam-switch]').addEventListener('click', switchCamera);
+      camEl.querySelector('[data-cam-shot]').addEventListener('click', takePhoto);
+      camEl.querySelector('[data-cam-file]').addEventListener('click', function() {
+        hideCamera();
+        ensureFileInput().click();
+      });
+      camEl.querySelector('[data-cam-side]').addEventListener('click', function() {
+        // Only manual scans let the user pick a side. The add-vehicle flow
+        // is guided: back first, then front.
+        if (scanMode !== 'manual') return;
+        scanSide = scanSide === 'front' ? 'back' : 'front';
+        updateSideUi();
+      });
+      window.addEventListener('resize', layoutFrame);
+      window.addEventListener('orientationchange', function() {
+        setTimeout(layoutFrame, 250);
+      });
+    }
+
+    // Size and centre the capture frame. CSS aspect-ratio is not reliable
+    // on older mobile browsers, so the geometry is computed explicitly.
+    // The frame is 3:2 - the real card shape - and takes as much of the
+    // visible video area as it can.
+    function layoutFrame() {
+      if (!camEl || camEl.hidden) return;
+      var view = camEl.querySelector('.camera-view');
+      var frame = camEl.querySelector('.camera-frame');
+      if (!view || !frame) return;
+      var vw = view.clientWidth;
+      var vh = view.clientHeight;
+      if (!vw || !vh) return;
+
+      // The video is object-fit: contain, so work out how big it is drawn.
+      var aspect = videoEl && videoEl.videoWidth && videoEl.videoHeight
+        ? videoEl.videoWidth / videoEl.videoHeight
+        : 4 / 3;
+      var drawW = vw;
+      var drawH = vw / aspect;
+      if (drawH > vh) {
+        drawH = vh;
+        drawW = vh * aspect;
+      }
+
+      var pad = Math.max(6, Math.round(Math.min(drawW, drawH) * 0.03));
+      var top = (vh - drawH) / 2;
+      var bottom = top + drawH;
+      var left = (vw - drawW) / 2;
+
+      // On phones the header, hint bar and controls float over the video.
+      // Keep the card frame inside the gap between them.
+      var status = camEl.querySelector('[data-cam-status]');
+      var controls = camEl.querySelector('.camera-controls');
+      if (status && controls && getComputedStyle(status).position === 'absolute') {
+        var vr = view.getBoundingClientRect();
+        top = Math.max(top, status.getBoundingClientRect().bottom - vr.top + pad);
+        bottom = Math.min(bottom, controls.getBoundingClientRect().top - vr.top - pad);
+      }
+      if (bottom - top < 80) {
+        top = (vh - drawH) / 2;
+        bottom = top + drawH;
+      }
+
+      var availH = Math.max(80, bottom - top);
+      var availW = drawW - pad * 2;
+      var w = Math.min(availW, availH * 1.5);
+      var h = w * 2 / 3;
+      if (h > availH) {
+        h = availH;
+        w = h * 1.5;
+      }
+
+      frame.style.width = Math.round(w) + 'px';
+      frame.style.height = Math.round(h) + 'px';
+      frame.style.left = Math.round(left + drawW / 2) + 'px';
+      frame.style.top = Math.round(top + (bottom - top) / 2) + 'px';
+    }
+
+    function stopStream() {
+      if (camStream) {
+        camStream.getTracks().forEach(function(track) {
+          try { track.stop(); } catch (err) { /* ignore */ }
+        });
+        camStream = null;
+      }
+      if (videoEl) {
+        try { videoEl.srcObject = null; } catch (err2) { /* ignore */ }
+      }
+    }
+
+    // Request the stream the scanner was tuned for. Asking for 4K made many
+    // phone cameras pick a noisier, softer mode with worse OCR results.
+    function cameraConstraints() {
+      return {
+        facingMode: { ideal: camFacing },
+        width: { min: 1280, ideal: 1920 },
+        height: { ideal: 1440 },
+        aspectRatio: { ideal: 4 / 3 },
+        advanced: [{ zoom: 1 }]
+      };
+    }
+
+    function startCamera() {
+      ensureCamera();
+      ensureProgress();
+      ensureResult();
+      updateSideUi();
+      savedOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      camEl.hidden = false;
+      setCamStatus('Starting camera…');
+      stopStream();
+      layoutFrame();
+      setTimeout(layoutFrame, 60);
+
+      // Best effort: keep the scanner upright on Android. iOS ignores this,
+      // and browsers reject the call outside fullscreen - both are harmless.
+      try {
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          var lock = screen.orientation.lock('portrait');
+          if (lock && lock.catch) lock.catch(function() { /* ignore */ });
+        }
+      } catch (err) { /* ignore */ }
+
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: cameraConstraints()
+      }).then(function(stream) {
+        camStream = stream;
+        videoEl.srcObject = stream;
+        videoEl.onloadedmetadata = function() {
+          layoutFrame();
+          var play = videoEl.play();
+          if (play && play.catch) play.catch(function() { /* autoplay guard */ });
+        };
+        var play = videoEl.play();
+        if (play && play.catch) play.catch(function() { /* autoplay guard */ });
+        updateSideUi();
+      }).catch(function(err) {
+        console.error('[scan] camera error', err);
+        hideCamera();
+        if (err && err.name === 'NotAllowedError') {
+          alert('Camera permission was blocked. Allow camera access for this site, or use the camera app instead.');
+        }
+        // Fall back to the native camera/file picker, which works even
+        // when getUserMedia is unavailable.
+        ensureFileInput().click();
+      });
+    }
+
+    function hideCamera() {
+      stopStream();
+      if (camEl) camEl.hidden = true;
+      document.body.style.overflow = savedOverflow || '';
+      try {
+        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+          screen.orientation.unlock();
+        }
+      } catch (err) { /* ignore */ }
+    }
+
+    function switchCamera() {
+      camFacing = camFacing === 'environment' ? 'user' : 'environment';
+      setCamStatus('Switching camera…');
+      stopStream();
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: cameraConstraints()
+      }).then(function(stream) {
+        camStream = stream;
+        videoEl.srcObject = stream;
+        videoEl.onloadedmetadata = layoutFrame;
+        var play = videoEl.play();
+        if (play && play.catch) play.catch(function() { /* ignore */ });
+        updateSideUi();
+      }).catch(function(err) {
+        console.error('[scan] camera switch error', err);
+        setCamStatus('Could not switch camera');
+      });
+    }
+
+    function takePhoto() {
+      if (!videoEl || !videoEl.videoWidth) {
+        setCamStatus('Camera is still starting - wait a moment and tap Capture again');
+        return;
+      }
+
+      var vw = videoEl.videoWidth;
+      var vh = videoEl.videoHeight;
+      var sx = 0, sy = 0, sw = vw, sh = vh;
+
+      // Crop to what the user framed (3:2 card area), mapping the
+      // on-screen frame through the video's `object-fit: contain` transform.
+      var view = camEl ? camEl.querySelector('.camera-view') : null;
+      var frame = camEl ? camEl.querySelector('.camera-frame') : null;
+      if (view && frame) {
+        var viewRect = view.getBoundingClientRect();
+        var frameRect = frame.getBoundingClientRect();
+        if (viewRect.width && viewRect.height && frameRect.width > 40 && frameRect.height > 40) {
+          var scale = Math.min(viewRect.width / vw, viewRect.height / vh);
+          var offX = (viewRect.width - vw * scale) / 2;
+          var offY = (viewRect.height - vh * scale) / 2;
+          var fx = (frameRect.left - viewRect.left - offX) / scale;
+          var fy = (frameRect.top - viewRect.top - offY) / scale;
+          var fw = frameRect.width / scale;
+          var fh = frameRect.height / scale;
+          fx = Math.max(0, Math.min(vw - 40, fx));
+          fy = Math.max(0, Math.min(vh - 40, fy));
+          sx = fx;
+          sy = fy;
+          sw = Math.min(fw, vw - fx);
+          sh = Math.min(fh, vh - fy);
+        }
+      }
+
+      var outW = Math.min(1920, Math.round(sw));
+      var outH = Math.max(1, Math.round(outW * sh / sw));
+      var canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      canvas.getContext('2d').drawImage(videoEl, sx, sy, sw, sh, 0, 0, outW, outH);
+
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      hideCamera();
+      handleDataUrl(dataUrl);
+    }
+
+    function handleFile(file) {
+      if (!file.type || file.type.indexOf('image/') !== 0) {
+        alert('Please choose a photo of the registration certificate.');
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(event) { handleDataUrl(event.target.result); };
+      reader.onerror = function() { alert('That photo could not be opened. Please try another one.'); };
+      reader.readAsDataURL(file);
+    }
+
+    function handleDataUrl(dataUrl) {
+      hideResult();
+      showProgress('Preparing the image…');
+      var img = new Image();
+      img.onload = function() {
+        try {
+          runOcr(img);
+        } catch (err) {
+          hideProgress();
+          showResult({}, [], '', err);
+        }
+      };
+      img.onerror = function() {
+        hideProgress();
+        showResult({}, [], '', new Error('That image could not be decoded.'));
+      };
+      img.src = dataUrl;
+    }
+
+    function preprocessImage(img) {
+      var width = img.naturalWidth || img.width;
+      var height = img.naturalHeight || img.height;
+      // Upscale for better OCR: target at least 2000px on longest side
+      var scale = Math.min(3, 2000 / Math.max(width, height));
+      if (width * scale < 1600) scale = Math.min(3, 1600 / width);
+      var w = Math.max(1, Math.round(width * scale));
+      var h = Math.max(1, Math.round(height * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // Grayscale + contrast + denoise + adaptive threshold
+      var frame;
+      try {
+        frame = ctx.getImageData(0, 0, w, h);
+      } catch (err) {
+        return canvas;
+      }
+      var data = frame.data;
+      var w2 = w, h2 = h;
+      
+      // 1. Convert to grayscale
+      var gray = new Uint8ClampedArray(w2 * h2);
+      for (var i = 0, p = 0; i < data.length; i += 4, p++) {
+        gray[p] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      }
+      
+      // 2. Contrast stretch (CLAHE-like: stretch 5th-95th percentile)
+      var sorted = Array.from(gray).sort((a, b) => a - b);
+      var p5 = sorted[Math.floor(sorted.length * 0.05)];
+      var p95 = sorted[Math.floor(sorted.length * 0.95)];
+      var range = p95 - p5 || 255;
+      for (var p = 0; p < gray.length; p++) {
+        var v = (gray[p] - p5) * 255 / range;
+        gray[p] = v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+      
+      // 3. Light bilateral filter (simplified: 3x3 weighted average preserving edges)
+      var denoised = new Uint8ClampedArray(w2 * h2);
+      for (var y = 0; y < h2; y++) {
+        for (var x = 0; x < w2; x++) {
+          var idx = y * w2 + x;
+          var sum = 0, wsum = 0;
+          for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+              var nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < w2 && ny >= 0 && ny < h2) {
+                var nidx = ny * w2 + nx;
+                var diff = Math.abs(gray[idx] - gray[nidx]);
+                var w = Math.exp(-diff * diff / 500); // edge-preserving
+                sum += gray[nidx] * w;
+                wsum += w;
+              }
+            }
+          }
+          denoised[idx] = wsum > 0 ? Math.round(sum / wsum) : gray[idx];
+        }
+      }
+      
+      // 4. Adaptive threshold (Sauvola-like: local mean - k * local std)
+      var binary = new Uint8ClampedArray(w2 * h2);
+      var window = 15; // local window size
+      var k = 0.3;
+      for (var y = 0; y < h2; y++) {
+        for (var x = 0; x < w2; x++) {
+          var sum = 0, sqsum = 0, count = 0;
+          var half = Math.floor(window / 2);
+          for (var dy = -half; dy <= half; dy++) {
+            for (var dx = -half; dx <= half; dx++) {
+              var nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < w2 && ny >= 0 && ny < h2) {
+                var v = denoised[ny * w2 + nx];
+                sum += v;
+                sqsum += v * v;
+                count++;
+              }
+            }
+          }
+          var mean = sum / count;
+          var variance = sqsum / count - mean * mean;
+          var stddev = Math.sqrt(Math.max(0, variance));
+          var threshold = mean * (1 + k * (stddev / 128 - 1));
+          var idx = y * w2 + x;
+          binary[idx] = denoised[idx] > threshold ? 255 : 0;
+        }
+      }
+      
+      // 5. Write back to frame (inverted: black text on white)
+      for (var p = 0, i = 0; i < data.length; i += 4, p++) {
+        var v = binary[p];
+        data[i] = data[i + 1] = data[i + 2] = v;
+      }
+      ctx.putImageData(frame, 0, 0);
+      return canvas;
+    }
+
+    function loadJsQR() {
+      if (window.jsQR) return Promise.resolve(window.jsQR);
+      if (window.__streetoJsQR) return window.__streetoJsQR;
+      window.__streetoJsQR = new Promise(function(resolve, reject) {
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+        script.async = true;
+        script.onload = function() {
+          if (window.jsQR) resolve(window.jsQR);
+          else reject(new Error('QR decoder did not start.'));
+        };
+        script.onerror = function() {
+          window.__streetoJsQR = null;
+          reject(new Error('Could not download the QR decoder.'));
+        };
+        document.head.appendChild(script);
+      });
+      return window.__streetoJsQR;
+    }
+
+    function decodeQrFromCanvas(canvas) {
+      return loadJsQR().then(function(jsQR) {
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width, h = canvas.height;
+        var frame;
+        try { frame = ctx.getImageData(0, 0, w, h); } catch (err) { return null; }
+        var code = jsQR(frame.data, w, h, { inversionAttempts: 'dontInvert' });
+        if (!code || !code.data) {
+          // Retry with inverted colours in case the QR is light-on-dark.
+          code = jsQR(frame.data, w, h, { inversionAttempts: 'onlyInvert' });
+        }
+        return code && code.data ? String(code.data) : null;
+      }).catch(function() { return null; });
+    }
+
+    // OCR runs on the server (Google Gemini) and returns ready-to-use
+    // field values, so the browser never has to do any text recognition.
+    function runOcr(img) {
+      setProgress(0.06, 'Preparing the image…');
+      var canvas;
+      try {
+        canvas = preprocessImage(img);
+      } catch (err) {
+        canvas = img;
+      }
+
+      setProgress(0.25, 'Reading the certificate with AI…');
+      canvas.toBlob(function(blob) {
+        if (!blob) {
+          hideProgress();
+          showResult({}, [], '', new Error('Could not read the image.'));
+          return;
+        }
+        var formData = new FormData();
+        formData.append('image', blob, 'scan.jpg');
+        // The back side prints a picture of the plate, which is not a field.
+        formData.append('side', scanSide === 'back' ? 'back' : 'front');
+        fetch('/api/ocr/certificate', {
+          method: 'POST',
+          credentials: 'same-origin',
+          body: formData
+        }).then(function(resp) {
+          if (!resp.ok) {
+            return resp.json().catch(function() { return {}; }).then(function(err) {
+              throw new Error(err.error || 'The scanner could not read this photo.');
+            });
+          }
+          return resp.json();
+        }).then(function(json) {
+          hideProgress();
+          var fields = json.fields || {};
+          var text = json.text || '';
+          var filled = applyFields(scanTarget, fields);
+          if (scanTarget && scanTarget.hasAttribute && scanTarget.hasAttribute('data-regcert') && filled.length) {
+            var frontCount = filled.filter(function(item) {
+              return FRONT_FIELDS.indexOf(item.field) >= 0;
+            }).length;
+            showFace(scanTarget, frontCount >= filled.length - frontCount ? 'front' : 'back');
+          }
+          showResult(fields, filled, text, null);
+        }).catch(function(err) {
+          console.warn('[scan] server OCR failed', err);
+          hideProgress();
+          showResult({}, [], '', err);
+        });
+      }, 'image/jpeg', 0.92);
+    }
+
+    function updateSideUi() {
+      if (!camEl) return;
+      var isAdd = scanMode === 'add';
+      var badge = camEl.querySelector('[data-cam-side]');
+      if (badge) {
+        badge.textContent = isAdd
+          ? (scanSide === 'back' ? '1/2 BACK' : '2/2 FRONT')
+          : (scanSide === 'back' ? 'BACK' : 'FRONT');
+        badge.classList.toggle('is-button', !isAdd);
+        badge.setAttribute('aria-label', isAdd
+          ? (scanSide === 'back' ? 'Step 1 of 2, back side' : 'Step 2 of 2, front side')
+          : 'Switch to the ' + (scanSide === 'front' ? 'back' : 'front') + ' side');
+      }
+      var prefix = isAdd
+        ? (scanSide === 'back' ? 'Step 1 of 2 - ' : 'Step 2 of 2 - ')
+        : '';
+      setCamStatus(prefix + (scanSide === 'back'
+        ? 'scan the BACK: make, model, VIN'
+        : 'scan the FRONT: plate, owner, dates'));
+
+      // The big blue banner names the side that is being scanned.
+      var titleEl = camEl.querySelector('[data-cam-side-title]');
+      if (titleEl) titleEl.textContent = SIDE_TITLES[scanSide] || SIDE_TITLES.front;
+
+      // Each card side prints a different layout, so show the matching guide.
+      // (SVG elements have no .hidden property — toggle the attribute.)
+      var frontGuide = camEl.querySelector('[data-guide="front"]');
+      var backGuide = camEl.querySelector('[data-guide="back"]');
+      if (frontGuide) frontGuide.toggleAttribute('hidden', scanSide !== 'front');
+      if (backGuide) backGuide.toggleAttribute('hidden', scanSide !== 'back');
+    }
+
+    function openScanner(root, opts) {
+      opts = opts || {};
+      scanTarget = (root && root.querySelector) ? root : document.getElementById('add-vehicle-modal');
+      var isAdd = Boolean(scanTarget && scanTarget.id === 'add-vehicle-modal');
+      scanMode = isAdd ? 'add' : 'manual';
+      if (opts.side === 'front' || opts.side === 'back') scanSide = opts.side;
+      else scanSide = isAdd ? 'back' : 'front';
+
+      ensureProgress();
+      ensureResult();
+
+      if (!canUseCamera()) {
+        // Plain HTTP on a LAN address cannot use getUserMedia, but an
+        // <input type="file" capture> still opens the phone camera.
+        ensureFileInput().click();
+        return;
+      }
+      startCamera();
+    }
+
+    document.querySelectorAll('[data-cert-scan]').forEach(function(button) {
+      button.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var card = button.closest('[data-regcert]');
+        // Start with the side the card is currently showing, so scanning the
+        // back face prompts for the back first.
+        var backFace = card && card.querySelector('[data-cert-face="back"]');
+        var side = backFace && !backFace.hidden ? 'back' : 'front';
+        openScanner(card, { side: side });
+      });
+    });
+
+    document.querySelectorAll('[data-modal-scan]').forEach(function(button) {
+      button.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openScanner(document.getElementById('add-vehicle-modal'), { side: 'back' });
+      });
+    });
+  })();
+</script>

@@ -1,0 +1,264 @@
+<%
+const myStatus = membership ? membership.status : null;
+const isStaff = Boolean(staff);
+%>
+<div class="single single--narrow">
+  <a class="backlink" href="/groups"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('All groups') %></a>
+
+  <div class="card grouphead">
+    <div class="grouphead__cover" id="groupcover" data-avatar-preview>
+      <% if (group.avatar) { %>
+        <img src="<%= config.uploadUrl %>/<%= group.avatar %>"<% if (srcset(group.avatar)) { %> srcset="<%= srcset(group.avatar) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="lazy" data-avatar-img>
+      <% } else { %>
+        <span class="grouphead__gen" style="--h:<%= f.hueOf(group.slug) %>" data-avatar-img><%- include('../partials/icon', { name: 'shield', size: 34 }) %></span>
+      <% } %>
+    </div>
+    <div class="grouphead__body">
+      <h1 class="grouphead__name"><%= group.name %></h1>
+      <div class="grouphead__meta">
+        <span class="tag tag--<%= group.privacy %>"><%- include('../partials/icon', { name: group.privacy === 'open' ? 'globe' : group.privacy === 'private' ? 'lock' : 'shield', size: 13 }) %> <%= t(f.PRIVACY_LABELS[group.privacy]) %></span>
+        <span class="muted"><%= group.member_count === 1 ? t('{n} member', { n: group.member_count }) : t('{n} members', { n: group.member_count }) %></span>
+        <span class="muted"><%= postCount === 1 ? t('{n} post', { n: postCount }) : t('{n} posts', { n: postCount }) %></span>
+      </div>
+      <% if (group.description) { %><p class="grouphead__desc"><%= group.description %></p><% } %>
+
+      <div class="grouphead__actions">
+        <% if (!myStatus) { %>
+          <form action="/groups/<%= group.slug %>/join" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'plus', size: 16 }) %> <%= group.privacy === 'open' ? t('Join group') : t('Request to join') %></button>
+          </form>
+        <% } else if (myStatus === 'pending') { %>
+          <span class="tag tag--pending"><%- include('../partials/icon', { name: 'clock', size: 13 }) %> <%= t('Waiting for approval') %></span>
+        <% } else if (myStatus === 'invited') { %>
+          <form action="/groups/<%= group.slug %>/join" method="post">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('Accept invite') %></button>
+          </form>
+        <% } else if (isMember) { %>
+          <a class="btn btn--outline" href="/meetups/new?group=<%= group.slug %>"><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('Group meetup') %></a>
+          <% if (group.owner_id !== currentUser.id) { %>
+            <form action="/groups/<%= group.slug %>/leave" method="post" data-confirm="<%= t('Leave this group?') %>">
+              <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+              <button class="btn btn--ghost" type="submit"><%= t('Leave group') %></button>
+            </form>
+          <% } %>
+        <% } %>
+        <% if (currentUser && currentUser.is_admin && group.owner_id !== currentUser.id) { %>
+          <form action="/groups/<%= group.slug %>/delete" method="post" data-confirm="<%= t('Delete this group and everything in it?') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--danger btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 15 }) %> <%= t('Delete group') %></button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <% if (isStaff) { %>
+    <%- include('../partials/group-tabs', { section: section, group: group }) %>
+  <% } %>
+
+  <% if (section === 'feed') { %>
+    <% if (isMember || isStaff) { %>
+      <%- include('../partials/composer', { action: '/groups/' + group.slug + '/posts', group: group }) %>
+    <% } %>
+
+    <% if (!items.length) { %>
+      <%- include('../partials/empty', { icon: 'wall', title: t('No posts in this group yet'), text: isMember ? t('Kick it off with a build photo, a plan or a pin.') : t('Join to see and post in the group feed.') }) %>
+    <% } %>
+
+    <% items.forEach(function (post) { %>
+      <%- include('../partials/post', { p: post, commentsHtml: '', moderator: isStaff }) %>
+    <% }); %>
+
+    <%- include('../partials/pagination', { page: page, hasMore: hasMore, baseQs: '' }) %>
+
+    <% if (groupMeetups.length) { %>
+      <section class="strip">
+        <h2 class="section-title"><%- include('../partials/icon', { name: 'pin', size: 17 }) %> <%= t('Group meetups') %></h2>
+        <div class="cards">
+          <% groupMeetups.forEach(function (m) { %><%- include('../partials/meetup-card', { meetup: m }) %><% }); %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (pinned.length) { %>
+      <section class="strip">
+        <h2 class="section-title"><%- include('../partials/icon', { name: 'gps', size: 17 }) %> <%= t('Pin drops') %></h2>
+        <ul class="rows">
+          <% pinned.forEach(function (spot) { %>
+            <li class="row">
+              <span class="row__id">
+                <%- include('../partials/icon', { name: spot.post_type === 'emergency' ? 'alert' : 'pin', size: 16 }) %>
+                <span><strong><%= spot.place_name || t('Pinned spot') %></strong> <span class="muted"><%= t('by @{user}', { user: spot.username }) %></span></span>
+              </span>
+              <a class="btn btn--ghost btn--sm" href="/posts/<%= spot.id %>"><%= t('View') %></a>
+            </li>
+          <% }); %>
+        </ul>
+      </section>
+    <% } %>
+  <% } %>
+
+  <% if (section === 'members') { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= t('Members ({n})', { n: members.length }) %></h2>
+      <div class="cards cards--persons">
+        <% members.forEach(function (member) { %>
+          <article class="card person">
+            <a class="person__id" href="/u/<%= member.username %>">
+              <%- include('../partials/avatar', { u: member }) %>
+              <div class="person__text">
+                <strong><%= member.display_name || member.username %></strong>
+                <span class="muted">@<%= member.username %></span>
+                <% if (member.car) { %><span class="person__car"><%- include('../partials/icon', { name: 'car', size: 14 }) %> <%= member.car %></span><% } %>
+              </div>
+            </a>
+            <div class="person__foot">
+              <span class="tag tag--tiny"><%= t(member.role) %></span>
+              <div class="person__actions">
+                <% if (currentUser && currentUser.id !== member.id) { %>
+                  <form action="/friends/message/<%= member.username %>" method="post">
+                    <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                    <button class="iconbtn" type="submit" aria-label="<%= t('Message') %>"><%- include('../partials/icon', { name: 'chat', size: 16 }) %></button>
+                  </form>
+                <% } %>
+                <% if (isStaff && member.role !== 'owner' && currentUser.id !== member.id) { %>
+                  <form action="/groups/<%= group.slug %>/members/<%= member.id %>/remove" method="post" data-confirm="<%= t('Remove @{user} from the group?', { user: member.username }) %>">
+                    <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                    <button class="iconbtn iconbtn--danger" type="submit" aria-label="<%= t('Remove member') %>"><%- include('../partials/icon', { name: 'x', size: 16 }) %></button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    </section>
+
+    <% if (isMember && !isStaff) { %>
+      <section class="card mini">
+        <h3 class="mini__title"><%= t('Invite a driver') %></h3>
+        <form class="inlineform" action="/groups/<%= group.slug %>/invite" method="post">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <input type="text" name="username" placeholder="<%= t('username') %>" required>
+          <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'send', size: 15 }) %> <%= t('Invite') %></button>
+        </form>
+        <p class="muted small"><%= t('Members can invite') %><% if (group.privacy === 'invite') { %> <%= t('their friends') %><% } %>.</p>
+      </section>
+    <% } %>
+  <% } %>
+
+  <% if (section === 'admin') { %>
+    <section class="strip">
+      <h2 class="section-title"><%- include('../partials/icon', { name: 'settings', size: 17 }) %> <%= t('Group admin') %></h2>
+
+      <% if (pending.length) { %>
+        <h3 class="mini__title"><%= t('Join requests') %> <span class="muted">(<%= pending.length %>)</span></h3>
+        <ul class="rows">
+          <% pending.forEach(function (person) { %>
+            <li class="row">
+              <a class="row__id" href="/u/<%= person.username %>">
+                <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
+                <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>
+              </a>
+              <div class="row__actions">
+                <form action="/groups/<%= group.slug %>/requests/<%= person.id %>/approve" method="post">
+                  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                  <button class="btn btn--primary btn--sm" type="submit"><%- include('../partials/icon', { name: 'check', size: 15 }) %> <%= t('Approve') %></button>
+                </form>
+                <form action="/groups/<%= group.slug %>/requests/<%= person.id %>/decline" method="post">
+                  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                  <button class="btn btn--ghost btn--sm" type="submit"><%= t('Decline') %></button>
+                </form>
+              </div>
+            </li>
+          <% }); %>
+        </ul>
+      <% } else { %>
+        <p class="muted small"><%= t('No pending requests.') %></p>
+      <% } %>
+
+      <h3 class="mini__title"><%= t('Invite a driver') %></h3>
+      <form class="inlineform" action="/groups/<%= group.slug %>/invite" method="post">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <input type="text" name="username" placeholder="<%= t('username') %>" required>
+        <button class="btn btn--primary btn--sm" type="submit"><%- include('../partials/icon', { name: 'send', size: 15 }) %> <%= t('Invite') %></button>
+      </form>
+      <p class="muted small"><%= t('Usernames only - no @ needed.') %> <% if (group.privacy === 'invite') { %><%= t('In an invite-only group, members can only invite their friends.') %><% } %></p>
+
+      <% if (invited.length) { %>
+        <h3 class="mini__title"><%= t('Invited') %></h3>
+        <div class="faces faces--wrap">
+          <% invited.forEach(function (person) { %>
+            <span class="faces__item" title="<%= t('invited') %>">
+              <%- include('../partials/avatar', { u: person, cls: 'avatar--xs' }) %>
+              <span class="muted">@<%= person.username %></span>
+            </span>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <h3 class="mini__title"><%= t('Group settings') %></h3>
+      <form action="/groups/<%= group.slug %>/settings" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <label class="field">
+          <span class="field__label"><%= t('Name') %></span>
+          <input type="text" name="name" value="<%= group.name %>" maxlength="60" required>
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('Description') %></span>
+          <textarea name="description" rows="3" maxlength="800"><%= group.description || '' %></textarea>
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('Privacy') %></span>
+          <%- include('partials/select-modal', {
+            name: 'privacy',
+            value: group.privacy,
+            options: [
+              { value: 'open', label: t(f.PRIVACY_LABELS.open) },
+              { value: 'private', label: t(f.PRIVACY_LABELS.private) },
+              { value: 'invite', label: t(f.PRIVACY_LABELS.invite) }
+            ],
+            label: t('Privacy'),
+            icon: 'shield'
+          }) %>
+        </label>
+        <label class="field">
+          <span class="field__label"><%= t('New logo') %></span>
+          <input type="file" name="avatar" accept="image/*" data-avatar-input data-avatar-target="#groupcover">
+          <span class="field__hint"><%= t('The new logo is shown straight away, but it is only saved when you save the settings.') %></span>
+        </label>
+        <button class="btn btn--primary btn--sm" type="submit"><%= t('Save settings') %></button>
+      </form>
+
+      <% if (group.owner_id === currentUser.id) { %>
+        <form action="/groups/<%= group.slug %>/delete" method="post" class="dangerrow" data-confirm="<%= t('Delete this group and everything in it?') %>">
+          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+          <button class="btn btn--danger btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 15 }) %> <%= t('Delete group') %></button>
+        </form>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (section === 'shared') { %>
+    <% if (pinned.length) { %>
+      <section class="strip">
+        <h2 class="section-title"><%- include('../partials/icon', { name: 'gps', size: 17 }) %> <%= t('Pin drops') %></h2>
+        <ul class="rows">
+          <% pinned.forEach(function (spot) { %>
+            <li class="row">
+              <span class="row__id">
+                <%- include('../partials/icon', { name: spot.post_type === 'emergency' ? 'alert' : 'pin', size: 16 }) %>
+                <span><strong><%= spot.place_name || t('Pinned spot') %></strong> <span class="muted"><%= t('by @{user}', { user: spot.username }) %></span></span>
+              </span>
+              <a class="btn btn--ghost btn--sm" href="/posts/<%= spot.id %>"><%= t('View') %></a>
+            </li>
+          <% }); %>
+        </ul>
+      </section>
+    <% } else { %>
+      <%- include('../partials/empty', { icon: 'gps', title: t('No pin drops yet'), text: t('Members can drop pins in the group feed.') }) %>
+    <% } %>
+  <% } %>
+</div>

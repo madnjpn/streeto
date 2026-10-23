@@ -1,0 +1,35 @@
+<div class="pagehead">
+  <div>
+    <p class="eyebrow"><%= t('street calendar') %></p>
+    <h1 class="display"><%= t('Meetups') %></h1>
+    <p class="lede"><%= total === 1 ? t('{n} run', { n: total }) : t('{n} runs', { n: total }) %> <%= t('on the board.') %></p>
+  </div>
+  <a class="btn btn--primary" href="/meetups/new"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Host a meetup') %></a>
+</div>
+
+<div class="feedtabs">
+  <% Object.entries(scopes).forEach(function ([key, label]) { %>
+    <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" href="/meetups?scope=<%= key %>"><%= t(label) %></a>
+  <% }); %>
+</div>
+
+<form class="searchbig" action="/meetups" method="get" role="search">
+  <%- include('../partials/icon', { name: 'search', size: 20 }) %>
+  <input type="search" name="q" value="<%= q %>" placeholder="<%= t('Search by name, spot or description') %>">
+  <button class="btn btn--primary" type="submit"><%= t('Search') %></button>
+</form>
+
+<% if (!items.length) { %>
+  <%- include('../partials/empty', {
+    icon: 'pin',
+    title: scope === 'going' ? t('You are not going to anything yet') : scope === 'mine' ? t('You are not hosting anything') : t('No meetups here'),
+    text: t('Pick a spot on the map, set a time, and see who shows up.'),
+    action: '<a class="btn btn--primary" href="/meetups/new">' + t('Host a meetup') + '</a>'
+  }) %>
+<% } else { %>
+  <div class="cards cards--wide">
+    <% items.forEach(function (m) { %><%- include('../partials/meetup-card', { meetup: m }) %><% }); %>
+  </div>
+<% } %>
+
+<%- include('../partials/pagination', { page: page, hasMore: items.length >= 18, baseQs: 'scope=' + scope + (q ? '&q=' + encodeURIComponent(q) : '') }) %>

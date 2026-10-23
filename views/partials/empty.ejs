@@ -1,0 +1,22 @@
+<%
+/* Empty-state block. Every local is optional, so this partial can be
+   included with as little as a title (or nothing at all). `hint` is
+   accepted as an alias for `text`. */
+const emptyIcon = typeof icon !== 'undefined' && icon ? icon : 'car';
+const emptyTitle = typeof title !== 'undefined' && title ? title : t('Nothing here yet');
+const emptyText =
+  typeof text !== 'undefined' && text
+    ? text
+    : typeof hint !== 'undefined' && hint
+      ? hint
+      : '';
+const emptyAction = typeof action !== 'undefined' && action ? action : '';
+%>
+<% if (typeof items === 'undefined' || !items.length) { %>
+<div class="empty">
+  <div class="empty__mark"><%- include('icon', { name: emptyIcon, size: 48 }) %></div>
+  <h3 class="empty__title"><%= emptyTitle %></h3>
+  <% if (emptyText) { %><p class="empty__text"><%= emptyText %></p><% } %>
+  <% if (emptyAction) { %><div class="empty__action"><%- emptyAction %></div><% } %>
+</div>
+<% } %>

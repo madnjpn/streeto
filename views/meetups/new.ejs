@@ -1,0 +1,175 @@
+<div class="single single--narrow">
+  <a class="backlink" href="/meetups"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('All meetups') %></a>
+  <p class="eyebrow"><%= t('host a run') %></p>
+  <h1 class="display"><%= t('New meetup') %></h1>
+  <p class="lede"><%= t('Pick the spot by street name search, GPS, or by tapping the map.') %></p>
+
+  <form class="card card--form" action="/meetups/new" method="post" novalidate data-meetup-form>
+    <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+    <input type="hidden" name="lat" value="<%= values.lat %>" data-pin-lat>
+    <input type="hidden" name="lng" value="<%= values.lng %>" data-pin-lng>
+    <input type="hidden" name="zoom" value="<%= values.zoom %>" data-pin-zoom>
+
+    <label class="field <%= errors.title ? 'field--bad' : '' %>">
+      <span class="field__label"><%= t('Title') %></span>
+      <input type="text" name="title" value="<%= values.title %>" maxlength="100" required placeholder="<%= t('e.g. Friday night docks run') %>">
+      <% if (errors.title) { %><span class="field__error"><%= t(errors.title) %></span><% } %>
+    </label>
+
+    <label class="field">
+      <span class="field__label"><%= t('Details') %></span>
+      <textarea name="description" rows="4" maxlength="2000" placeholder="<%= t('Meeting point details, route, rules, what to bring.') %>"><%= values.description %></textarea>
+    </label>
+
+    <div class="field-row">
+      <label class="field <%= errors.starts_at ? 'field--bad' : '' %>">
+        <span class="field__label"><%= t('Date & time') %></span>
+        <input type="datetime-local" name="starts_at" value="<%= values.starts_at %>" required>
+        <% if (errors.starts_at) { %><span class="field__error"><%= t(errors.starts_at) %></span><% } %>
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Capacity') %> <span class="muted"><%= t('(optional)') %></span></span>
+        <input type="number" name="capacity" value="<%= values.capacity %>" min="1" max="10000" placeholder="<%= t('No limit') %>">
+        <% if (errors.capacity) { %><span class="field__error"><%= t(errors.capacity) %></span><% } %>
+      </label>
+    </div>
+
+    <label class="field">
+      <%- include('partials/select-modal', {
+        name: 'category',
+        value: values.category || 'meetup',
+        options: [
+          { value: 'meetup', label: t('Meetup') },
+          { value: 'track_day', label: t('Track day') },
+          { value: 'show', label: t('Car show') },
+          { value: 'cruise', label: t('Cruise') },
+          { value: 'touge', label: t('Touge') }
+        ],
+        label: t('Category'),
+        icon: 'pin'
+      }) %>
+    </label>
+
+    <fieldset class="field <%= errors.place_name ? 'field--bad' : '' %>" data-normal-location>
+      <legend class="field__label"><%= t('Location') %></legend>
+      <% if (errors.place_name) { %><span class="field__error"><%= t(errors.place_name) %></span><% } %>
+      <%- include('../partials/map-picker', { id: 'meetup-map', lat: values.lat, lng: values.lng }) %>
+      <%# The pin names the spot - these are filled from the map, not typed. %>
+      <input type="hidden" name="place_name" value="<%= values.place_name %>">
+      <input type="hidden" name="address" value="<%= values.address %>">
+    </fieldset>
+
+    <fieldset class="field <%= errors.route ? 'field--bad' : '' %>" data-touge-route hidden>
+      <legend class="field__label"><%= t('Route') %></legend>
+      <% if (errors.route) { %><span class="field__error"><%= t(errors.route) %></span><% } %>
+      <p class="muted"><%= t('A touge run is a point-to-point mountain road. The Start (A) is also the meeting spot. Tap once for Start (A), then tap for Finish (B).') %></p>
+
+      <%# The map names the two points from the streets under the pins. %>
+      <input type="hidden" name="route_start_name" value="<%= values.route_start_name %>">
+      <input type="hidden" name="route_end_name" value="<%= values.route_end_name %>">
+
+      <div class="mapbox" data-touge-picker data-map-id="touge-route-picker">
+        <div class="mapbox__actions">
+          <button type="button" class="btn btn--ghost btn--sm" data-gps>
+            <%- include('../partials/icon', { name: 'gps', size: 16 }) %> <%= t('Use my GPS') %>
+          </button>
+          <button type="button" class="btn btn--ghost btn--sm" data-pin-clear>
+            <%- include('../partials/icon', { name: 'x', size: 16 }) %> <%= t('Clear route') %>
+          </button>
+          <span class="mapbox__chosen" data-pin-status><%= t('Tap the map to set Start (A), then tap for Finish (B).') %></span>
+        </div>
+        <div class="touge-map">
+          <div class="mapbox__map" id="touge-route-picker" data-touge-map role="application" aria-label="<%= t('Touge route picker') %>"></div>
+        </div>
+        <div class="touge-widgets">
+          <div class="touge-banner" data-route-length hidden></div>
+          <div class="meetupweather meetupweather--badge" data-meetup-weather data-form-weather hidden></div>
+          <div class="touge-names" data-route-names hidden>
+            <span class="touge-names__chip touge-names__chip--a"><strong>A</strong><span data-route-name-a></span></span>
+            <span class="touge-names__chip touge-names__chip--b"><strong>B</strong><span data-route-name-b></span></span>
+          </div>
+        </div>
+        <div class="touge-profile" data-route-profile hidden></div>
+      </div>
+
+      <input type="hidden" name="route_start_lat" value="<%= values.route_start_lat %>">
+      <input type="hidden" name="route_start_lng" value="<%= values.route_start_lng %>">
+      <input type="hidden" name="route_end_lat" value="<%= values.route_end_lat %>">
+      <input type="hidden" name="route_end_lng" value="<%= values.route_end_lng %>">
+      <input type="hidden" name="route_view" value="<%= values.route_view %>">
+    </fieldset>
+
+    <div class="meetupweather meetupweather--strip" data-meetup-weather data-form-weather hidden></div>
+
+    <fieldset class="field">
+      <legend class="field__label"><%= t('Who can come?') %></legend>
+      <div class="radiocards">
+        <% privacies.forEach(function (p) { %>
+          <label class="radiocard <%= values.privacy === p ? 'is-on' : '' %>">
+            <input type="radio" name="privacy" value="<%= p %>" <%= values.privacy === p ? 'checked' : '' %>>
+            <span class="radiocard__icon"><%- include('../partials/icon', { name: p === 'open' ? 'globe' : p === 'private' ? 'lock' : 'shield', size: 20 }) %></span>
+            <span class="radiocard__text">
+              <strong><%= t(f.PRIVACY_LABELS[p]) %></strong>
+              <span class="muted"><%= p === 'open' ? t('Anyone can join instantly.') : p === 'private' ? t('Anyone can ask - you approve each spot.') : t('Hidden. You invite people yourself.') %></span>
+            </span>
+          </label>
+        <% }); %>
+      </div>
+    </fieldset>
+
+    <label class="field">
+      <%- include('partials/select-modal', {
+        name: 'group',
+        value: group ? group.slug : '',
+        options: [
+          { value: '', label: t('Public meetup') }
+        ].concat(myGroups.map(function (g) {
+          return { value: g.slug, label: g.name, selected: group && group.id === g.id };
+        })),
+        label: t('Attach to a group') + ' <span class="muted">' + t('(optional)') + '</span>',
+        icon: 'shield'
+      }) %>
+    </label>
+
+    <button class="btn btn--primary btn--block" type="submit"><%- include('../partials/icon', { name: 'pin', size: 17 }) %> <%= t('Post meetup') %></button>
+  </form>
+</div>
+
+<script type="module">
+  const form = document.querySelector('[data-meetup-form]');
+  const categoryInput = form.querySelector('[name="category"]');
+  const routeFieldset = form.querySelector('[data-touge-route]');
+  const normalLocationFieldset = form.querySelector('[data-normal-location]');
+
+  function toggleRouteFieldset(updateUrl = false) {
+    const isTouge = categoryInput.value === 'touge';
+    routeFieldset.hidden = !isTouge;
+    normalLocationFieldset.hidden = isTouge;
+    form.classList.toggle('is-touge', isTouge);
+
+    // Keep the chosen category in the address bar, so a refresh (or a
+    // re-render after a validation error) comes back to the same one.
+    if (updateUrl) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('category', categoryInput.value);
+      window.history.replaceState({}, '', url);
+    }
+
+    if (isTouge) {
+      // When Touge is selected, copy the normal location to route start if route is empty
+      const normalLat = form.querySelector('[name="lat"]')?.value;
+      const normalLng = form.querySelector('[name="lng"]')?.value;
+      const startLat = form.querySelector('[name="route_start_lat"]')?.value;
+      const startLng = form.querySelector('[name="route_start_lng"]')?.value;
+      if ((!startLat || !startLng) && normalLat && normalLng) {
+        form.querySelector('[name="route_start_lat"]').value = normalLat;
+        form.querySelector('[name="route_start_lng"]').value = normalLng;
+      }
+      // The picker owns the route-length banner.
+      window.TougeRoutePicker?.boot();
+    }
+  }
+
+  categoryInput.addEventListener('change', () => toggleRouteFieldset(true));
+  toggleRouteFieldset();
+</script>

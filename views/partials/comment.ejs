@@ -1,0 +1,84 @@
+<%
+const canModerate = typeof moderator !== 'undefined' ? moderator : false;
+const canDelete = Boolean(currentUser) && (currentUser.id === c.user_id || canModerate || (post && post.user_id === currentUser.id));
+const canEdit = Boolean(currentUser) && (currentUser.id === c.user_id || canModerate || currentUser.is_admin);
+const isReply = typeof reply !== 'undefined' && reply;
+const repliesHtml = typeof replies !== 'undefined' && replies ? replies : '';
+const postId = post ? post.id : '';
+%>
+<div class="comment <%= isReply ? 'comment--reply' : '' %>" data-comment="<%= c.id %>">
+  <a class="comment__avatar" href="/u/<%= c.username %>"><%- include('avatar', { u: { username: c.username, display_name: c.display_name, avatar: c.avatar }, cls: 'avatar--xs' }) %></a>
+  <div class="comment__main">
+    <div class="comment__bubble">
+      <div class="comment__who">
+        <a href="/u/<%= c.username %>"><strong><%= c.display_name || c.username %></strong></a>
+        <time datetime="<%= c.created_at %>"><%= f.timeAgo(c.created_at) %><% if (c.edited_at) { %> · <span class="comment__edited"><%= t('edited') %></span><% } %></time>
+      </div>
+      <div class="comment__body" data-comment-body><%- f.formatText(c.body) %></div>
+      <% if (c.media_path) { %>
+        <div class="comment__media">
+          <% if (c.media_type === 'video') { %>
+            <video src="<%= config.uploadUrl %>/<%= c.media_path %>" controls preload="metadata" class="comment__mediafile"></video>
+          <% } else { %>
+            <a href="<%= config.uploadUrl %>/<%= c.media_path %>" target="_blank" rel="noopener">
+              <img src="<%= config.uploadUrl %>/<%= c.media_path %>" alt="" class="comment__mediafile" loading="lazy">
+            </a>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (currentUser) { %>
+      <div class="comment__acts">
+        <button class="comment__reply" type="button" data-reply-to="<%= c.id %>" data-reply-name="@<%= c.username %>">
+          <%- include('icon', { name: 'comment', size: 13 }) %> <%= t('Reply') %>
+        </button>
+        <% if (canEdit) { %>
+          <button class="comment__reply" type="button" data-comment-edit><%= t('Edit') %></button>
+        <% } %>
+        <button class="comment__react" type="button" data-comment-react title="<%= t('React') %>" aria-label="<%= t('React') %>">
+          <%- include('icon', { name: 'heart', size: 13 }) %>
+        </button>
+      </div>
+
+      <div class="comment__reacts" data-reacts="<%= c.id %>">
+        <% (typeof reactions !== 'undefined' && reactions ? reactions : []).forEach(function (r) { %>
+          <button class="react <%= r.mine ? 'is-mine' : '' %>" type="button" data-react="<%= r.emoji %>" title="<%= (r.who || []).map(function (w) { return '@' + w.username; }).join(', ') %>"><%= r.emoji %><span><%= r.count %></span></button>
+        <% }); %>
+      </div>
+
+      <form class="comment__replyform" action="/posts/<%= postId %>/comments" method="post" enctype="multipart/form-data" data-comment-form="<%= postId %>" data-reply-form hidden>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <input type="hidden" name="parent_id" value="<%= c.id %>">
+        <input type="text" name="body" maxlength="1000" placeholder="<%= t('Reply to {name}…', { name: '@' + c.username }) %>" aria-label="<%= t('Reply') %>">
+        <label class="comment__attach" title="<%= t('Attach a photo') %>">
+          <%- include('icon', { name: 'image', size: 14 }) %>
+          <input type="file" name="media" accept="image/*,video/*" hidden>
+        </label>
+        <button class="btn btn--primary btn--sm" type="submit" aria-label="<%= t('Send reply') %>">
+          <%- include('icon', { name: 'send', size: 15 }) %>
+        </button>
+        <button class="btn btn--ghost btn--sm" type="button" data-reply-cancel><%= t('Cancel') %></button>
+      </form>
+    <% } %>
+
+    <% if (canEdit) { %>
+      <form class="comment__editform" action="/comments/<%= c.id %>/edit" method="post" data-comment-edit-form hidden>
+        <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <textarea name="body" rows="3" maxlength="1000" data-comment-edit-text aria-label="<%= t('Edit comment') %>"><%= c.body %></textarea>
+        <div class="comment__editacts">
+          <button class="btn btn--ghost btn--sm" type="button" data-comment-edit-cancel><%= t('Cancel') %></button>
+          <button class="btn btn--primary btn--sm" type="submit"><%- include('icon', { name: 'check', size: 15 }) %> <%= t('Save') %></button>
+        </div>
+      </form>
+    <% } %>
+
+    <div class="comment__replies" data-replies="<%= c.id %>"><%- repliesHtml %></div>
+  </div>
+  <% if (canDelete) { %>
+    <form action="/comments/<%= c.id %>/delete" method="post" class="comment__del" data-comment-delete>
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <button class="iconbtn iconbtn--ghost" type="submit" aria-label="<%= t('Delete comment') %>"><%- include('icon', { name: 'x', size: 15 }) %></button>
+    </form>
+  <% } %>
+</div>

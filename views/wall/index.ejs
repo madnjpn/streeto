@@ -1,0 +1,116 @@
+<div class="wall-grid">
+  <section class="wall-main">
+    <% if (currentUser) { %>
+      <%- include('../partials/composer', { action: '/posts' }) %>
+    <% } else { %>
+      <div class="card pagehead">
+        <div>
+          <p class="lede"><%= t('Log in to post on the wall.') %></p>
+          <div class="btnrow">
+            <a class="btn btn--primary" href="/register"><%= t('Join up') %></a>
+            <a class="btn btn--ghost" href="/login"><%= t('Log in') %></a>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="feedtabs" role="tablist">
+      <% Object.entries(scopes).forEach(function ([key, label]) { %>
+        <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/?view=<%= key %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
+      <% }); %>
+      <span class="feedtabs__count muted"><%= total === 1 ? t('{n} post', { n: total }) : t('{n} posts', { n: total }) %></span>
+    </div>
+
+    <% if (!items.length) { %>
+      <%- include('../partials/empty', {
+        icon: 'dice',
+        title: scope === 'mygroup' ? t('Your group is quiet') : t('No posts yet'),
+        text: scope === 'mygroup'
+          ? t('Add drivers as friends, or switch to Everyone to see what the whole network is posting.')
+          : t('Be the first to post something on the wall.'),
+        action: '<a class="btn btn--primary" href="/people">' + t('Find drivers') + '</a>'
+      }) %>
+    <% } %>
+
+    <% items.forEach(function (post) { %>
+      <%- include('../partials/post', { p: post, commentsHtml: '' }) %>
+    <% }); %>
+
+    <%- include('../partials/pagination', { page: page, hasMore: hasMore, baseQs: 'view=' + scope }) %>
+  </section>
+
+  <aside class="wall-side wall-side--right">
+    <% if (incoming.length) { %>
+      <div class="card mini">
+        <h3 class="mini__title"><%= t('Friend requests') %></h3>
+        <% incoming.forEach(function (reqRow) { %>
+          <div class="mini__person">
+            <a href="/u/<%= reqRow.username %>"><%- include('../partials/avatar', { u: { username: reqRow.username, display_name: reqRow.display_name, avatar: reqRow.avatar }, cls: 'avatar--sm' }) %></a>
+            <div class="mini__person-text">
+              <a href="/u/<%= reqRow.username %>"><strong><%= reqRow.display_name || reqRow.username %></strong></a>
+              <span class="muted">@<%= reqRow.username %></span>
+            </div>
+            <button class="btn btn--primary btn--sm" type="button" data-friend-accept="<%= reqRow.id %>" data-label-off="<%= t('Accept') %>" title="<%= t('Accept') %>"><%- include('../partials/icon', { name: 'check', size: 15 }) %></button>
+          </div>
+        <% }); %>
+        <a class="mini__more" href="/friends"><%= t('All requests') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      </div>
+    <% } %>
+
+    <div class="card mini">
+      <h3 class="mini__title"><%= t('Find your group') %></h3>
+      <% if (suggestions.length) { %>
+        <% suggestions.forEach(function (person) { %>
+          <div class="mini__person">
+            <a href="/u/<%= person.username %>"><%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %></a>
+            <div class="mini__person-text">
+              <a href="/u/<%= person.username %>"><strong><%= person.display_name || person.username %></strong></a>
+              <span class="muted"><%= person.car || person.city || '@' + person.username %></span>
+            </div>
+            <button class="btn btn--outline btn--sm" type="button" data-friend-add="<%= person.username %>" data-label-off="<%= t('Add') %>" title="<%= t('Add') %>"><%- include('../partials/icon', { name: 'plus', size: 15 }) %></button>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="muted small"><%= t('No suggestions right now.') %></p>
+      <% } %>
+      <a class="mini__more" href="/people"><%= t('Search all drivers') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+    </div>
+
+    <% if (trending && trending.length) { %>
+      <div class="card mini">
+        <h3 class="mini__title"><%= t('Trending tags') %></h3>
+        <div class="tagcloud">
+          <% trending.forEach(function (trow) { %>
+            <a class="tag tag--type" href="/search?q=%23<%= encodeURIComponent(trow.tag) %>&type=posts">#<%= trow.tag %> <span class="muted">(<%= trow.n %>)</span></a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (upcoming && upcoming.length) { %>
+      <div class="card mini">
+        <h3 class="mini__title"><%= t('Next meetups') %></h3>
+        <% upcoming.forEach(function (m) { %>
+          <a class="mini__meetup" href="/meetups/<%= m.id %>">
+            <span class="mini__meetup-when"><%= f.toDate(m.starts_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short' }) %></span>
+            <span class="mini__meetup-text">
+              <strong><%= f.truncate(m.title, 34) %></strong>
+              <span class="muted"><%= f.relativeFuture(m.starts_at) %><%= m.place_name ? ' · ' + f.truncate(m.place_name, 24) : '' %></span>
+            </span>
+          </a>
+        <% }); %>
+        <a class="mini__more" href="/meetups"><%= t('All meetups') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+      </div>
+    <% } %>
+
+    <div class="card mini mini--theme">
+      <h3 class="mini__title"><%= t("Tonight's rules") %></h3>
+      <ul class="mini__rules">
+        <li><%= t('Keep it on the track or the legal limit.') %></li>
+        <li><%= t("Never post someone's plate or face without asking.") %></li>
+        <li><%= t('SOS pins are for real emergencies.') %></li>
+      </ul>
+      <a class="mini__more" href="/about"><%= t('How it works') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+    </div>
+  </aside>
+</div>
