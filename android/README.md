@@ -26,6 +26,14 @@ After downloading it, copy `app-release.apk` to
 `public/downloads/STREETO-android.apk` so the **STREETO.NET | Android** button
 on the login page serves the new build. Distribution is website-only — there is no Play Store listing.
 
+### Versions
+
+The site reads the Android `versionCode` and `versionName` from
+`app/build.gradle.kts`, and the web version from the root `package.json`, so
+bump both when preparing a release. The download button and the in-app update
+check always use whatever APK is at `public/downloads/STREETO-android.apk`; its
+SHA-256 is computed on the fly for the native update check.
+
 ### Signing
 
 Release builds are signed with the keystore held in these repository secrets:

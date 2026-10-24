@@ -183,6 +183,7 @@ function showBanner() {
     });
   }
   banner.hidden = false;
+  document.body.classList.add('has-update-banner');
 }
 
 $$('[data-update-now]').forEach((button) => {
@@ -204,6 +205,7 @@ $$('[data-update-dismiss]').forEach((button) => {
     }
     const banner = $('[data-update-banner]');
     if (banner) banner.hidden = true;
+    document.body.classList.remove('has-update-banner');
   });
 });
 

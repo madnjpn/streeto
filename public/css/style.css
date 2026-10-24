@@ -1080,6 +1080,10 @@ h1, h2, h3, h4 {
   color: var(--dim);
 }
 .update-banner__close:hover { color: var(--text); background: rgba(var(--veil), 0.08); }
+@media (min-width: 861px) {
+  /* Keep the first card clear of the fixed update banner. */
+  body.has-update-banner .layout-shell { padding-top: 96px; }
+}
 
 /* ── flashes & alerts ───────────────────────────────────────────── */
 .flashes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
