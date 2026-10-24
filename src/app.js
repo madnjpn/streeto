@@ -74,6 +74,8 @@ import searchRoutes from './routes/search.js';
 import apiRoutes from './routes/api.js';
 import pageRoutes from './routes/pages.js';
 import adminRoutes from './routes/admin.js';
+import socialRoutes from './routes/social.js';
+import { startMediaQueue } from './lib/media-queue.js';
 
 export const app = express();
 
@@ -421,10 +423,15 @@ app.use('/', meetupRoutes);
 app.use('/', notificationRoutes);
 app.use('/', searchRoutes);
 app.use('/', adminRoutes);
+app.use('/', socialRoutes);
 app.use('/', pageRoutes);
 app.use('/api', apiRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
+
+/* One process owns the media queue. It recovers interrupted jobs on boot and
+   drains work in the background; uploads never wait for FFmpeg. */
+if (process.env.MEDIA_QUEUE_DISABLED !== '1') startMediaQueue();
 
 export default app;

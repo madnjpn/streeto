@@ -4,6 +4,9 @@
     <h1 class="display"><%= t('My Ride') %></h1>
     <p class="lede"><%= t('Add your personal vehicle from its registration certificate and track maintenance, oil changes, and parts replaced.') %></p>
   </div>
+  <div class="pagehead__actions">
+    <a class="btn btn--primary" href="/garage/ride?add=1"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Add vehicle') %></a>
+  </div>
 </div>
 
 <%- include('../partials/garage-tabs', { section: 'ride' }) %>
@@ -78,7 +81,7 @@
 <% } %>
 
 <!-- Add Vehicle Modal -->
-<div class="modal" id="add-vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="add-vehicle-modal-title" hidden>
+<div class="modal" id="add-vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="add-vehicle-modal-title" <%= openAdd ? '' : 'hidden' %>>
   <div class="modal__overlay" tabindex="-1"></div>
   <div class="modal__panel modal__panel--form">
     <header class="modal__header">
@@ -212,6 +215,11 @@
     function closeModal() {
       modal.hidden = true;
       document.body.style.overflow = '';
+      try {
+        if (window.location.search.indexOf('add=1') !== -1) {
+          history.replaceState(null, '', window.location.pathname);
+        }
+      } catch (err) { /* private mode */ }
     }
 
     if (openBtn) {
@@ -221,6 +229,10 @@
     closeBtns.forEach(function(btn) {
       btn.addEventListener('click', closeModal);
     });
+
+    // A no-JavaScript / WebView-safe entry point: the page can render the
+    // dialog open from /garage/ride?add=1.
+    <% if (openAdd) { %>openModal();<% } %>
 
     // The technical passport number is letters and digits only. Dots and
     // apostrophes are punctuation (from the printed "A." field code or OCR
@@ -928,6 +940,11 @@
         typeof navigator.mediaDevices.getUserMedia === 'function');
     }
 
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
     function setCamStatus(message) {
       if (!camEl) return;
       var el = camEl.querySelector('[data-cam-status]');
@@ -1523,7 +1540,11 @@
       ensureProgress();
       ensureResult();
 
-      if (!canUseCamera()) {
+      // iOS WebKit can expose getUserMedia but still refuses it inside a
+      // WebView, and the fallback click after an async rejection is outside
+      // the user gesture. Use the native camera input directly there so the
+      // Add Vehicle scan always opens something usable.
+      if (isIOS() || !canUseCamera()) {
         // Plain HTTP on a LAN address cannot use getUserMedia, but an
         // <input type="file" capture> still opens the phone camera.
         ensureFileInput().click();

@@ -220,6 +220,10 @@ The same HTML/CSS should run in a `WKWebView` without a second design.
 - [ ] No page horizontal overflow.
 - [ ] Footer links and last actions clear the fixed menu/chat buttons.
 - [ ] Keyboard focus visible; icon-only controls have `aria-label`.
+- [ ] Reduced-motion mode leaves the page usable; no action depends on hover.
+- [ ] `npm run ui:check` passes.
+- [ ] `npm run ui:visual` passes at 390 × 844 and 1440 × 900, including the
+      Georgian pass and serious/critical axe checks.
 - [ ] `npm run smoke` passes.
 - [ ] Version, changelog and Georgian translations updated for user-facing
       changes.
@@ -235,4 +239,4 @@ The same HTML/CSS should run in a `WKWebView` without a second design.
 | Buttons / icons | `views/partials/icon.ejs`, `.btn` / `.iconbtn` in CSS |
 | Empty states | `views/partials/empty.ejs` |
 | Live examples | `views/admin/style-guide.ejs` (`/admin/style-guide`) |
-| Release gate | `npm run smoke` |
+| Release gate | `npm run ui:check`, `npm run ui:visual`, `npm run smoke` |

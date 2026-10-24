@@ -27,6 +27,7 @@ const showWhere = meetup.privacy === 'open' || Boolean(currentUser);
       <% } %>
       <span><%- include('icon', { name: 'clock', size: 14 }) %> <%= f.relativeFuture(meetup.starts_at) %></span>
       <span><%- include('icon', { name: 'users', size: 14 }) %> <%= meetup.going_count %></span>
+      <% if (meetup.distance_km != null) { %><span><%- include('icon', { name: 'pin', size: 14 }) %> <%= t('{n} km away', { n: Number(meetup.distance_km).toFixed(1) }) %></span><% } %>
     </div>
     <% if (meetup.going_avatars) { %>
       <div class="meetup__faces">

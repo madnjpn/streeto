@@ -3,21 +3,41 @@ import * as notifications from '../models/notifications.js';
 import { requireAuth } from '../middleware/auth.js';
 import { verifyCsrf } from '../middleware/csrf.js';
 import { backTo, wantsJson, jsonOk } from '../lib/http.js';
+import { NOTIFICATION_CATEGORIES, NOTIFICATION_CATEGORY_KEYS } from '../lib/notification-prefs.js';
 
 const router = express.Router();
 
+const FILTERS = new Set(['all', 'unread']);
+const CATEGORIES = new Set(NOTIFICATION_CATEGORY_KEYS);
+
 /* ── activity feed ────────────────────────────────────────────── */
 router.get('/notifications', requireAuth, (req, res) => {
-  const items = notifications.recent(req.user.id, 60);
-  const hadUnread = items.some((item) => !item.read_at);
-  notifications.markAllRead(req.user.id);
+  const filter = FILTERS.has(req.query.filter) ? req.query.filter : 'all';
+  const category = CATEGORIES.has(req.query.type) ? req.query.type : '';
+  const items = notifications.recent(req.user.id, {
+    limit: 60,
+    unreadOnly: filter === 'unread',
+    category: category || null,
+  });
 
   return res.page('notifications/index', {
     title: `Activity - ${req.app.locals.config.siteName}`,
     active: 'activity',
     items,
-    hadUnread,
+    filter,
+    category,
+    unread: notifications.unreadCount(req.user.id),
+    categories: NOTIFICATION_CATEGORIES,
   });
+});
+
+/** Opening one item marks it read, then sends the member to the real thing. */
+router.get('/notifications/open/:id', requireAuth, (req, res) => {
+  const item = notifications.byId(req.user.id, Number(req.params.id));
+  if (!item) return res.redirect('/notifications');
+  notifications.markRead(req.user.id, item.id);
+  const target = String(item.url || '');
+  return res.redirect(target.startsWith('/') && !target.startsWith('//') ? target : '/notifications');
 });
 
 router.post('/notifications/read', requireAuth, verifyCsrf, (req, res) => {

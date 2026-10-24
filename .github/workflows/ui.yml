@@ -1,0 +1,71 @@
+name: Web UI checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'views/**'
+      - 'public/**'
+      - 'src/**'
+      - 'scripts/ui-check.mjs'
+      - 'scripts/ui-visual-check.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ui.yml'
+  pull_request:
+    paths:
+      - 'views/**'
+      - 'public/**'
+      - 'src/**'
+      - 'scripts/ui-check.mjs'
+      - 'scripts/ui-visual-check.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui:
+    name: Contracts, 390/1440 layout and WCAG
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Puppeteer browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: puppeteer-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Static UI contract
+        run: npm run ui:check
+
+      - name: Ensure Chrome is available
+        run: npx puppeteer browsers install chrome
+
+      - name: Visual and accessibility checks
+        run: npm run ui:visual
+
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: artifacts/ui
+          if-no-files-found: ignore
+          retention-days: 7

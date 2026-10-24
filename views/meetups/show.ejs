@@ -43,6 +43,13 @@ const isTouge = meetup.category === 'touge' && meetup.route_start_lat != null &&
     <% if (meetup.description) { %><p class="meetuphero__desc"><%= meetup.description %></p><% } %>
 
     <div class="meetuphero__actions">
+      <button class="btn btn--ghost" type="button"
+              data-share-card
+              data-share-card-title="<%= meetup.title %>"
+              data-share-card-url="<%= config.publicUrl %>/meetups/<%= meetup.id %>"
+              data-share-card-image="<%= config.publicUrl %>/<%= isTouge && meetup.privacy === 'open' ? `og/route/${meetup.id}.png` : `og/meetup/${meetup.id}.png` %>">
+        <%- include('../partials/icon', { name: 'share', size: 16 }) %> <%= t('Share card') %>
+      </button>
       <% if (!currentUser) { %>
         <a class="btn btn--primary" href="/login"><%= t('Log in to join') %></a>
       <% } else if (join.action === 'join') { %>
@@ -140,6 +147,7 @@ const isTouge = meetup.category === 'touge' && meetup.route_start_lat != null &&
       </div>
       <div class="touge-profile" data-route-profile hidden></div>
       <div class="mapcard__foot">
+        <a class="btn btn--ghost btn--sm" href="/routes/<%= meetup.id %>"><%- include('../partials/icon', { name: 'pin', size: 14 }) %> <%= t('Open route page') %></a>
         <a class="btn btn--ghost btn--sm" href="https://www.google.com/maps/dir/?api=1&origin=<%= meetup.route_start_lat %>,<%= meetup.route_start_lng %>&destination=<%= meetup.route_end_lat %>,<%= meetup.route_end_lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%= t('Get directions') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
       </div>
     </section>

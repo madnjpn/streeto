@@ -1,0 +1,62 @@
+<div class="pagehead">
+  <div class="pagehead__main">
+    <p class="eyebrow"><%= t('local') %></p>
+    <h1 class="display"><%= t('Near you') %></h1>
+    <p class="lede"><%= t('Find meetups, crews and drivers around a city or your current location.') %></p>
+  </div>
+</div>
+
+<form class="card nearform" action="/near" method="get" data-near-form>
+  <label class="field nearform__city">
+    <span class="field__label"><%= t('City or region') %></span>
+    <input type="text" name="city" value="<%= city %>" list="near-cities" placeholder="<%= t('e.g. Tbilisi') %>" autocomplete="address-level2">
+  </label>
+  <datalist id="near-cities">
+    <% cities.forEach(function (row) { %><option value="<%= row.city %>"></option><% }); %>
+  </datalist>
+  <input type="hidden" name="lat" value="<%= coords.lat ?? '' %>" data-near-lat>
+  <input type="hidden" name="lng" value="<%= coords.lng ?? '' %>" data-near-lng>
+  <div class="nearform__actions">
+    <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'search', size: 16 }) %> <%= t('Search') %></button>
+    <button class="btn btn--ghost" type="button" data-near-locate><%- include('../partials/icon', { name: 'gps', size: 16 }) %> <%= t('Use my location') %></button>
+  </div>
+  <p class="small muted" data-near-status role="status" aria-live="polite">
+    <% if (coords.ok) { %><%= t('Showing runs within 200 km of your location.') %>
+    <% } else if (city) { %><%= t('Showing what is happening around {city}.', { city }) %>
+    <% } else { %><%= t('Type a city or use your location to narrow the map.') %><% } %>
+  </p>
+</form>
+
+<section class="strip">
+  <h2 class="section-title"><%- include('../partials/icon', { name: 'pin', size: 17 }) %> <%= t('Meetups near you') %></h2>
+  <% if (meetups.length) { %>
+    <div class="cards cards--wide">
+      <% meetups.forEach(function (meetup) { %><%- include('../partials/meetup-card', { meetup }) %><% }); %>
+    </div>
+  <% } else { %>
+    <%- include('../partials/empty', {
+      icon: 'pin',
+      title: t('No nearby meetups yet'),
+      text: t('Start one, or widen the search to another city.'),
+      action: isAuthenticated ? '<a class="btn btn--primary" href="/meetups/new">' + t('Host a meetup') + '</a>' : '',
+    }) %>
+  <% } %>
+</section>
+
+<% if (groups.length) { %>
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'shield', size: 17 }) %> <%= city ? t('Crews around {city}', { city }) : t('Crews near these runs') %></h2>
+    <div class="cards">
+      <% groups.forEach(function (group) { %><%- include('../partials/group-card', { group, currentUser }) %><% }); %>
+    </div>
+  </section>
+<% } %>
+
+<% if (drivers.length) { %>
+  <section class="strip">
+    <h2 class="section-title"><%- include('../partials/icon', { name: 'users', size: 17 }) %> <%= city ? t('Drivers around {city}', { city }) : t('Drivers on the network') %></h2>
+    <div class="cards cards--persons">
+      <% drivers.forEach(function (person) { %><%- include('../partials/person-card', { person, relationship: null }) %><% }); %>
+    </div>
+  </section>
+<% } %>

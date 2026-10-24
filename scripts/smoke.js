@@ -2227,9 +2227,60 @@ try {
       assert.doesNotMatch(html, new RegExp(`/builds/${privateId}`));
     });
   }
+  const notifUserId = get('SELECT id FROM users WHERE username = ?', A.username).id;
   {
     const res = await a.request('GET', '/notifications');
     check('notifications page renders', () => assert.equal(res.status, 200));
+  }
+  {
+    const before = get(
+      'SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL',
+      notifUserId,
+    ).n;
+    await a.request('GET', '/notifications');
+    const after = get(
+      'SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL',
+      notifUserId,
+    ).n;
+    check('opening activity does not silently mark everything read', () => assert.equal(after, before));
+  }
+  {
+    const { res, html } = await a.page('/notifications?filter=unread&type=social');
+    check('activity can be filtered by unread and category', () => {
+      assert.equal(res.status, 200);
+      assert.match(html, /Unread/);
+    });
+  }
+  {
+    const res = await a.post('/settings/notifications', a.formWithCsrf({
+      notify_messages: '1',
+      notify_social: '1',
+      notify_groups: '1',
+      notify_meetups: '1',
+      notify_builds: '1',
+      notify_services: '1',
+    }));
+    check('per-category notification settings save', () => {
+      assert.equal(res.status, 302);
+      const row = get('SELECT notify_prefs FROM users WHERE id = ?', notifUserId);
+      const prefs = JSON.parse(row.notify_prefs);
+      assert.equal(prefs.messages, true);
+      assert.equal(prefs.social, true);
+      assert.equal(prefs.services, true);
+    });
+  }
+  {
+    const unread = get(
+      'SELECT id FROM notifications WHERE user_id = ? AND read_at IS NULL ORDER BY id DESC LIMIT 1',
+      notifUserId,
+    );
+    if (unread) {
+      const res = await a.request('GET', `/notifications/open/${unread.id}`);
+      check('opening one activity item marks it read and redirects', () => {
+        assert.equal(res.status, 302);
+        assert.ok(get('SELECT read_at FROM notifications WHERE id = ?', unread.id).read_at);
+      });
+    }
   }
   {
     const res = await a.request('GET', '/api/pulse?html=1', { headers: a.jsonHeaders() });

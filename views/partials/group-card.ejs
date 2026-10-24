@@ -3,7 +3,7 @@ const rel = typeof relationship !== 'undefined' ? relationship : null;
 const membershipStatus = group.status && ['active', 'pending', 'invited'].includes(group.status) ? group.status : null;
 %>
 <article class="card groupcard">
-  <a class="group__cover" href="/groups/<%= group.slug %>">
+  <a class="group__cover" href="/groups/<%= group.slug %>" aria-label="<%= t('Open {group}', { group: group.name }) %>">
     <% if (group.avatar) { %>
       <img src="<%= config.uploadUrl %>/<%= group.avatar %>"<% if (srcset(group.avatar)) { %> srcset="<%= srcset(group.avatar) %>" sizes="(max-width: 760px) 50vw, 300px"<% } %> alt="" loading="lazy">
     <% } else { %>
@@ -19,6 +19,7 @@ const membershipStatus = group.status && ['active', 'pending', 'invited'].includ
     <div class="group__meta muted">
       <span><%- include('icon', { name: 'users', size: 14 }) %> <%= group.member_count %></span>
       <span><%- include('icon', { name: 'wall', size: 14 }) %> <%= group.post_count %></span>
+      <% if (group.owner_city) { %><span><%- include('icon', { name: 'pin', size: 14 }) %> <%= group.owner_city %></span><% } %>
     </div>
     <% if (currentUser) { %>
       <div class="group__foot">

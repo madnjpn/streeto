@@ -10,6 +10,16 @@
     : "'JetBrains Mono', ui-monospace, Consolas, 'Noto Sans Georgian', monospace";
   const themeName = (typeof theme !== 'undefined' && theme) ? theme : 'street';
   const metaThemeColor = themeName === 'light' ? '#f7f5ef' : themeName === 'gold' ? '#0a0806' : '#07080b';
+  const pageTitle = typeof title !== 'undefined' ? title : config.siteName;
+  const pageDescription = typeof description !== 'undefined' && description
+    ? description
+    : `${config.siteName} - ${t(config.tagline)}. ${t('Groups, meetups, street maps and a wall built for car people.')}`;
+  const social = typeof og !== 'undefined' && og ? og : null;
+  const canonicalPath = social?.url || (typeof path !== 'undefined' ? path : '/');
+  const canonicalUrl = `${config.publicUrl || ''}${canonicalPath}`;
+  const socialImage = social?.image
+    ? (/^https?:\/\//i.test(social.image) ? social.image : `${config.publicUrl || ''}${social.image}`)
+    : '';
 %>
 <!DOCTYPE html>
 <html lang="<%= lang %>" data-theme="<%= themeName %>" style="--font-head: <%= headStack %>; --font-body: <%= bodyStack %>; --font-mono: <%= monoStack %>;">
@@ -21,8 +31,21 @@
 <meta name="csrf-token" content="<%= csrfToken %>">
 <meta name="streeto-web-version" content="<%= webVersion %>">
 <meta name="streeto-android-version" content="<%= androidRelease.versionName %>">
-<meta name="description" content="<%= config.siteName %> - <%= t(config.tagline) %>. <%= t('Groups, meetups, street maps and a wall built for car people.') %>">
-<title><%= typeof title !== 'undefined' ? title : config.siteName %></title>
+<meta name="description" content="<%= pageDescription %>">
+<title><%= pageTitle %></title>
+<link rel="canonical" href="<%= canonicalUrl %>">
+<meta property="og:site_name" content="<%= config.siteName %>">
+<meta property="og:title" content="<%= social?.title || pageTitle %>">
+<meta property="og:description" content="<%= social?.description || pageDescription %>">
+<meta property="og:url" content="<%= canonicalUrl %>">
+<meta property="og:type" content="<%= social?.type || 'website' %>">
+<% if (socialImage) { %><meta property="og:image" content="<%= socialImage %>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="<%= socialImage %>"><% } else { %><meta name="twitter:card" content="summary"><% } %>
+<meta name="twitter:title" content="<%= social?.title || pageTitle %>">
+<meta name="twitter:description" content="<%= social?.description || pageDescription %>">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,6 +86,7 @@
       <nav class="sidenav" aria-label="<%= t('Main') %>">
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'wall' ? 'is-active' : '' %>" href="/"><%- include('partials/icon', { name: 'wall', size: 19 }) %> <span><%= t('Wall') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'explore' ? 'is-active' : '' %>" href="/explore"><%- include('partials/icon', { name: 'search', size: 19 }) %> <span><%= t('Explore') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'near' ? 'is-active' : '' %>" href="/near"><%- include('partials/icon', { name: 'pin', size: 19 }) %> <span><%= t('Near me') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'builds' ? 'is-active' : '' %>" href="/builds"><%- include('partials/icon', { name: 'garage', size: 19 }) %> <span><%= t('Builds') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'groups' ? 'is-active' : '' %>" href="/groups"><%- include('partials/icon', { name: 'shield', size: 19 }) %> <span><%= t('Groups') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'meetups' ? 'is-active' : '' %>" href="/meetups"><%- include('partials/icon', { name: 'pin', size: 19 }) %> <span><%= t('Meetups') %></span></a>
@@ -140,6 +164,7 @@
 <script src="/assets/<%= assetStamp %>/js/app.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/version.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/video.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/share-card.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/chat.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/search-live.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/meetup-weather.js" type="module"></script>

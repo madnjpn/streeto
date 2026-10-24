@@ -210,6 +210,7 @@ router.post('/chat/:id/send', chatUpload, optimizeAs('chat'), verifyCsrf, (req, 
           body: body ? body.slice(0, 120) : translate(lang, fallback),
           url: `/?chat=${id}`,
           tag: `chat-${id}`,
+          category: 'messages',
         });
       });
     }
@@ -315,6 +316,7 @@ router.post('/share', requireAuth, verifyCsrf, async (req, res, next) => {
             : translate(lang, 'Shared a {what}', { what }),
           url: `/?chat=${conversation.id}`,
           tag: `chat-${conversation.id}`,
+          category: 'messages',
         });
       }
     } catch (e) {}

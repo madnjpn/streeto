@@ -14,9 +14,9 @@
       </div>
     <% } %>
 
-    <div class="feedtabs" role="tablist">
+    <div class="feedtabs">
       <% Object.entries(scopes).forEach(function ([key, label]) { %>
-        <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/?view=<%= key %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
+        <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" href="/?view=<%= key %>"><%= t(label) %></a>
       <% }); %>
       <span class="feedtabs__count muted"><%= total === 1 ? t('{n} post', { n: total }) : t('{n} posts', { n: total }) %></span>
     </div>
@@ -45,7 +45,7 @@
         <h3 class="mini__title"><%= t('Friend requests') %></h3>
         <% incoming.forEach(function (reqRow) { %>
           <div class="mini__person">
-            <a href="/u/<%= reqRow.username %>"><%- include('../partials/avatar', { u: { username: reqRow.username, display_name: reqRow.display_name, avatar: reqRow.avatar }, cls: 'avatar--sm' }) %></a>
+            <a href="/u/<%= reqRow.username %>" aria-label="<%= t('Open @{user} profile', { user: reqRow.username }) %>"><%- include('../partials/avatar', { u: { username: reqRow.username, display_name: reqRow.display_name, avatar: reqRow.avatar }, cls: 'avatar--sm' }) %></a>
             <div class="mini__person-text">
               <a href="/u/<%= reqRow.username %>"><strong><%= reqRow.display_name || reqRow.username %></strong></a>
               <span class="muted">@<%= reqRow.username %></span>
@@ -62,7 +62,7 @@
       <% if (suggestions.length) { %>
         <% suggestions.forEach(function (person) { %>
           <div class="mini__person">
-            <a href="/u/<%= person.username %>"><%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %></a>
+            <a href="/u/<%= person.username %>" aria-label="<%= t('Open @{user} profile', { user: person.username }) %>"><%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %></a>
             <div class="mini__person-text">
               <a href="/u/<%= person.username %>"><strong><%= person.display_name || person.username %></strong></a>
               <span class="muted"><%= person.car || person.city || '@' + person.username %></span>

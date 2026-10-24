@@ -20,7 +20,7 @@ const subtitle = [build.year, build.make, build.model].filter(Boolean).join(' ')
     <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated && typeof mine !== 'undefined' && !mine && !build.for_sale) { %>
       <form class="build-card__watch" action="/builds/<%= build.id %>/watch" method="post" data-watch-form>
         <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
-        <button type="submit" class="btn btn--icon <%= build.watching ? 'is-on' : '' %>" data-watch-btn aria-pressed="<%= Boolean(build.watching) %>">
+        <button type="submit" class="btn btn--icon <%= build.watching ? 'is-on' : '' %>" data-watch-btn aria-pressed="<%= Boolean(build.watching) %>" aria-label="<%= build.watching ? t('Stop watching this build') : t('Watch this build') %>">
           <%- include('icon', { name: 'bell', size: 16 }) %>
         </button>
       </form>

@@ -9,6 +9,7 @@ import * as howitworks from '../models/howitworks.js';
 import { get, all, count } from '../db.js';
 import config from '../config.js';
 import { DEFAULT_LATIN, DEFAULT_GEORGIAN } from '../models/appearance.js';
+import { checkCoords, cleanText } from '../lib/validate.js';
 
 /**
  * Built-in Latin (English) pairings: a display font for headings and a
@@ -142,6 +143,98 @@ router.get('/explore', (req, res) => {
     upcoming,
     activeGroups,
     trending,
+  });
+});
+
+/** Great-circle distance in km, used only for the local discovery page. */
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const containsCity = (value, city) =>
+  Boolean(city) && String(value || '').toLocaleLowerCase().includes(city.toLocaleLowerCase());
+
+/** City/region discovery: nearby meetups, crews and drivers. */
+router.get('/near', (req, res) => {
+  const viewerId = req.user?.id ?? 0;
+  const coords = checkCoords(req.query.lat, req.query.lng);
+  const city = cleanText(req.query.city ?? '', 80) || (!coords.ok ? (req.user?.city || '') : '');
+  const cities = all(
+    `SELECT city, COUNT(*) AS n FROM users
+      WHERE city IS NOT NULL AND TRIM(city) <> ''
+      GROUP BY city ORDER BY n DESC, city COLLATE NOCASE LIMIT 80`,
+  );
+
+  let meetupList = meetups.list({ scope: 'upcoming', viewerId, limit: 100 });
+  if (coords.ok) {
+    meetupList = meetupList
+      .map((meetup) => {
+        const lat = meetup.lat ?? meetup.route_start_lat;
+        const lng = meetup.lng ?? meetup.route_start_lng;
+        return lat != null && lng != null
+          ? { ...meetup, distance_km: distanceKm(coords.lat, coords.lng, lat, lng) }
+          : meetup;
+      })
+      .filter((meetup) => meetup.distance_km != null && meetup.distance_km <= 200)
+      .sort((a, b) => a.distance_km - b.distance_km)
+      .slice(0, 8);
+  } else if (city) {
+    meetupList = meetupList
+      .filter((meetup) => containsCity(meetup.place_name, city) || containsCity(meetup.address, city))
+      .slice(0, 8);
+  } else {
+    meetupList = meetupList.slice(0, 8);
+  }
+
+  const nearbyGroupIds = new Set(meetupList.map((meetup) => meetup.group_id).filter(Boolean));
+  let groupList = all(
+    `SELECT g.*, u.city AS owner_city, u.username AS owner_username,
+            (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id AND gm.status = 'active') AS member_count,
+            (SELECT COUNT(*) FROM posts p WHERE p.group_id = g.id) AS post_count,
+            (SELECT gm.status FROM group_members gm WHERE gm.group_id = g.id AND gm.user_id = :me) AS status
+       FROM groups g JOIN users u ON u.id = g.owner_id
+      WHERE g.privacy <> 'invite'
+      ORDER BY member_count DESC, g.created_at DESC
+      LIMIT 100`,
+    { me: viewerId },
+  );
+  if (city) {
+    groupList = groupList.filter(
+      (group) =>
+        containsCity(group.owner_city, city) ||
+        containsCity(group.name, city) ||
+        containsCity(group.description, city) ||
+        nearbyGroupIds.has(group.id),
+    );
+  } else if (coords.ok) {
+    groupList = groupList.filter((group) => nearbyGroupIds.has(group.id));
+  }
+  groupList = groupList.slice(0, 6);
+
+  let drivers = [];
+  if (city) {
+    drivers = users.search(city, { excludeId: viewerId, limit: 6 });
+  } else if (viewerId) {
+    drivers = users.recentMembers(6).filter((person) => person.id !== viewerId);
+  }
+
+  return res.page('pages/near', {
+    title: `Near you - ${config.siteName}`,
+    active: 'near',
+    bodyClass: 'page-near',
+    city,
+    cities,
+    coords,
+    meetups: meetupList,
+    groups: groupList,
+    drivers,
+    pageScripts: [`/assets/${res.locals.assetStamp}/js/near.js`],
   });
 });
 

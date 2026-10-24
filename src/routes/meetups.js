@@ -251,10 +251,54 @@ router.get('/meetups/:id', (req, res, next) => {
     groupMeetups: meetup.group_id
       ? meetups.list({ scope: 'group', groupId: meetup.group_id, viewerId, limit: 4 })
       : [],
+    og: {
+      title: `${meetup.title} - ${meetup.category === 'touge' ? 'Touge route' : 'STREETO meetup'}`,
+      description:
+        meetup.privacy === 'open'
+          ? `${meetup.place_name || meetup.address || 'Street meetup'} · ${new Date(meetup.starts_at).toLocaleDateString('en-GB')}`
+          : 'Members only · STREETO',
+      image: meetup.category === 'touge' && meetup.route_start_lat != null
+        ? `/og/route/${meetup.id}.png`
+        : `/og/meetup/${meetup.id}.png`,
+      type: 'article',
+      url: `/meetups/${meetup.id}`,
+    },
   });
 });
 
 /* ── join / leave / invite ────────────────────────────────────── */
+/**
+ * The shareable route page. It is public for open runs; private and invite
+ * runs still need a member who can see the meetup.
+ */
+router.get('/routes/:id', (req, res, next) => {
+  const meetup = meetups.byId(Number(req.params.id));
+  if (!meetup || meetup.category !== 'touge') return next();
+  if (meetup.route_start_lat == null || meetup.route_end_lat == null) return next();
+  if (meetup.privacy !== 'open' && !req.user) {
+    const next = encodeURIComponent(`/routes/${meetup.id}`);
+    return res.redirect(`/login?next=${next}`);
+  }
+  if (!meetups.canView(meetup, req.user?.id ?? 0)) return next();
+
+  const place = meetup.route_start_name || meetup.place_name || 'Start';
+  const finish = meetup.route_end_name || 'Finish';
+  return res.page('routes/show', {
+    title: `${meetup.title} route - ${req.app.locals.config.siteName}`,
+    active: 'meetups',
+    meetup,
+    place,
+    finish,
+    og: {
+      title: `${meetup.title} - Touge route`,
+      description: `${place} to ${finish}${meetup.route_distance_km != null ? ` · ${Number(meetup.route_distance_km).toFixed(1)} km` : ''}`,
+      image: `/og/route/${meetup.id}.png`,
+      type: 'article',
+      url: `/routes/${meetup.id}`,
+    },
+  });
+});
+
 router.post('/meetups/:id/join', requireAuth, verifyCsrf, (req, res, next) => {
   const meetup = meetups.byId(Number(req.params.id));
   if (!meetup) return next();

@@ -13,7 +13,7 @@ const isActive = (key) => (typeof active !== 'undefined' && active === key) ? 'i
 const searchText = typeof q !== 'undefined' ? q : (query.q || '');
 // Pages that bring their own search box hide the header one so there is
 // never a pair of stacked search bars.
-const ownSearch = ['/search', '/people', '/groups', '/meetups', '/chat/new', '/services/parts', '/services/maintenance', '/services/part-search'];
+const ownSearch = ['/search', '/people', '/groups', '/meetups', '/near', '/chat/new', '/services/parts', '/services/maintenance', '/services/part-search'];
 const showTopSearch = isAuthenticated && !ownSearch.includes(path);
 %>
 <header class="topbar">
@@ -41,7 +41,7 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
           </a>
 
           <div class="menu menu--end" data-menu>
-            <button class="menu__trigger" type="button" data-menu-toggle aria-expanded="false" aria-haspopup="true">
+            <button class="menu__trigger" type="button" data-menu-toggle aria-expanded="false" aria-haspopup="true" aria-label="<%= t('Open account menu') %>">
               <%- include('avatar', { u: currentUser, cls: 'avatar--sm' }) %>
               <span class="menu__handle">@<%= currentUser.username %></span>
               <%- include('icon', { name: 'chevron', size: 16 }) %>
@@ -92,6 +92,7 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
   </div>
   <a class="appmenu__link <%= isActive('wall') %>" href="/"><%- include('icon', { name: 'wall', size: 20 }) %><span><%= t('Wall') %></span></a>
   <a class="appmenu__link <%= isActive('explore') %>" href="/explore"><%- include('icon', { name: 'search', size: 20 }) %><span><%= t('Explore') %></span></a>
+  <a class="appmenu__link <%= isActive('near') %>" href="/near"><%- include('icon', { name: 'pin', size: 20 }) %><span><%= t('Near me') %></span></a>
   <a class="appmenu__link <%= isActive('builds') %>" href="/builds"><%- include('icon', { name: 'garage', size: 20 }) %><span><%= t('Builds') %></span></a>
   <a class="appmenu__link <%= isActive('groups') %>" href="/groups"><%- include('icon', { name: 'shield', size: 20 }) %><span><%= t('Groups') %></span></a>
   <a class="appmenu__link <%= isActive('meetups') %>" href="/meetups"><%- include('icon', { name: 'pin', size: 20 }) %><span><%= t('Meetups') %></span></a>

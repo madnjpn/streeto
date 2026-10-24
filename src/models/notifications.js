@@ -1,12 +1,22 @@
 import { all, count, get, run } from '../db.js';
 import { pushToUser } from '../lib/push-all.js';
 import { translate } from '../lib/i18n.js';
+import { NOTIFICATION_CATEGORIES, categoryForType } from '../lib/notification-prefs.js';
 
 /**
  * Lightweight notification feed. Rows are written by the routes when
  * something interesting happens (friend request, comment, invite...).
  */
-export function notify({ userId, actorId = null, type, entityId = null, url = null, text, push = true }) {
+export function notify({
+  userId,
+  actorId = null,
+  type,
+  entityId = null,
+  url = null,
+  text,
+  push = true,
+  category = null,
+}) {
   if (!userId || (actorId && actorId === userId)) return null;
   const info = run(
     `INSERT INTO notifications (user_id, actor_id, type, entity_id, url, text)
@@ -40,6 +50,7 @@ export function notify({ userId, actorId = null, type, entityId = null, url = nu
         body,
         url: url || '/notifications',
         tag: `notif-${type}-${entityId || id}`,
+        category: category || categoryForType(type),
       });
     } catch {
       /* push is best-effort; the activity row is already saved */
@@ -49,17 +60,39 @@ export function notify({ userId, actorId = null, type, entityId = null, url = nu
   return id;
 }
 
-export const recent = (userId, limit = 40) =>
-  all(
+export function recent(userId, { limit = 40, unreadOnly = false, category = null } = {}) {
+  const where = ['n.user_id = ?'];
+  const params = [userId];
+  if (unreadOnly) where.push('n.read_at IS NULL');
+  const types = category && NOTIFICATION_CATEGORIES[category];
+  if (types?.length) {
+    where.push(`n.type IN (${types.map(() => '?').join(', ')})`);
+    params.push(...types);
+  }
+  params.push(limit);
+  return all(
     `SELECT n.*, u.username AS actor_username, u.display_name AS actor_display_name, u.avatar AS actor_avatar
        FROM notifications n
        LEFT JOIN users u ON u.id = n.actor_id
-      WHERE n.user_id = ?
+      WHERE ${where.join(' AND ')}
       ORDER BY n.created_at DESC, n.id DESC
       LIMIT ?`,
-    userId,
-    limit,
+    ...params,
   );
+}
+
+export const byId = (userId, id) =>
+  get('SELECT * FROM notifications WHERE id = ? AND user_id = ?', id, userId);
+
+export function markRead(userId, id) {
+  run(
+    `UPDATE notifications
+        SET read_at = COALESCE(read_at, strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      WHERE id = ? AND user_id = ?`,
+    id,
+    userId,
+  );
+}
 
 export const unreadCount = (userId) =>
   count('notifications', 'user_id = ? AND read_at IS NULL', userId);
@@ -103,4 +136,14 @@ export function notifyAdmins({ actorId = null, type, entityId = null, url = null
   return sent;
 }
 
-export default { notify, notifyAdmins, recent, unreadCount, markAllRead, clearAll, alreadyNotified };
+export default {
+  notify,
+  notifyAdmins,
+  recent,
+  byId,
+  unreadCount,
+  markRead,
+  markAllRead,
+  clearAll,
+  alreadyNotified,
+};

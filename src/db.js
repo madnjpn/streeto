@@ -95,6 +95,14 @@ export function migrate() {
       throw error;
     }
   }
+
+  // Repair a migration that shipped with an unterminated comment before
+  // 020 was fixed. Production databases from that era already have the
+  // column; fresh installs that recorded the old file do not.
+  if (!all('PRAGMA table_info(builds)').some((row) => row.name === 'odometer_km')) {
+    db.exec('ALTER TABLE builds ADD COLUMN odometer_km INTEGER');
+  }
+
   return fresh;
 }
 

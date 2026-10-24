@@ -118,6 +118,8 @@ body {
 .pagehead__actions,
 .pagehead .btnrow {
   flex: 0 0 auto;
+  flex-wrap: wrap;
+  row-gap: var(--ui-space-2);
 }
 
 /* Older pages put a single .btn / form directly in the header. Keep that
@@ -266,6 +268,49 @@ body {
   min-width: 0;
 }
 
+.nearform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4);
+}
+
+.nearform__city {
+  flex: 1 1 280px;
+}
+
+.nearform__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.nearform > .small {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.notifprefs {
+  margin-top: var(--ui-space-4);
+  padding-top: var(--ui-space-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.notifprefs fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.notifprefs .check {
+  margin-top: var(--ui-space-2);
+}
+
+.notifprefs > .btn {
+  margin-top: var(--ui-space-3);
+}
+
 .field input,
 .field textarea,
 .field select,
@@ -273,6 +318,28 @@ body {
 .form-grid textarea,
 .form-grid select {
   max-width: 100%;
+}
+
+/* The mobile form rule makes every control full-width. A checkbox or radio
+   is a control too, but it must stay a checkbox: iOS/Safari otherwise grows
+   it to the whole card. The label remains the large tap target. */
+.check input[type="checkbox"],
+.check input[type="radio"],
+.choice input[type="checkbox"],
+.choice input[type="radio"],
+.field input[type="checkbox"],
+.field input[type="radio"],
+.form-grid input[type="checkbox"],
+.form-grid input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  max-width: 18px;
+  flex: 0 0 auto;
+  padding: 0;
+  border-radius: 4px;
+  accent-color: var(--neon);
+  vertical-align: middle;
 }
 
 /* --------------------------------------------------------------------------
@@ -334,6 +401,22 @@ body {
    Internal style guide
    -------------------------------------------------------------------------- */
 
+.share-card-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + var(--ui-safe-bottom));
+  z-index: 120;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border: 1px solid rgba(var(--neon-rgb), 0.35);
+  border-radius: var(--ui-radius-pill);
+  background: rgba(var(--panel-scrim), 0.96);
+  color: var(--text);
+  font-size: 12.5px;
+  box-shadow: var(--shadow-sm);
+}
+
 .sg-section {
   margin-top: var(--ui-space-6);
 }
@@ -385,7 +468,7 @@ body {
 .sg-swatch--neon { background: var(--neon); color: var(--on-accent); }
 .sg-swatch--panel { background: var(--panel); }
 .sg-swatch--bg { background: var(--bg); }
-.sg-swatch--danger { background: var(--danger); color: #fff; }
+.sg-swatch--danger { background: var(--danger); color: #120202; }
 
 .sg-rules {
   display: grid;

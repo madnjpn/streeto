@@ -58,9 +58,10 @@ export function hueOf(value) {
 /** First two characters of a name, upper-cased. */
 export function initials(value) {
   const text = String(value ?? '?').trim();
-  const parts = text.split(/[\s_.-]+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return text.slice(0, 2).toUpperCase();
+  const parts = text.replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  const clean = text.replace(/[^\p{L}\p{N}]/gu, '');
+  return (clean || '?').slice(0, 2).toUpperCase();
 }
 
 /** Public URL for a user's avatar, or null to use generated initials. */

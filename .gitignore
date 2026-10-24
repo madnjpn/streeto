@@ -33,6 +33,8 @@ cookies.txt
 *.cookies
 _tmp_*
 uploads-smoke/
+uploads-ui-visual/
+artifacts/
 desktop.ini
 =
 

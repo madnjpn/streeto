@@ -151,6 +151,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.2.1 (versionCode 7)
+- Version: 1.2.2 (versionCode 8)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

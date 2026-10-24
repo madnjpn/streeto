@@ -11,9 +11,9 @@
 
 <%- include('../../partials/services-tabs', { section: 'parts' }) %>
 
-<div class="feedtabs" role="tablist">
+<div class="feedtabs">
   <% Object.entries(scopes).forEach(function ([key, label]) { %>
-    <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/services/parts?scope=<%= key %>&sort=<%= sort %><%= category ? '&category=' + category : '' %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
+    <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" href="/services/parts?scope=<%= key %>&sort=<%= sort %><%= category ? '&category=' + category : '' %>"><%= t(label) %></a>
   <% }); %>
   <span class="feedtabs__spacer"></span>
   <% Object.entries(sorts).forEach(function ([key, label]) { %>

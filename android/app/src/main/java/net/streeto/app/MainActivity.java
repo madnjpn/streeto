@@ -30,6 +30,7 @@ import android.view.animation.OvershootInterpolator;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_FILE = 1001;
     private static final int REQ_LOCATION = 1002;
     private static final int REQ_NOTIFICATIONS = 1003;
+    private static final int REQ_CAMERA = 1004;
 
     /** Extra used by notifications to open a specific page in the shell. */
     public static final String EXTRA_PATH = "net.streeto.app.OPEN_PATH";
@@ -92,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
     private Uri cameraUri;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
+    private PermissionRequest cameraPermissionRequest;
 
     private static final String UPDATE_FILE = "streeto-update.apk";
     private long updateDownloadId = -1;
@@ -338,6 +341,35 @@ public class MainActivity extends AppCompatActivity {
                                 Manifest.permission.ACCESS_COARSE_LOCATION,
                         },
                         REQ_LOCATION);
+            }
+
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                runOnUiThread(() -> {
+                    boolean wantsVideo = false;
+                    for (String resource : request.getResources()) {
+                        if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) {
+                            wantsVideo = true;
+                            break;
+                        }
+                    }
+                    if (!wantsVideo) {
+                        request.deny();
+                        return;
+                    }
+                    if (hasCameraPermission()) {
+                        request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                        return;
+                    }
+                    if (cameraPermissionRequest != null) {
+                        cameraPermissionRequest.deny();
+                    }
+                    cameraPermissionRequest = request;
+                    ActivityCompat.requestPermissions(
+                            MainActivity.this,
+                            new String[]{Manifest.permission.CAMERA},
+                            REQ_CAMERA);
+                });
             }
 
             @Override
@@ -680,6 +712,11 @@ public class MainActivity extends AppCompatActivity {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
+    private boolean hasCameraPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
     private void showOffline() {
         progress.setVisibility(View.GONE);
         refresh.setRefreshing(false);
@@ -708,6 +745,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.notify_enabled, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, R.string.notify_permission_denied, Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
+        if (requestCode == REQ_CAMERA) {
+            if (cameraPermissionRequest != null) {
+                if (hasCameraPermission()) {
+                    cameraPermissionRequest.grant(
+                            new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                } else {
+                    cameraPermissionRequest.deny();
+                }
+                cameraPermissionRequest = null;
             }
             return;
         }

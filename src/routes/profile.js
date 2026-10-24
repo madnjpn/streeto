@@ -72,6 +72,7 @@ router.get('/settings', requireAuth, (req, res) =>
     },
     maxUsername: USERNAME_MAX,
     changelog: CHANGELOG,
+    notifyPrefs: users.notificationPrefs(req.user.id),
   }),
 );
 
@@ -117,6 +118,18 @@ router.post('/settings/letters', requireAuth, verifyCsrf, (req, res) => {
   users.setMailPrefs(req.user.id, { digest, pti });
   req.flash('success', 'Letter settings saved.');
   return res.redirect('/settings');
+});
+
+/** Push categories are independent switches; the activity feed is not filtered. */
+router.post('/settings/notifications', requireAuth, verifyCsrf, (req, res) => {
+  const prefs = {};
+  for (const key of ['messages', 'social', 'groups', 'meetups', 'builds', 'services']) {
+    const value = req.body[`notify_${key}`];
+    prefs[key] = value === '1' || value === 'on';
+  }
+  users.setNotificationPrefs(req.user.id, prefs);
+  req.flash('success', 'Notification settings saved.');
+  return res.redirect('/settings#notifications');
 });
 
 router.post('/settings/password', requireAuth, verifyCsrf, async (req, res) => {

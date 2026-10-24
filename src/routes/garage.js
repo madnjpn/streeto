@@ -73,6 +73,7 @@ router.get('/garage/ride', requireAuth, async (req, res) => {
     active: 'garage',
     vehicles: userVehicles,
     userBuilds,
+    openAdd: req.query.add === '1',
   });
 });
 

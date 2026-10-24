@@ -2,6 +2,7 @@
   <p class="eyebrow"><%= t('explore') %></p>
   <h1 class="display"><%= t('Explore the network') %></h1>
   <p class="lede"><%= t('Hot posts, builds, meetups and groups from the last week.') %></p>
+  <p><a class="btn btn--ghost btn--sm" href="/near"><%- include('../partials/icon', { name: 'pin', size: 15 }) %> <%= t('Find what is near you') %></a></p>
 
   <% if (trending && trending.length) { %>
     <div class="card mini">

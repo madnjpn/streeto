@@ -25,6 +25,7 @@ const walk = (dir, predicate = () => true) =>
 const ejsFiles = walk('views', (file) => file.endsWith('.ejs'));
 const jsFiles = walk('public/js', (file) => file.endsWith('.js'));
 const uiCss = read('public/css/ui-system.css');
+const baseCss = read('public/css/style.css');
 
 /* The layer must be loaded after the main stylesheet. */
 const layout = read('views/layout.ejs');
@@ -45,6 +46,10 @@ for (const token of [
 ]) {
   if (!uiCss.includes(token)) errors.push(`ui-system.css is missing ${token}`);
 }
+
+/* Accessibility is part of the contract, not a later cleanup. */
+if (!uiCss.includes(':focus-visible')) errors.push('ui-system.css is missing the focus-visible ring');
+if (!baseCss.includes('prefers-reduced-motion')) errors.push('style.css is missing reduced-motion handling');
 
 /* Every page header is one text block plus optional actions. */
 for (const file of ejsFiles) {

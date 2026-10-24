@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.3.0` (`package.json`), Android `1.2.1`
-(`versionCode 7`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.4.1` (`package.json`), Android `1.2.2`
+(`versionCode 8`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -580,11 +580,15 @@ take a DB backup first. Do not delete uploads by hand.
 
 `ffmpeg-static` is installed with npm, so the binary lives inside
 `node_modules/ffmpeg-static` and the project has no external ffmpeg
-dependency. On upload a video is:
+dependency. A video upload is written to disk and a durable `media_jobs` row
+is queued. The HTTP response finishes immediately; the background worker:
 
-1. converted to a browser-safe **H.264/AAC MP4** (max 720 px wide, fast-start),
-2. given a **WebP poster** extracted at ~1 s,
-3. shown with a custom play cover, duration badge and native controls.
+1. converts the video to a browser-safe **H.264/AAC MP4** (max 720 px wide,
+   fast-start),
+2. moves every database reference from the original extension to the MP4,
+3. extracts a **WebP poster** at ~1 s,
+4. marks the job done. Interrupted jobs are recovered on the next boot;
+   `GET /api/health` reports queue counts.
 
 The player (`public/js/video.js`) also plays a 2.6 s **muted hover preview** on
 desktop; mobile opens on tap. `preload="metadata"` gets the duration without
@@ -592,7 +596,8 @@ downloading the whole clip until playback.
 
 - Backfill existing videos: `npm run posters`.
 - The poster path is derived from the video path; no extra database column.
-- Deleting a video removes its poster.
+- The queue uses one worker per Node process; keep the one-server deployment.
+- Deleting a video removes its poster and any pending job becomes a no-op.
 - `prune-orphan-uploads.mjs` keeps posters that belong to a referenced video.
 - Optional override: set `FFMPEG_PATH` in the environment.
 - If your npm policy blocks package install scripts, approve `ffmpeg-static`
@@ -617,11 +622,15 @@ downloading the whole clip until playback.
 | `/settings` | Profile, theme, letters, app updates/changes, password, delete |
 | `/notifications` | Activity |
 | `/search` | Global search |
+| `/near` | City / current-location discovery (meetups, crews, drivers) |
+| `/routes/:id` | Shareable Touge route page |
 | `/u/:username` | Public profile |
 | `/about`, `/explore`, `/partners` | Static/marketing pages |
 | `/admin` | Admin console (admin only) |
 | `/login`, `/register`, `/forgot`, `/reset/:token` | Auth/recovery |
 | `/downloads/STREETO-android.apk` | Signed APK (attachment) |
+| `/sitemap.xml`, `/robots.txt` | Public discovery files |
+| `/og/build/:id.png`, `/og/meetup/:id.png`, `/og/route/:id.png` | Generated share-card images |
 
 ### 7.2 JSON API
 
@@ -736,6 +745,8 @@ required. A muted chat never produces one.
 | `part-search.js` | Parts tabs, catalogue tree, part results. |
 | `push.js`, `push-init.js` | Web Push subscription, the Settings notification card, and the native Android notification bridge. |
 | `share.js` | Share dialog. |
+| `share-card.js` | Native/downloadable social preview cards for builds, meetups and routes. |
+| `near.js` | Browser geolocation for the city/region discovery page. |
 | `mentions.js` | `@name` picker/links. |
 | `admin*.js` | Admin console, translations, how-it-works editor. |
 
@@ -933,7 +944,7 @@ The update check runs on app page loads and when the user taps
 4. Deploy/pull and restart the server (`npm ci --omit=dev` if dependencies
    changed). Static JS/CSS need no restart; the asset stamp updates.
 5. Verify `/api/app/version`, the footer, and Settings → Changes.
-6. Run `npm run ui:check` and `npm run smoke`.
+6. Run `npm run ui:check`, `npm run ui:visual` and `npm run smoke`.
 
 No APK build or reinstall is needed; apps get the new site on next load.
 
@@ -1040,6 +1051,21 @@ check('what it proves', () => {
 Use the `Client` helper (`a`, `b`, …) for cookies/CSRF, `a.page()` to capture
 the token, and `a.post()`/`a.request()` for form/JSON requests. Keep tests
 independent and use the scratch database.
+
+### 11.5 UI and accessibility gate
+
+```bash
+npm run ui:check    # pagehead/avatar/button contracts, tokens, a11y hooks
+npm run ui:visual   # seeded browser check at 390x844 and 1440x900 + axe
+```
+
+`ui:visual` seeds `data/ui-visual.db`, starts the app on a random port,
+checks every major page in English and Georgian, and writes screenshots to
+`artifacts/ui/`. It fails on horizontal overflow, stretched avatars, actions
+outside the viewport, broken images, or serious/critical WCAG violations.
+`.github/workflows/ui.yml` runs it when web files change; the Android
+workflow is path-filtered to `android/**` and only builds the APK when the
+shell actually changed.
 
 ---
 
@@ -1327,9 +1353,9 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
   seeded; some Georgian terms may still be missing until translated.
 - **Changelog is curated manually.** A release is not “done” until the entry
   and its Georgian translations are added.
-- **APK build runs on every push**, including web-only changes. That is safe
-  (the served APK only changes when you copy it) but slow; a path filter on
-  `android/**` would optimise it later.
+- **APK builds are path-filtered** to `android/**` (and the workflow file).
+  Web-only pushes run the UI/smoke checks instead; a manual
+  `workflow_dispatch` can always build the APK.
 - **Local self-signed certificates** trigger browser warnings and cannot be
   used with Cloudflare Full (strict); use an Origin CA cert in production.
 - **Demo seed credentials** (`street123`) are not production credentials.
@@ -1386,6 +1412,11 @@ cookie jars, logs with personal data.
 | Brand, nav, footer | `views/partials/nav.ejs`, `views/layout.ejs`, `websitelogo.png`, `favicon.ico` |
 | Global CSS / themes | `public/css/style.css` (theme blocks at the top, responsive rules at the bottom) |
 | Shared UI contract / tokens / live guide | `public/css/ui-system.css`, `docs/UI_SYSTEM.md`, `views/admin/style-guide.ejs` |
+| Notifications, filters and push categories | `src/routes/notifications.js`, `src/lib/notification-prefs.js`, `views/notifications/index.ejs` |
+| Background media queue | `src/lib/media-queue.js`, `src/migrations/042_media_jobs.sql`, `/api/health` |
+| Public share cards / sitemap | `src/routes/social.js`, `src/lib/og-image.js`, `public/fonts/`, `public/js/share-card.js` |
+| Near-you discovery | `src/routes/pages.js`, `views/pages/near.ejs`, `public/js/near.js` |
+| UI / accessibility gate | `scripts/ui-check.mjs`, `scripts/ui-visual-check.mjs`, `.github/workflows/ui.yml` |
 | Global interactions | `public/js/app.js` |
 | Web/Android versions, footer, update banner | `src/lib/app-version.js`, `public/js/version.js`, `views/layout.ejs` |
 | Settings update/changes card | `views/profile/settings.ejs`, `src/routes/profile.js` |
@@ -1438,7 +1469,7 @@ cookie jars, logs with personal data.
 2. Server-side validation and permissions added.
 3. Migration added if the schema changed; existing data still works.
 4. New strings translated in `ka.js` (and `CLIENT_KEYS` if browser-only).
-5. `npm run ui:check` and `npm run smoke` pass.
+5. `npm run ui:check`, `npm run ui:visual` and `npm run smoke` pass.
 6. Version/changelog updated if users will notice the change.
 7. No secrets or ignored files staged (`git status` clean apart from intended
    changes).
@@ -1447,8 +1478,8 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.3.0`
-- Android version: `android/app/build.gradle.kts` → `1.2.1` (versionCode `7`)
+- Web version: `package.json` → `1.4.1`
+- Android version: `android/app/build.gradle.kts` → `1.2.2` (versionCode `8`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

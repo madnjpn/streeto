@@ -13,7 +13,8 @@ import {
   publicUploadUrl,
 } from './upload-paths.js';
 import { processImage, forgetPicture } from './images.js';
-import { makePoster, removePoster, transcodeVideo } from './video-posters.js';
+import { removePoster } from './video-posters.js';
+import { enqueueVideo } from './media-queue.js';
 
 /** How wide a picture may be when nothing else is said. */
 const DEFAULT_MAX = 1600;
@@ -60,7 +61,7 @@ function folderFor(req) {
  * wide that is), and smaller copies are written next to it so a phone
  * does not download the big one.
  */
-export async function optimizeUpload(req, _res, next) {
+export async function optimizeUpload(req, res, next) {
   const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : (req.file ? [req.file] : []);
   const max = Number(req.uploadMax) || DEFAULT_MAX;
   for (const file of files) {
@@ -68,17 +69,17 @@ export async function optimizeUpload(req, _res, next) {
     if (file.mimetype?.startsWith('video/')) {
       const rel = relativeUploadPath(file.path);
       if (!rel) continue;
-      const done = await transcodeVideo(rel);
-      if (done.changed) {
-        const abs = resolveUploadPath(done.path);
-        if (abs) {
-          file.path = abs;
-          file.filename = done.path;
-          file.mimetype = 'video/mp4';
-          file.originalname = String(file.originalname || '').replace(/\.[^.]+$/, '.mp4');
+      // The route stores the original filename; the worker produces the MP4
+      // and moves every database reference after the response has finished.
+      const enqueue = () => {
+        try {
+          enqueueVideo(rel);
+        } catch (error) {
+          console.warn('[media] could not queue', rel, '-', error.message);
         }
-      }
-      await makePoster(done.path);
+      };
+      if (res.headersSent) enqueue();
+      else res.once('finish', enqueue);
       continue;
     }
     if (!IMAGE_TYPES.has(file.mimetype) || file.mimetype === 'image/gif') continue;

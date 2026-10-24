@@ -1,4 +1,5 @@
 import { all, get, run } from '../db.js';
+import { normalizePrefs } from '../lib/notification-prefs.js';
 
 /** Column list for anything that hands a user object to the views.
  *  Exported so middleware and models can never drift apart. */
@@ -101,6 +102,18 @@ export function setMailPrefs(userId, { digest, pti }) {
 }
 
 export function updatePassword(userId, passwordHash) {  run('UPDATE users SET password_hash = ? WHERE id = ?', passwordHash, userId);
+}
+
+/** Per-category push choices; activity in the bell is always kept. */
+export function notificationPrefs(userId) {
+  const row = get('SELECT notify_prefs FROM users WHERE id = ?', userId);
+  return normalizePrefs(row?.notify_prefs);
+}
+
+export function setNotificationPrefs(userId, prefs) {
+  const normalized = normalizePrefs(prefs);
+  run('UPDATE users SET notify_prefs = ? WHERE id = ?', JSON.stringify(normalized), userId);
+  return normalized;
 }
 
 /** Remember the interface language a member last picked. */
@@ -302,6 +315,7 @@ export const recentMembers = (limit = 8) =>
 
 export default {
   findById, findByUsername, findByLogin, findWithHash, usernameTaken, emailTaken,
-  createUser, updateProfile, updatePassword, setLanguage, setTheme, setCurrency, setProvider, search, suggestions, stats,
+  createUser, updateProfile, updatePassword, setLanguage, setTheme, setCurrency, setProvider,
+  notificationPrefs, setNotificationPrefs, search, suggestions, stats,
   recentMembers, adminCount, providerCount, isAdmin, adminIds, setAdmin, adminList, removeUser, uploadsFor,
 };

@@ -1,0 +1,67 @@
+<%
+  const isPast = f.toDate(meetup.starts_at) < new Date();
+  const distance = meetup.route_distance_km != null ? Number(meetup.route_distance_km).toFixed(1) : '';
+  const shareUrl = config.publicUrl ? `${config.publicUrl}/routes/${meetup.id}` : `/routes/${meetup.id}`;
+%>
+<div class="pagehead">
+  <div class="pagehead__main">
+    <p class="eyebrow"><%= t('Touge route') %></p>
+    <h1 class="display"><%= meetup.title %></h1>
+    <p class="lede">
+      <%= place %> → <%= finish %>
+      <% if (distance) { %> · <strong><%= distance %> km</strong><% } %>
+      · <a class="link" href="/u/<%= meetup.host_username %>">@<%= meetup.host_username %></a>
+    </p>
+  </div>
+  <div class="pagehead__actions">
+    <a class="btn btn--ghost" href="/meetups/<%= meetup.id %>"><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('Open meetup') %></a>
+    <button class="btn btn--primary" type="button"
+            data-share-card
+            data-share-card-title="<%= t('{title} - Touge route', { title: meetup.title }) %>"
+            data-share-card-url="<%= shareUrl %>"
+            data-share-card-image="<%= config.publicUrl %>/og/route/<%= meetup.id %>.png">
+      <%- include('../partials/icon', { name: 'share', size: 16 }) %> <%= t('Share card') %>
+    </button>
+  </div>
+</div>
+
+<div class="single single--narrow">
+  <section class="card routecard">
+    <h2 class="card__title"><%- include('../partials/icon', { name: 'pin', size: 18 }) %> <%= t('Route') %></h2>
+    <div class="touge-map">
+      <div class="mapcard__map" data-touge-preview
+           data-lat="<%= meetup.route_start_lat %>"
+           data-lng="<%= meetup.route_start_lng %>"
+           data-end-lat="<%= meetup.route_end_lat %>"
+           data-end-lng="<%= meetup.route_end_lng %>"
+           data-view="<%= meetup.route_view || '' %>"
+           data-zoom="<%= meetup.zoom || 13 %>"></div>
+    </div>
+    <div class="touge-widgets">
+      <div class="touge-banner" data-route-length <%= meetup.route_distance_km == null ? 'hidden' : '' %>>
+        <% if (meetup.route_distance_km != null) { %><strong><%= distance %> km</strong><% } %>
+      </div>
+      <div class="touge-names">
+        <span class="touge-names__chip touge-names__chip--a"><strong>A</strong><span><%= place %></span></span>
+        <span class="touge-names__chip touge-names__chip--b"><strong>B</strong><span><%= finish %></span></span>
+      </div>
+    </div>
+    <div class="touge-profile" data-route-profile hidden></div>
+    <div class="mapcard__foot">
+      <span><%= t('Touge run') %><% if (isPast) { %> · <%= t('Past') %><% } %></span>
+      <a class="btn btn--ghost btn--sm" href="https://www.google.com/maps/dir/?api=1&origin=<%= meetup.route_start_lat %>,<%= meetup.route_start_lng %>&destination=<%= meetup.route_end_lat %>,<%= meetup.route_end_lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%= t('Get directions') %> <%- include('../partials/icon', { name: 'chevron', size: 14, cls: 'icon--rot270' }) %></a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title"><%= t('Run details') %></h2>
+    <div class="kv">
+      <span><%= t('Date') %></span><strong><%= f.fullDate(meetup.starts_at) %></strong>
+      <span><%= t('Host') %></span><strong><a class="link" href="/u/<%= meetup.host_username %>">@<%= meetup.host_username %></a></strong>
+      <span><%= t('Start') %></span><strong><%= place %></strong>
+      <span><%= t('Finish') %></span><strong><%= finish %></strong>
+      <% if (distance) { %><span><%= t('Distance') %></span><strong><%= distance %> km</strong><% } %>
+      <span><%= t('Going') %></span><strong><%= meetup.going_count || 0 %></strong>
+    </div>
+  </section>
+</div>

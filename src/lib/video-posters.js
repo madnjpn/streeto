@@ -45,7 +45,7 @@ export function posterFor(mediaPath) {
  *
  * Returns { path, changed }. On failure the original path is returned.
  */
-export async function transcodeVideo(mediaPath) {
+export async function transcodeVideo(mediaPath, { keepOriginal = false } = {}) {
   if (!isVideo(mediaPath)) return { path: mediaPath, changed: false };
   const input = resolveUploadPath(mediaPath);
   if (!input || !fs.existsSync(input)) return { path: mediaPath, changed: false };
@@ -88,8 +88,11 @@ export async function transcodeVideo(mediaPath) {
     );
     if (!fs.existsSync(temp) || fs.statSync(temp).size === 0) throw new Error('empty output');
 
-    // Replace the original only after a complete, valid output exists.
-    if (path.resolve(input) !== path.resolve(output)) fs.rmSync(input, { force: true });
+    // Replace the original only after a complete, valid output exists. The
+    // queue can keep it until the database references have moved.
+    if (!keepOriginal && path.resolve(input) !== path.resolve(output)) {
+      fs.rmSync(input, { force: true });
+    }
     fs.rmSync(output, { force: true });
     fs.renameSync(temp, output);
     return { path: outputRel, changed: outputRel !== mediaPath };

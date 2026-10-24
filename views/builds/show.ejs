@@ -55,6 +55,13 @@ const leading = standings.length && standings[0].id === build.id;
     <% } %>
   </div>
   <div class="pagehead__actions">
+    <button class="btn btn--ghost" type="button"
+            data-share-card
+            data-share-card-title="<%= build.title %>"
+            data-share-card-url="<%= config.publicUrl %>/builds/<%= build.id %>"
+            data-share-card-image="<%= config.publicUrl %>/og/build/<%= build.id %>.png">
+      <%- include('../partials/icon', { name: 'share', size: 17 }) %> <%= t('Share card') %>
+    </button>
     <% if (mine) { %>
       <a class="btn btn--ghost" href="/builds/<%= build.id %>/edit"><%- include('../partials/icon', { name: 'settings', size: 17 }) %> <%= t('Edit') %></a>
     <% } %>
@@ -91,7 +98,7 @@ const leading = standings.length && standings[0].id === build.id;
           <% media.forEach(function (item, index) { %>
             <figure class="gallery__slide <%= index === 0 ? 'is-active' : '' %>" data-slide="<%= index %>">
               <% if (item.media_type === 'photo') { %>
-                <a href="<%= config.uploadUrl %>/<%= item.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="<%= index === 0 ? 'eager' : 'lazy' %>"></a>
+                <a href="<%= config.uploadUrl %>/<%= item.media_path %>" data-lightbox aria-label="<%= t('Open image') %>"><img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="<%= index === 0 ? 'eager' : 'lazy' %>"></a>
               <% } else { %>
                 <% const videoPoster = poster(item.media_path); %>
                 <%- include('../partials/video', {
@@ -146,7 +153,7 @@ const leading = standings.length && standings[0].id === build.id;
           <% timeline.forEach(function (item) { %>
             <li class="timeline__row">
               <% if (item.photo) { %>
-                <a class="timeline__photo" href="<%= config.uploadUrl %>/<%= item.photo %>" data-lightbox>
+                <a class="timeline__photo" href="<%= config.uploadUrl %>/<%= item.photo %>" data-lightbox aria-label="<%= t('Open image') %>">
                   <img src="<%= config.uploadUrl %>/<%= item.photo %>"<% if (srcset(item.photo)) { %> srcset="<%= srcset(item.photo) %>" sizes="(max-width: 760px) 40vw, 220px"<% } %> alt="" loading="lazy">
                 </a>
               <% } %>

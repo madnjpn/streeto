@@ -28,12 +28,18 @@ import { lookupChassis, oemUrl } from '../lib/chassis.js';
 import { partSources, makerCatalogue } from '../lib/part-sources.js';
 import { twinsOf } from '../lib/twins.js';
 import { webVersion, androidVersion } from '../lib/app-version.js';
+import { mediaQueueStats } from '../lib/media-queue.js';
 
 const router = express.Router();
 
 /* ── health probe ─────────────────────────────────────────────── */
 router.get('/health', (_req, res) =>
-  res.json({ ok: true, service: 'streeto', time: new Date().toISOString() }),
+  res.json({
+    ok: true,
+    service: 'streeto',
+    time: new Date().toISOString(),
+    media: mediaQueueStats(),
+  }),
 );
 
 /* ── current web / Android versions (update check) ─────────────── */

@@ -11,6 +11,31 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.4.1',
+    date: '2026-10-25',
+    scope: 'both',
+    items: [
+      'The Service Provider checkbox keeps its normal size on iOS.',
+      'Android now asks for camera permission for the certificate scanner.',
+      'The certificate scanner uses the native camera picker on iOS and WebView.',
+      'Add vehicle now opens from a direct link and works without the live scanner.',
+    ],
+  },
+  {
+    version: '1.4.0',
+    date: '2026-10-25',
+    scope: 'web',
+    items: [
+      'Notifications have filters, mark-all-read and per-category push settings.',
+      'Video processing runs in a durable background queue, so uploads return immediately.',
+      'Builds, meetups and Touge routes have public share cards with generated preview images.',
+      'A sitemap and robots file make public pages discoverable.',
+      'Near you finds meetups, crews and drivers by city or current location.',
+      'Web UI checks cover 390 and 1440 layouts, WCAG and Georgian long strings.',
+      'Android CI now builds only when Android files change.',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-10-24',
     scope: 'web',

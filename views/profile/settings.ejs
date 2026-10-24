@@ -107,6 +107,39 @@
     </div>
     <p class="small" data-push-status role="status" aria-live="polite"></p>
     <p class="muted small" data-push-note hidden><%= t('Android keeps a small STREETO notification while realtime alerts are on.') %></p>
+
+    <form class="notifprefs" action="/settings/notifications" method="post">
+      <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+      <fieldset class="field--radio">
+        <legend class="field__label"><%= t('Push categories') %></legend>
+        <p class="muted small"><%= t('Choose which alerts can reach your phone. Activity in the bell is always kept.') %></p>
+        <label class="check">
+          <input type="checkbox" name="notify_messages" value="1" <%= notifyPrefs.messages ? 'checked' : '' %>>
+          <span><%= t('Messages') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_social" value="1" <%= notifyPrefs.social ? 'checked' : '' %>>
+          <span><%= t('Friends and comments') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_groups" value="1" <%= notifyPrefs.groups ? 'checked' : '' %>>
+          <span><%= t('Groups') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_meetups" value="1" <%= notifyPrefs.meetups ? 'checked' : '' %>>
+          <span><%= t('Meetups') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_builds" value="1" <%= notifyPrefs.builds ? 'checked' : '' %>>
+          <span><%= t('Builds') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_services" value="1" <%= notifyPrefs.services ? 'checked' : '' %>>
+          <span><%= t('Services') %></span>
+        </label>
+      </fieldset>
+      <button class="btn btn--ghost" type="submit"><%= t('Save notification settings') %></button>
+    </form>
   </section>
 
   <section class="card card--form">

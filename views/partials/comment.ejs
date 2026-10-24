@@ -7,7 +7,7 @@ const repliesHtml = typeof replies !== 'undefined' && replies ? replies : '';
 const postId = post ? post.id : '';
 %>
 <div class="comment <%= isReply ? 'comment--reply' : '' %>" data-comment="<%= c.id %>">
-  <a class="comment__avatar" href="/u/<%= c.username %>"><%- include('avatar', { u: { username: c.username, display_name: c.display_name, avatar: c.avatar }, cls: 'avatar--xs' }) %></a>
+  <a class="comment__avatar" href="/u/<%= c.username %>" aria-label="<%= t('Open @{user} profile', { user: c.username }) %>"><%- include('avatar', { u: { username: c.username, display_name: c.display_name, avatar: c.avatar }, cls: 'avatar--xs' }) %></a>
   <div class="comment__main">
     <div class="comment__bubble">
       <div class="comment__who">
@@ -24,7 +24,7 @@ const postId = post ? post.id : '';
               poster: videoPoster ? config.uploadUrl + '/' + videoPoster : ''
             }) %>
           <% } else { %>
-            <a href="<%= config.uploadUrl %>/<%= c.media_path %>" target="_blank" rel="noopener">
+            <a href="<%= config.uploadUrl %>/<%= c.media_path %>" target="_blank" rel="noopener" aria-label="<%= t('Open image') %>">
               <img src="<%= config.uploadUrl %>/<%= c.media_path %>" alt="" class="comment__mediafile" loading="lazy">
             </a>
           <% } %>

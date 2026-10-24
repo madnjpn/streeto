@@ -382,6 +382,15 @@ router.get('/builds/:id', async (req, res, next) => {
     // The history of the build - what was done, and when.
     timeline: timeline.list(id),
     timelineSummary: timeline.summary(id),
+    og: {
+      title: `${build.title} - STREETO build`,
+      description: [[build.year, build.make, build.model].filter(Boolean).join(' '), build.engine]
+        .filter(Boolean)
+        .join(' · ') || `@${build.username}'s build`,
+      image: `/og/build/${build.id}.png`,
+      type: 'article',
+      url: `/builds/${build.id}`,
+    },
   });
 });
 

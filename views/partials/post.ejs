@@ -10,7 +10,7 @@ const renderedComments = typeof commentsHtml !== 'undefined' ? commentsHtml : ''
 %>
 <article class="post <%= post.post_type === 'emergency' ? 'post--sos' : '' %>" id="post-<%= post.id %>" data-post="<%= post.id %>">
   <header class="post__head">
-    <a class="post__avatar" href="/u/<%= post.username %>">
+    <a class="post__avatar" href="/u/<%= post.username %>" aria-label="<%= t('Open @{user} profile', { user: post.username }) %>">
       <%- include('avatar', { u: { username: post.username, display_name: post.display_name, avatar: post.avatar } }) %>
     </a>
     <div class="post__who">
@@ -156,7 +156,7 @@ const renderedComments = typeof commentsHtml !== 'undefined' ? commentsHtml : ''
       <span data-comment-count="<%= post.id %>"><%= post.comment_count %></span>
     </button>
     <%- include('share-button', { type: 'post', id: post.id, title: post.body || t('Post'), label: t('Post'), variant: 'stat' }) %>
-    <a class="stat" href="/posts/<%= post.id %>"><%- include('icon', { name: 'eye', size: 17 }) %> <span class="stat__label"><%= t('View') %></span></a>
+    <a class="stat" href="/posts/<%= post.id %>" aria-label="<%= t('View post') %>"><%- include('icon', { name: 'eye', size: 17 }) %> <span class="stat__label"><%= t('View') %></span></a>
   </div>
 
   <section class="comments" data-comments="<%= post.id %>" <%= post.comment_count ? '' : 'hidden' %>>
