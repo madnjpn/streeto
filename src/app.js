@@ -9,6 +9,7 @@ import { run, all } from './db.js';
 import { renderView } from './lib/views.js';
 import { mailUsable } from './lib/mail.js';
 import { srcsetFor } from './lib/images.js';
+import { webVersion, androidVersion } from './lib/app-version.js';
 
 // Safety net for a database created before migration 020 (the migration
 // itself adds the column). Wrapped, so two processes starting at the same
@@ -367,6 +368,11 @@ app.use((req, res, next) => {
   res.locals.query = req.query || {};
   res.locals.path = req.path;
   res.locals.title = config.siteName;
+  // Versions shown in the footer and on the settings page. Reading the
+  // Android version per request means a freshly copied APK is picked up
+  // without restarting the server.
+  res.locals.webVersion = webVersion;
+  res.locals.androidRelease = androidVersion();
   res.locals.maxUploadMb = config.maxUploadMb;
   res.locals.currentFont = getFont();
   res.locals.fontStacks = fontStacks;

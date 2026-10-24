@@ -2,15 +2,25 @@ package net.streeto.app;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -27,6 +37,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.content.pm.PackageInfoCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -34,7 +45,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
 
 /**
  * STREETO in a native shell.
@@ -58,6 +74,12 @@ public class MainActivity extends AppCompatActivity {
     private Uri cameraUri;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
+
+    private static final String UPDATE_FILE = "streeto-update.apk";
+    private long updateDownloadId = -1;
+    private String updateSha256 = "";
+    private BroadcastReceiver updateReceiver;
+    private boolean updateReceiverRegistered = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -119,7 +141,12 @@ public class MainActivity extends AppCompatActivity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " StreetoApp/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " StreetoApp/" + versionName());
+
+        // Version reporting and the in-app updater. Only streeto.net pages
+        // are ever loaded in this WebView; everything else goes to the
+        // browser, so the bridge is not exposed to arbitrary sites.
+        webView.addJavascriptInterface(new UpdateBridge(), "StreetNative");
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
@@ -215,6 +242,192 @@ public class MainActivity extends AppCompatActivity {
                 /* nothing can open it */
             }
         });
+    }
+
+    /** The small JS bridge used by the site's update check. */
+    private class UpdateBridge {
+        @JavascriptInterface
+        public String getVersion() {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("versionName", versionName());
+                json.put("versionCode", versionCode());
+                return json.toString();
+            } catch (Exception ignored) {
+                return "{\"versionName\":\"" + versionName() + "\",\"versionCode\":" + versionCode() + "}";
+            }
+        }
+
+        /**
+         * Download and open the signed APK. Returns "started", "permission"
+         * when the user must allow installs from STREETO first, or "failed".
+         */
+        @JavascriptInterface
+        public String downloadAndInstall(String url, String sha256) {
+            if (!isUpdateUrl(url)) return "failed";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                    && !getPackageManager().canRequestPackageInstalls()) {
+                runOnUiThread(MainActivity.this::openInstallPermission);
+                return "permission";
+            }
+            runOnUiThread(() -> startUpdateDownload(url, sha256));
+            return "started";
+        }
+    }
+
+    private boolean isUpdateUrl(String url) {
+        try {
+            Uri uri = Uri.parse(url == null ? "" : url);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase();
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
+            return "https".equals(scheme)
+                    && (host.equals("streeto.net") || host.endsWith(".streeto.net"));
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private void openInstallPermission() {
+        Toast.makeText(this, R.string.update_allow_installs, Toast.LENGTH_LONG).show();
+        try {
+            startActivity(new Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + getPackageName())));
+        } catch (ActivityNotFoundException ignored) {
+            /* the installer will ask on its own */
+        }
+    }
+
+    private void startUpdateDownload(String url, String sha256) {
+        if (!isUpdateUrl(url)) {
+            Toast.makeText(this, R.string.update_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && !getPackageManager().canRequestPackageInstalls()) {
+            openInstallPermission();
+            return;
+        }
+
+        try {
+            File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+            if (dir == null) throw new IllegalStateException("no downloads directory");
+            File target = new File(dir, UPDATE_FILE);
+            if (target.exists()) target.delete();
+
+            DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            if (manager == null) throw new IllegalStateException("no download manager");
+
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url))
+                    .setTitle(getString(R.string.update_download_title))
+                    .setDescription(getString(R.string.update_download_text))
+                    .setMimeType("application/vnd.android.package-archive")
+                    .setNotificationVisibility(
+                            DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalFilesDir(
+                            this, Environment.DIRECTORY_DOWNLOADS, UPDATE_FILE);
+
+            updateSha256 = sha256 == null ? "" : sha256.trim().toLowerCase();
+            updateDownloadId = manager.enqueue(request);
+            registerUpdateReceiver();
+        } catch (Exception error) {
+            Toast.makeText(this, R.string.update_failed, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void registerUpdateReceiver() {
+        if (updateReceiverRegistered) return;
+        updateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (!DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction())) return;
+                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                if (id != updateDownloadId) return;
+                installUpdate(id);
+            }
+        };
+        ContextCompat.registerReceiver(
+                this,
+                updateReceiver,
+                new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                ContextCompat.RECEIVER_EXPORTED);
+        updateReceiverRegistered = true;
+    }
+
+    private void installUpdate(long id) {
+        DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        if (manager == null) return;
+
+        try (Cursor cursor = manager.query(new DownloadManager.Query().setFilterById(id))) {
+            if (cursor == null || !cursor.moveToFirst()) return;
+            int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+            if (status != DownloadManager.STATUS_SUCCESSFUL) {
+                Toast.makeText(this, R.string.update_failed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (Exception error) {
+            Toast.makeText(this, R.string.update_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        File apk = dir == null ? null : new File(dir, UPDATE_FILE);
+        if (apk == null || !apk.isFile()) {
+            Toast.makeText(this, R.string.update_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!updateSha256.isEmpty()) {
+            String actual = sha256(apk);
+            if (!actual.equalsIgnoreCase(updateSha256)) {
+                apk.delete();
+                Toast.makeText(this, R.string.update_corrupt, Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        try {
+            Uri apkUri = FileProvider.getUriForFile(
+                    this, getPackageName() + ".fileprovider", apk);
+            Intent install = new Intent(Intent.ACTION_VIEW);
+            install.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(install);
+        } catch (Exception error) {
+            Toast.makeText(this, R.string.update_open_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static String sha256(File file) {
+        try (InputStream in = new FileInputStream(file)) {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) != -1) digest.update(buffer, 0, read);
+            StringBuilder out = new StringBuilder(64);
+            for (byte b : digest.digest()) out.append(String.format("%02x", b & 0xff));
+            return out.toString();
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+
+    private String versionName() {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return info.versionName == null ? "1.0" : info.versionName;
+        } catch (Exception ignored) {
+            return "1.0";
+        }
+    }
+
+    private int versionCode() {
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return (int) PackageInfoCompat.getLongVersionCode(info);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     /** A camera target for the upload chooser, or null when unavailable. */
@@ -356,6 +569,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (updateReceiverRegistered && updateReceiver != null) {
+            try {
+                unregisterReceiver(updateReceiver);
+            } catch (Exception ignored) {
+                /* already gone */
+            }
+            updateReceiver = null;
+            updateReceiverRegistered = false;
+        }
         if (webView != null) {
             webView.loadUrl("about:blank");
             webView.destroy();

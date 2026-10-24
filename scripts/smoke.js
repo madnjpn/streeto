@@ -199,6 +199,19 @@ try {
     });
   }
   {
+    const version = await a.request('GET', '/api/app/version');
+    const body = await version.json();
+    check('GET /api/app/version returns web and Android versions', () => {
+      assert.equal(version.status, 200);
+      assert.equal(body.ok, true);
+      assert.match(body.web.version, /^\d+\.\d+\.\d+/);
+      assert.match(body.android.versionName, /^\d+\.\d+\.\d+/);
+      assert.ok(body.android.versionCode >= 1);
+      assert.equal(body.android.url, '/downloads/STREETO-android.apk');
+      assert.match(version.headers.get('cache-control') || '', /no-store/);
+    });
+  }
+  {
     const { res, html } = await a.page('/about');
     check('GET /about renders', () => {
       assert.equal(res.status, 200);

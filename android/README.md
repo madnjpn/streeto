@@ -13,6 +13,8 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 - Cookies persist between launches (stay logged in)
 - Offline screen with a retry button
 - Thin cyan progress line while pages load
+- In-app update check: **Settings → App & updates** shows the web and app versions, and the shell downloads a newer signed APK, checks its SHA-256 and opens the installer
+- A dismissible update banner appears when a newer release is being served
 
 ## Build
 
@@ -63,6 +65,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.0.1 (versionCode 2)
+- Version: 1.1.0 (versionCode 3)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

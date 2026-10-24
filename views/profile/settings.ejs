@@ -78,6 +78,22 @@
     </div>
   </section>
 
+  <section class="card card--form" id="updates">
+    <h2 class="card__title"><%= t('App & updates') %></h2>
+    <p class="muted small"><%= t('Check whether a newer version of STREETO is available.') %></p>
+    <div class="kv">
+      <span><%= t('Web version') %></span><strong>v<%= webVersion %></strong>
+      <span data-app-current-row hidden><%= t('Installed app') %></span><strong data-app-current hidden>—</strong>
+      <span><%= t('Latest Android app') %></span><strong><a href="/downloads/STREETO-android.apk" data-app-latest>v<%= androidRelease.versionName || '—' %></a></strong>
+    </div>
+    <div class="btnrow">
+      <button class="btn btn--ghost" type="button" data-check-updates><%- include('../partials/icon', { name: 'exchange', size: 16 }) %> <%= t('Check for updates') %></button>
+      <button class="btn btn--primary" type="button" data-update-now-settings hidden><%- include('../partials/icon', { name: 'download', size: 16 }) %> <%= t('Update now') %></button>
+      <button class="btn btn--primary" type="button" data-reload-now hidden><%- include('../partials/icon', { name: 'exchange', size: 16 }) %> <%= t('Reload') %></button>
+    </div>
+    <p class="small" data-update-status role="status" aria-live="polite"></p>
+  </section>
+
   <section class="card card--form">
     <h2 class="card__title"><%= t('Letters') %></h2>
     <p class="muted small"><%= t('The site can write to you now and then - a weekly letter with what happened on the street, and a reminder before a car has to go to the technical inspection.') %></p>

@@ -39,6 +39,8 @@ website-only; there is no Play Store listing.
 
 - package `net.streeto.app`, Android 7.0+ (API 24)
 - camera/gallery uploads, GPS, back button, pull-to-refresh
+- in-app update check with a native downloader and a footer showing the web
+  and app versions
 - fixed release signing key stored in GitHub Secrets, so updates install over
   older versions
 - rebuild: Actions → **Build Android APK**; copy `app-release.apk` to

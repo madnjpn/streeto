@@ -26,6 +26,7 @@ import { decodeVin, readIdentifier, namesFor } from '../lib/vin.js';
 import { lookupChassis, oemUrl } from '../lib/chassis.js';
 import { partSources, makerCatalogue } from '../lib/part-sources.js';
 import { twinsOf } from '../lib/twins.js';
+import { webVersion, androidVersion } from '../lib/app-version.js';
 
 const router = express.Router();
 
@@ -33,6 +34,16 @@ const router = express.Router();
 router.get('/health', (_req, res) =>
   res.json({ ok: true, service: 'streeto', time: new Date().toISOString() }),
 );
+
+/* ── current web / Android versions (update check) ─────────────── */
+router.get('/app/version', (_req, res) => {
+  res.set('Cache-Control', 'no-store, max-age=0');
+  res.json({
+    ok: true,
+    web: { version: webVersion },
+    android: androidVersion(),
+  });
+});
 
 /* ── street name search (proxied so no browser key is exposed) ── */
 const placeLimiter = rateLimit({

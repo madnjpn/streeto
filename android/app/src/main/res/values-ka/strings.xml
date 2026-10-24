@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="choose_file">აირჩიეთ ფაილი</string>
+    <string name="choose_photo">აირჩიეთ ფოტო</string>
+    <string name="location_denied">მდებარეობის ნებართვა უარყოფილია</string>
+    <string name="offline_title">კავშირი არ არის</string>
+    <string name="offline_text">STREETO მიუწვდომელია. შეამოწმეთ კავშირი და სცადეთ ხელახლა.</string>
+    <string name="retry">კვლავ სცადეთ</string>
+    <string name="update_download_title">STREETO-ს განახლება</string>
+    <string name="update_download_text">იტვირთება უახლესი ვერსია…</string>
+    <string name="update_failed">განახლების ჩამოტვირთვა ვერ მოხერხდა</string>
+    <string name="update_corrupt">განახლების ფაილი დაზიანებულია. სცადეთ ხელახლა.</string>
+    <string name="update_allow_installs">ნება მიეცით STREETO-ს აპების დაყენებაზე, შემდეგ კვლავ დააჭირეთ განახლებას.</string>
+    <string name="update_open_failed">ინსტალერი ვერ გაიხსნა</string>
+</resources>

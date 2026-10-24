@@ -19,6 +19,8 @@
 <meta name="color-scheme" content="<%= themeName === 'light' ? 'light' : 'dark' %>">
 <meta name="theme-color" content="<%= metaThemeColor %>">
 <meta name="csrf-token" content="<%= csrfToken %>">
+<meta name="streeto-web-version" content="<%= webVersion %>">
+<meta name="streeto-android-version" content="<%= androidRelease.versionName %>">
 <meta name="description" content="<%= config.siteName %> - <%= t(config.tagline) %>. <%= t('Groups, meetups, street maps and a wall built for car people.') %>">
 <title><%= typeof title !== 'undefined' ? title : config.siteName %></title>
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -43,6 +45,15 @@
 <%- include('partials/custom-fonts') %>
 
 <%- include('partials/nav') %>
+
+<div class="update-banner" data-update-banner role="status" aria-live="polite" hidden>
+  <div class="update-banner__text">
+    <strong><%= t('Update available') %></strong>
+    <span data-update-banner-text></span>
+  </div>
+  <button class="btn btn--primary btn--sm" type="button" data-update-now><%= t('Update now') %></button>
+  <button class="update-banner__close" type="button" data-update-dismiss aria-label="<%= t('Dismiss') %>"><%- include('partials/icon', { name: 'x', size: 15 }) %></button>
+</div>
 
 <div class="layout-shell">
   <% if (isAuthenticated) { %>
@@ -90,6 +101,11 @@
   <div class="footer__inner">
     <span class="footer__brand"><img class="footer__logo" src="/websitelogo.png" alt="<%= config.siteName %>"> </span>
     <span class="footer__note"><%= t('Build it, Drive it, Share it.') %></span>
+    <span class="footer__versions" aria-label="<%= t('Versions') %>">
+      <span><%= t('Web') %> <b data-footer-web-version>v<%= webVersion %></b></span>
+      <span class="footer__dot" aria-hidden="true">·</span>
+      <span><%= t('App') %> <b data-footer-app-version title="<%= t('Latest Android app') %>">v<%= androidRelease.versionName || '—' %></b></span>
+    </span>
     <nav class="footer__links">
       <a href="/about"><%= t('How it works') %></a>
       <a href="/meetups"><%= t('Meetups') %></a>
@@ -121,6 +137,7 @@
 <% } %>
 
 <script src="/assets/<%= assetStamp %>/js/app.js" type="module"></script>
+<script src="/assets/<%= assetStamp %>/js/version.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/chat.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/search-live.js" type="module"></script>
 <script src="/assets/<%= assetStamp %>/js/meetup-weather.js" type="module"></script>

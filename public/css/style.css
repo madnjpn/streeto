@@ -1023,8 +1023,63 @@ h1, h2, h3, h4 {
   color: var(--text-dim);
 }
 .footer__logo { display: block; height: 20px; width: auto; opacity: 0.85; }
-.footer__links { display: flex; gap: 16px; margin-left: auto; }
+.footer__links { display: flex; gap: 16px; margin-left: 0; }
 .footer__links a:hover { color: var(--neon); }
+.footer__versions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.footer__versions b { color: var(--text-dim); font-weight: 600; }
+.footer__dot { opacity: 0.4; }
+
+/* App update banner (shown inside the Android shell when a newer APK exists). */
+.update-banner {
+  position: fixed;
+  top: calc(var(--topbar) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(720px, calc(100vw - 24px));
+  padding: 10px 10px 10px 14px;
+  border: 1px solid rgba(var(--neon-rgb), 0.38);
+  border-radius: 14px;
+  background: rgba(7, 8, 11, 0.95);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+.update-banner[hidden] { display: none; }
+.update-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.update-banner__text strong {
+  font-family: var(--font-head);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon);
+}
+.update-banner__text span { font-size: 13px; color: var(--text-dim); }
+.update-banner__close {
+  display: inline-flex;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--dim);
+}
+.update-banner__close:hover { color: var(--text); background: rgba(var(--veil), 0.08); }
 
 /* ── flashes & alerts ───────────────────────────────────────────── */
 .flashes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
@@ -3859,6 +3914,8 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
   .layout-shell { padding: 18px 8px 96px; }
   .shell { padding-bottom: 40px; }
   .footer { padding-bottom: 28px; }
+  .footer__versions { margin-left: 0; width: 100%; }
+  .update-banner { top: auto; bottom: 14px; }
   .brand__text strong { font-size: 19px; }
   .brand__logo { height: 28px; }
   .auth { grid-template-columns: 1fr; }

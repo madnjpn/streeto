@@ -259,6 +259,20 @@ export const CLIENT_KEYS = [
   'Years',
   'Your garage is empty. Add a car and it shows up here.',
   '{n} parts found',
+
+  /* versions & app updates */
+  'Installed app version',
+  'Latest Android app',
+  'Downloading the update…',
+  'A new version of STREETO is available: v{version}.',
+  'Checking…',
+  'Update available: v{version}.',
+  "You're on the latest version (v{version}).",
+  'A new web version is available. Reload the page to get it.',
+  'The web version is up to date (v{version}).',
+  'Check failed. Try again.',
+  'Allow installs for STREETO, then tap Update again.',
+  'Could not start the update. Try again.',
 ];
 
 /** Build the key -> translation map handed to the browser. */
