@@ -239,14 +239,19 @@ router.get('/near', (req, res) => {
 });
 
 /** Install the web app / PWA on iPhone, Android or desktop. */
-router.get('/install', (req, res) =>
-  res.page('pages/install', {
+router.get('/install', (req, res) => {
+  const ua = req.get('user-agent') || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+    (/Macintosh/i.test(ua) && /Mobile\//i.test(ua));
+  const isAndroid = /Android/i.test(ua);
+  return res.page('pages/install', {
     title: `Install STREETO - ${config.siteName}`,
     active: 'install',
     bodyClass: 'page-install',
+    installPlatform: isIOS ? 'ios' : isAndroid ? 'android' : 'desktop',
     pageScripts: [`/assets/${res.locals.assetStamp}/js/install.js`],
-  }),
-);
+  });
+});
 
 /* ── partners page ─────────────────────────────────────────────── */
 router.get('/partners', (req, res) => {

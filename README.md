@@ -788,9 +788,10 @@ portrait app with 192/512px and maskable icons. `public/sw.js` registers the
 offline shell, caches static interface files and keeps the existing push
 notification handlers. `public/offline.html` is the offline fallback.
 
-- **Install link:** `/install`, also linked under the Android APK button on
-  the login page. It contains iPhone Safari “Add to Home Screen” steps and
-  the Chrome/Edge install flow.
+- **Install link:** `/install`, reached from the single
+  **DOWNLOAD | ANDROID & iOS** button on the login page. Android visitors see
+  the signed APK download only; iPhone visitors see the Safari “Add to Home
+  Screen” steps; desktop visitors get the Chrome/Edge PWA flow.
 - **iOS version:** the PWA uses the web version. Settings shows **iOS version**
   and the footer shows `Web · iOS · Android` versions.
 - **Notifications on iOS:** Web Push works only after the PWA is installed to
