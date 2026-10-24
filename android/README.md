@@ -62,6 +62,8 @@ The app uses Firebase Cloud Messaging for near-realtime alerts:
   `FIREBASE_SERVICE_ACCOUNT_PATH` on the Node server.
 - **Settings → Notifications** requests Android 13+ permission, fetches the FCM
   token and registers it with `POST /api/push/device`.
+- If notifications are still off after login, a dismissible **Enable / Not now**
+  prompt appears; Not now hides it for 14 days.
 - The server sends data-only messages; `StreetoMessagingService` posts the
   notification and opens the chat/activity page. Foreground messages are
   skipped because the site already shows the badge.

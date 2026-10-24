@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.2.0` (`package.json`), Android `1.2.1`
+**Current in this tree:** web `1.2.2` (`package.json`), Android `1.2.1`
 (`versionCode 7`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -865,6 +865,8 @@ The update check runs on app page loads and when the user taps
 - **Settings → Notifications** requests Android 13+ notification permission,
   fetches the FCM token and posts it to `POST /api/push/device`. Logging out or
   turning notifications off removes it.
+- If notifications are still off after login, a dismissible prompt offers
+  **Enable notifications** / **Not now**; Not now hides it for 14 days.
 - The server sends **data-only** high-priority messages; `StreetoMessagingService`
   renders the notification and opens the relevant chat/activity page. It skips
   the buzz while the app is in the foreground.
@@ -1397,7 +1399,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.2.0`
+- Web version: `package.json` → `1.2.2`
 - Android version: `android/app/build.gradle.kts` → `1.2.1` (versionCode `7`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`

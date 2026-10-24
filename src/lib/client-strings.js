@@ -291,6 +291,10 @@ export const CLIENT_KEYS = [
   'Mute',
   'Unmute',
   'Muted',
+  'Turn on notifications',
+  'Get messages, friend requests, comments and activity while STREETO is closed.',
+  'Enable notifications',
+  'Not now',
 ];
 
 /** Build the key -> translation map handed to the browser. */

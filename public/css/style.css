@@ -1092,6 +1092,50 @@ body.has-open-modal .update-banner { display: none; }
   color: var(--dim);
 }
 .update-banner__close:hover { color: var(--text); background: rgba(var(--veil), 0.08); }
+
+/* One-time post-login nudge for users who have not enabled notifications. */
+.notif-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(620px, calc(100vw - 24px));
+  padding: 12px 14px;
+  border: 1px solid rgba(var(--neon-rgb), 0.3);
+  border-radius: 14px;
+  background: rgba(7, 8, 11, 0.96);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+.notif-prompt[hidden] { display: none; }
+.notif-prompt__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.notif-prompt__text strong {
+  font-family: var(--font-head);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+.notif-prompt__text span { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+.notif-prompt__actions { display: flex; gap: 8px; flex: 0 0 auto; }
+@media (max-width: 620px) {
+  .notif-prompt {
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    flex-wrap: wrap;
+  }
+  .notif-prompt__text { flex-basis: 100%; }
+  .notif-prompt__actions { width: 100%; }
+  .notif-prompt__actions .btn { flex: 1; }
+}
 @media (min-width: 861px) {
   /* Keep the first card clear of the fixed update banner. */
   body.has-update-banner .layout-shell { padding-top: 96px; }

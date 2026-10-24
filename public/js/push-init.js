@@ -18,12 +18,81 @@ const noteEl = document.querySelector('[data-push-note]');
 
 let busy = false;
 
+const PROMPT_KEY = 'streeto.notificationPromptAt';
+const PROMPT_DAYS = 14;
+
 function paint(state, message) {
   if (stateEl) stateEl.textContent = state;
   if (statusEl) statusEl.textContent = message || '';
   if (enableBtn) enableBtn.hidden = state === t('Enabled');
   if (disableBtn) disableBtn.hidden = state !== t('Enabled');
   if (noteEl) noteEl.hidden = !native;
+  updatePrompt(state);
+}
+
+function removePrompt() {
+  document.querySelector('.notif-prompt')?.remove();
+}
+
+function promptDismissed() {
+  try {
+    const at = Number(localStorage.getItem(PROMPT_KEY)) || 0;
+    return Date.now() - at < PROMPT_DAYS * 24 * 60 * 60 * 1000;
+  } catch {
+    return false;
+  }
+}
+
+function updatePrompt(state) {
+  const enabled = state === t('Enabled');
+  const blocked = state === t('Blocked') || state === t('Not supported');
+  if (enabled || blocked || location.pathname === '/settings' || promptDismissed()) {
+    removePrompt();
+    return;
+  }
+  if (!native && (!pushSupported() || pushPermission() === 'denied')) {
+    removePrompt();
+    return;
+  }
+  if (document.querySelector('.notif-prompt')) return;
+
+  const prompt = document.createElement('div');
+  prompt.className = 'notif-prompt';
+  prompt.setAttribute('role', 'status');
+
+  const text = document.createElement('div');
+  text.className = 'notif-prompt__text';
+  const title = document.createElement('strong');
+  title.textContent = t('Turn on notifications');
+  const copy = document.createElement('span');
+  copy.textContent = t('Get messages, friend requests, comments and activity while STREETO is closed.');
+  text.append(title, copy);
+
+  const actions = document.createElement('div');
+  actions.className = 'notif-prompt__actions';
+  const enableCta = document.createElement('button');
+  enableCta.type = 'button';
+  enableCta.className = 'btn btn--primary btn--sm';
+  enableCta.textContent = t('Enable notifications');
+  enableCta.addEventListener('click', () => enable());
+  const later = document.createElement('button');
+  later.type = 'button';
+  later.className = 'btn btn--ghost btn--sm';
+  later.textContent = t('Not now');
+  later.addEventListener('click', dismissPrompt);
+  actions.append(enableCta, later);
+
+  prompt.append(text, actions);
+  document.body.append(prompt);
+}
+
+function dismissPrompt() {
+  try {
+    localStorage.setItem(PROMPT_KEY, String(Date.now()));
+  } catch {
+    /* private mode */
+  }
+  removePrompt();
 }
 
 function nativeEnabled() {
@@ -111,6 +180,12 @@ async function disable() {
       bridge.disableNotifications();
     } else {
       await disablePushSubscription();
+    }
+    // Do not immediately nag the member who just turned them off.
+    try {
+      localStorage.setItem(PROMPT_KEY, String(Date.now()));
+    } catch {
+      /* private mode */
     }
     await refresh();
   } finally {

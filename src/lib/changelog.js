@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.2.2',
+    date: '2026-10-24',
+    scope: 'web',
+    items: [
+      'A one-time post-login prompt offers to turn on notifications.',
+    ],
+  },
+  {
     version: '1.2.1',
     date: '2026-10-24',
     scope: 'android',
