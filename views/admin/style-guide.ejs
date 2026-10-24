@@ -1,0 +1,147 @@
+<div class="pagehead">
+  <div class="pagehead__main">
+    <p class="eyebrow"><%= t('control room') %></p>
+    <h1 class="display"><%= t('UI system') %></h1>
+    <p class="lede"><%= t('One visual language for every page and every screen.') %></p>
+  </div>
+  <div class="pagehead__actions">
+    <a class="btn btn--ghost" href="/admin"><%- include('../partials/icon', { name: 'back', size: 16 }) %> <%= t('Admin console') %></a>
+  </div>
+</div>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Design rules') %></h2>
+  <ul class="sg-rules">
+    <li><%= t('Every action uses a .btn variant; icon-only actions use .iconbtn.') %></li>
+    <li><%= t('People always use the avatar partial and one of the named sizes.') %></li>
+    <li><%= t('Never set a fixed height on text; let it wrap.') %></li>
+    <li><%= t('Test every page at 390 px: no sideways scroll, no clipped copy.') %></li>
+    <li><%= t('Leave room for the fixed menu and chat buttons at the bottom of the page.') %></li>
+  </ul>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Colour') %></h2>
+  <div class="sg-swatches">
+    <div class="sg-swatch sg-swatch--neon">--neon</div>
+    <div class="sg-swatch sg-swatch--panel">--panel</div>
+    <div class="sg-swatch sg-swatch--bg">--bg</div>
+    <div class="sg-swatch sg-swatch--danger">--danger</div>
+  </div>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Typography') %></h2>
+  <p class="display"><%= t('Street display') %></p>
+  <h2><%= t('Section heading') %></h2>
+  <p><%= t('Body copy uses Inter and wraps naturally. Long words may break, but copy is never cut off by a fixed height.') %></p>
+  <p class="muted small"><%= t('Metadata, timestamps and labels use the small mono style.') %></p>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Buttons') %></h2>
+  <div class="sg-demo">
+    <button class="btn btn--primary" type="button"><%= t('Primary') %></button>
+    <button class="btn btn--ghost" type="button"><%= t('Ghost') %></button>
+    <button class="btn btn--outline" type="button"><%= t('Outline') %></button>
+    <button class="btn btn--danger" type="button"><%= t('Danger') %></button>
+  </div>
+  <div class="sg-demo">
+    <button class="btn btn--primary btn--sm" type="button"><%= t('Small') %></button>
+    <button class="btn btn--ghost btn--lg" type="button"><%= t('Large') %></button>
+    <button class="btn btn--ghost" type="button" disabled><%= t('Disabled') %></button>
+    <button class="btn btn--ghost btn--icon" type="button" aria-label="<%= t('Icon') %>"><%- include('../partials/icon', { name: 'plus', size: 17 }) %></button>
+  </div>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Avatars') %></h2>
+  <div class="sg-demo">
+    <%- include('../partials/avatar', { u: { username: 'xs', display_name: 'XS' }, cls: 'avatar--xs' }) %>
+    <span class="sg-label">xs</span>
+    <%- include('../partials/avatar', { u: { username: 'sm', display_name: 'SM' }, cls: 'avatar--sm' }) %>
+    <span class="sg-label">sm</span>
+    <%- include('../partials/avatar', { u: { username: 'md', display_name: 'MD' }, cls: 'avatar--md' }) %>
+    <span class="sg-label">md</span>
+    <%- include('../partials/avatar', { u: { username: 'lg', display_name: 'LG' }, cls: 'avatar--lg' }) %>
+    <span class="sg-label">lg</span>
+  </div>
+  <p class="muted small"><%= t('Avatars are always square and use object-fit: cover. Never stretch a face.') %></p>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Page header') %></h2>
+  <div class="pagehead">
+    <div class="pagehead__main">
+      <p class="eyebrow"><%= t('garage') %></p>
+      <h2 class="display"><%= t('My Garage') %></h2>
+      <p class="lede"><%= t('Manage your personal vehicles, track maintenance, and check fines.') %></p>
+    </div>
+    <div class="pagehead__actions">
+      <button class="btn btn--primary btn--sm" type="button"><%= t('Add a build') %></button>
+    </div>
+  </div>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Cards') %></h2>
+  <div class="sg-grid">
+    <article class="card">
+      <h3 class="card__title"><%= t('Example card') %></h3>
+      <p class="muted"><%= t('Cards hold one clear idea and one primary action.') %></p>
+      <button class="btn btn--primary btn--sm" type="button"><%= t('Open') %></button>
+    </article>
+    <article class="card card--danger">
+      <h3 class="card__title"><%= t('Danger card') %></h3>
+      <p class="muted"><%= t('Use danger only for destructive actions.') %></p>
+      <button class="btn btn--danger btn--sm" type="button"><%= t('Delete') %></button>
+    </article>
+  </div>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Forms') %></h2>
+  <div class="sg-grid">
+    <label class="field">
+      <span class="field__label"><%= t('Display name') %></span>
+      <input type="text" value="STREETO">
+    </label>
+    <label class="field">
+      <span class="field__label"><%= t('City') %></span>
+      <input type="text" value="Tbilisi">
+      <span class="field__hint"><%= t('The city is shown on your profile.') %></span>
+    </label>
+  </div>
+  <div class="sg-demo">
+    <button class="btn btn--primary" type="button"><%= t('Save changes') %></button>
+    <button class="btn btn--ghost" type="button"><%= t('Cancel') %></button>
+  </div>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Text and rows') %></h2>
+  <ul class="rows">
+    <li class="row row--stack">
+      <span class="row__id">
+        <span class="avatar avatar--sm avatar--gen" style="--h: 190">ST</span>
+        <span>
+          <strong>@streeto</strong>
+          <span class="muted small"> · 2d ago</span>
+          <span class="row__snippet"><%= t('Long copy wraps to the next line instead of being hidden behind an ellipsis.') %></span>
+        </span>
+      </span>
+      <button class="btn btn--ghost btn--sm" type="button"><%= t('View') %></button>
+    </li>
+  </ul>
+</section>
+
+<section class="card sg-section">
+  <h2 class="card__title"><%= t('Layout') %></h2>
+  <ul class="sg-rules">
+    <li><code>.shell</code> - <%= t('page width, 1280 px') %></li>
+    <li><code>.single</code> - <%= t('reading width, 760 px') %></li>
+    <li><code>.single--narrow</code> - <%= t('narrow content, 720 px') %></li>
+    <li><code>--ui-space-*</code> - <%= t('spacing on a 4 px grid') %></li>
+    <li><code>env(safe-area-inset-*)</code> - <%= t('notch and home-indicator clearance') %></li>
+  </ul>
+</section>

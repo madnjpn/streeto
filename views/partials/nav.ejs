@@ -13,7 +13,7 @@ const isActive = (key) => (typeof active !== 'undefined' && active === key) ? 'i
 const searchText = typeof q !== 'undefined' ? q : (query.q || '');
 // Pages that bring their own search box hide the header one so there is
 // never a pair of stacked search bars.
-const ownSearch = ['/search', '/people', '/groups', '/meetups', '/chat/new', '/services/parts', '/services/maintenance'];
+const ownSearch = ['/search', '/people', '/groups', '/meetups', '/chat/new', '/services/parts', '/services/maintenance', '/services/part-search'];
 const showTopSearch = isAuthenticated && !ownSearch.includes(path);
 %>
 <header class="topbar">
@@ -40,11 +40,11 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
             <% if (unreadMessages) { %><span class="pip pip--dot" data-badge="chat"><%= unreadMessages > 9 ? '9+' : unreadMessages %></span><% } %>
           </a>
 
-          <a class="iconbtn <%= isActive('meetups') %>" href="/meetups" aria-label="<%= t('Meetups') %>">
+          <a class="iconbtn topbar__shortcut--optional <%= isActive('meetups') %>" href="/meetups" aria-label="<%= t('Meetups') %>">
             <%- include('icon', { name: 'pin', size: 20 }) %>
           </a>
 
-          <a class="iconbtn <%= isActive('activity') %>" href="/notifications" aria-label="<%= t('Activity') %>">
+          <a class="iconbtn topbar__shortcut--optional <%= isActive('activity') %>" href="/notifications" aria-label="<%= t('Activity') %>">
             <%- include('icon', { name: 'bell', size: 20 }) %>
             <% if (unreadNotifications) { %><span class="pip pip--dot" data-badge="notifications"><%= unreadNotifications > 99 ? '99+' : unreadNotifications %></span><% } %>
           </a>
@@ -66,6 +66,7 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
               <a class="menu__item" href="/u/<%= currentUser.username %>"><%- include('icon', { name: 'user', size: 17 }) %> <%= t('My profile') %></a>
               <a class="menu__item" href="/builds"><%- include('icon', { name: 'garage', size: 17 }) %> <%= t('My builds') %></a>
               <a class="menu__item" href="/friends"><%- include('icon', { name: 'users', size: 17 }) %> <%= t('Friends') %> <% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
+              <a class="menu__item" href="/notifications"><%- include('icon', { name: 'bell', size: 17 }) %> <%= t('Activity') %> <% if (unreadNotifications) { %><span class="pip" data-badge="notifications"><%= unreadNotifications > 99 ? '99+' : unreadNotifications %></span><% } %></a>
               <a class="menu__item" href="/chat/new"><%- include('icon', { name: 'send', size: 17 }) %> <%= t('New message') %></a>
               <a class="menu__item" href="/meetups/new"><%- include('icon', { name: 'plus', size: 17 }) %> <%= t('Host a meetup') %></a>
               <% if (currentUser.is_admin) { %><a class="menu__item" href="/admin"><%- include('icon', { name: 'shield', size: 17 }) %> <%= t('Admin console') %></a><% } %>

@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('services') %></p>
     <h1 class="display"><%= t('Maintenance') %></h1>
     <p class="lede"><%= total === 1 ? t('{n} workshop or specialist', { n: total }) : t('{n} workshops and specialists', { n: total }) %></p>
@@ -11,7 +11,7 @@
 
 <%- include('../../partials/services-tabs', { section: 'maintenance' }) %>
 
-<div class="feedtabs" role="tablist">
+<div class="feedtabs feedtabs--wrap" role="tablist">
   <% Object.entries(scopes).forEach(function ([key, label]) { %>
     <a class="feedtabs__tab <%= scope === key ? 'is-active' : '' %>" role="tab" href="/services/maintenance?scope=<%= key %>&sort=<%= sort %><%= category ? '&category=' + category : '' %>" aria-selected="<%= scope === key %>"><%= t(label) %></a>
   <% }); %>

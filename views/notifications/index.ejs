@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('activity') %></p>
     <h1 class="display"><%= t('What you missed') %></h1>
     <p class="lede"><%= t('Friend requests, comments, likes, invites, sale alerts and meetup updates.') %></p>
@@ -23,7 +23,7 @@
         const parts = String(n.text || '').split('|');
         const notifVars = parts.length > 1 ? { name: parts.slice(1).join('|') } : undefined;
       %>
-      <li class="row row--activity <%= !n.read_at ? 'is-fresh' : '' %>">
+      <li class="row row--activity row--stack <%= !n.read_at ? 'is-fresh' : '' %>">
         <a class="row__id" href="<%= n.url || '/notifications' %>">
           <% if (n.actor_username) { %>
             <%- include('../partials/avatar', { u: { username: n.actor_username, display_name: n.actor_display_name, avatar: n.actor_avatar }, cls: 'avatar--sm' }) %>

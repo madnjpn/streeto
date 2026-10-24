@@ -501,9 +501,14 @@ function initPreview(el) {
     }
   } catch { /* no saved view */ }
 
+  // A saved camera angle can put one end of a short route outside a phone
+  // screen. On a phone, fit both pins instead; keep the host's view on
+  // larger screens where there is room for it.
+  const useSavedView = Boolean(savedView) && !window.matchMedia('(max-width: 640px)').matches;
+
   const map = buildMap(el, {
-    center: savedView ? [savedView.lng, savedView.lat] : [(lng + endLng) / 2, (lat + endLat) / 2],
-    zoom: savedView ? savedView.zoom : 13,
+    center: useSavedView ? [savedView.lng, savedView.lat] : [(lng + endLng) / 2, (lat + endLat) / 2],
+    zoom: useSavedView ? savedView.zoom : 13,
     // Free camera: the track can be zoomed, panned and rotated, but the
     // pins are fixed - nothing here changes A or B.
     interactive: true,
@@ -539,7 +544,7 @@ function initPreview(el) {
         return;
       }
       map.resize();
-      if (savedView) {
+      if (useSavedView) {
         map.jumpTo({
           center: [savedView.lng, savedView.lat],
           zoom: savedView.zoom,

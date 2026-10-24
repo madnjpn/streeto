@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('pick a driver') %></p>
     <h1 class="display"><%= t('New message') %></h1>
     <p class="lede"><%= t('Search anyone on the network, or pick a friend.') %></p>
@@ -48,7 +48,7 @@
   <% if (friendsList.length) { %>
     <ul class="rows">
       <% friendsList.forEach(function (person) { %>
-        <li class="row">
+        <li class="row row--stack">
           <a class="row__id" href="/u/<%= person.username %>">
             <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
             <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>

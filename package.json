@@ -1,6 +1,6 @@
 {
   "name": "streeto",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "description": "STREETO - underground street racing social network (Node.js + SQLite)",
@@ -18,6 +18,7 @@
     "golive": "node scripts/go-live.mjs",
     "prodcheck": "node scripts/prod-check.mjs",
     "smoke": "node scripts/smoke.js",
+    "ui:check": "node scripts/ui-check.mjs",
     "icons:android": "node scripts/build-android-icons.mjs",
     "posters": "node scripts/build-video-posters.mjs"
   },

@@ -1,0 +1,410 @@
+/* ==========================================================================
+   STREETO UI SYSTEM 1.0
+   --------------------------------------------------------------------------
+   One contract for every page, browser and the future iOS shell.
+
+   Loaded after style.css. This file does not invent a second look: it turns
+   the parts we already use into named tokens and keeps pages on the same
+   grid. New UI should use these tokens and components instead of one-off
+   pixel values.
+
+   Rules in short:
+   - Page width: .shell (1280) / .single (760) / .single--narrow (720).
+   - Page header: .pagehead > .pagehead__main (+ optional actions).
+   - Actions: .btn + one variant; icon actions: .iconbtn.
+   - People: always include partials/avatar.ejs; only the named sizes.
+   - Text: never set a fixed height around copy; let it wrap.
+   - Mobile: test 390x844; nothing may scroll sideways or sit under the
+     fixed menu / chat buttons at the end of a page.
+   ========================================================================== */
+
+:root {
+  /* spacing, on a 4px grid */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-space-10: 40px;
+  --ui-space-14: 56px;
+
+  /* controls */
+  --ui-control-sm: 30px;
+  --ui-control-md: 36px;
+  --ui-control-lg: 44px;
+  --ui-control-icon: 36px;
+  --ui-control-icon-ghost: 32px;
+
+  /* radii */
+  --ui-radius-pill: 999px;
+  --ui-radius-control: 12px;
+  --ui-radius-card: 16px;
+  --ui-radius-sheet: 20px;
+
+  /* avatars */
+  --ui-avatar-xs: 26px;
+  --ui-avatar-sm: 36px;
+  --ui-avatar-md: 46px;
+  --ui-avatar-lg: 76px;
+  --ui-avatar-xl: 104px;
+
+  /* page */
+  --ui-page: 1280px;
+  --ui-content: 760px;
+  --ui-content-narrow: 720px;
+  --ui-gutter: clamp(12px, 4vw, 22px);
+
+  /* safe areas: iOS notch / home indicator and Android gesture bar */
+  --ui-safe-top: env(safe-area-inset-top, 0px);
+  --ui-safe-right: env(safe-area-inset-right, 0px);
+  --ui-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ui-safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* --------------------------------------------------------------------------
+   Page + text placement
+   -------------------------------------------------------------------------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-wrap: break-word;
+}
+
+.shell,
+.layout-shell,
+.single,
+.single--narrow {
+  min-width: 0;
+}
+
+.single,
+.single--narrow {
+  width: 100%;
+}
+
+/* The page header is always one text block, never loose siblings. */
+.pagehead {
+  align-items: flex-start;
+  row-gap: var(--ui-space-3);
+}
+
+.pagehead__main {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.pagehead__main > * {
+  max-width: 100%;
+}
+
+.pagehead .lede {
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+/* Guard older direct-child headers as well. */
+.pagehead > .eyebrow,
+.pagehead > .display,
+.pagehead > .lede {
+  flex: 1 1 100%;
+}
+
+.pagehead__actions,
+.pagehead .btnrow {
+  flex: 0 0 auto;
+}
+
+/* Older pages put a single .btn / form directly in the header. Keep that
+   shape usable, but align it like a proper header action. */
+.pagehead > .btn,
+.pagehead > .btnrow,
+.pagehead > form {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 860px) {
+  .pagehead__main {
+    flex-basis: 100%;
+  }
+
+  .pagehead__actions,
+  .pagehead .btnrow {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  .pagehead > .btn,
+  .pagehead > form {
+    align-self: flex-end;
+  }
+
+  .pagehead > .btnrow {
+    align-self: stretch;
+    justify-content: flex-end;
+  }
+}
+
+/* Copy must be allowed to wrap; a fixed height is a bug waiting to happen. */
+.display,
+.section-title,
+.card__title,
+.lede,
+.row__id,
+.row__id > span,
+.field__hint {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+
+.btn {
+  height: auto;
+  min-height: var(--ui-control-md);
+  max-width: 100%;
+  padding: 0 var(--ui-space-4);
+  border-radius: var(--ui-radius-pill);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.btn--secondary {
+  --btn-bg: rgba(var(--veil), 0.06);
+  --btn-bd: var(--line-strong);
+  --btn-fg: var(--text);
+}
+
+.btn--secondary:hover {
+  --btn-bd: rgba(var(--neon-rgb), 0.4);
+  background: rgba(var(--neon-rgb), 0.08);
+  color: var(--neon);
+}
+
+.btn--sm {
+  min-height: var(--ui-control-sm);
+  padding: 0 var(--ui-space-3);
+}
+
+.btn--lg {
+  min-height: var(--ui-control-lg);
+  padding: 0 var(--ui-space-5);
+}
+
+.btn--icon {
+  width: var(--ui-control-md);
+  min-width: var(--ui-control-md);
+  padding: 0;
+}
+
+.btn--icon.btn--sm {
+  width: var(--ui-control-sm);
+  min-width: var(--ui-control-sm);
+}
+
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.iconbtn {
+  width: var(--ui-control-icon);
+  height: var(--ui-control-icon);
+}
+
+.iconbtn--ghost {
+  width: var(--ui-control-icon-ghost);
+  height: var(--ui-control-icon-ghost);
+}
+
+/* Touch targets are governed by the control sizes; do not add pseudo
+   elements outside the control, because they enlarge scrollWidth and make
+   dense rows overlap. */
+
+.btnrow {
+  align-items: center;
+  gap: var(--ui-space-2);
+}
+
+/* --------------------------------------------------------------------------
+   Avatars
+   -------------------------------------------------------------------------- */
+
+.avatar {
+  aspect-ratio: 1 / 1;
+  min-width: var(--size);
+  object-fit: cover;
+  object-position: center;
+}
+
+.avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.avatar--gen {
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+
+.field {
+  min-width: 0;
+}
+
+.field input,
+.field textarea,
+.field select,
+.form-grid input,
+.form-grid textarea,
+.form-grid select {
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Fixed UI and safe areas
+   -------------------------------------------------------------------------- */
+
+.topbar {
+  padding-top: var(--ui-safe-top);
+}
+
+.appmenu__trigger {
+  bottom: calc(var(--ui-space-4) + var(--ui-safe-bottom));
+  left: calc(var(--ui-space-4) + var(--ui-safe-left));
+}
+
+.chatdock {
+  right: calc(var(--ui-space-4) + var(--ui-safe-right));
+  bottom: calc(var(--ui-space-4) + var(--kb) + var(--ui-safe-bottom));
+}
+
+.notif-prompt {
+  bottom: calc(88px + var(--ui-safe-bottom));
+}
+
+@media (max-width: 360px) {
+  /* Keep the avatar menu on-screen on the smallest iOS-sized screens.
+     Activity and Meetups remain in the app menu and the account menu. */
+  .topbar__shortcut--optional {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .notif-prompt {
+    bottom: calc(82px + var(--ui-safe-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  /* The privacy note is information, not a column: let it take its own
+     line instead of squeezing into a 50 px strip beside the picker. */
+  .composer__scope {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .composer__scope [data-privacy-note] {
+    flex-basis: 100%;
+  }
+}
+
+.footer {
+  padding-bottom: calc(96px + var(--ui-safe-bottom));
+}
+
+/* Keyboard focus must always be visible, for desktop and assistive tech. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Internal style guide
+   -------------------------------------------------------------------------- */
+
+.sg-section {
+  margin-top: var(--ui-space-6);
+}
+
+.sg-section h2 {
+  margin-bottom: var(--ui-space-3);
+}
+
+.sg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ui-space-4);
+}
+
+.sg-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--ui-radius-control);
+}
+
+.sg-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.sg-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--ui-space-2);
+}
+
+.sg-swatch {
+  min-height: 64px;
+  padding: var(--ui-space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-control);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text);
+}
+
+.sg-swatch--neon { background: var(--neon); color: var(--on-accent); }
+.sg-swatch--panel { background: var(--panel); }
+.sg-swatch--bg { background: var(--bg); }
+.sg-swatch--danger { background: var(--danger); color: #fff; }
+
+.sg-rules {
+  display: grid;
+  gap: var(--ui-space-2);
+  padding-left: 20px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.sg-rules li::marker {
+  color: var(--neon);
+}
+
+@media (max-width: 620px) {
+  .sg-demo {
+    padding: var(--ui-space-3);
+  }
+}

@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('control room') %></p>
     <h1 class="display"><%= t('Admin console') %></h1>
     <p class="lede"><%= t('Promote drivers, moderate the feed, and keep the database safe.') %></p>
@@ -31,6 +31,7 @@
   <a class="feedtabs__tab <%= tab === 'claims' ? 'is-active' : '' %>" href="/admin/service-claims"><%= t('Claims') %><% if (pendingClaims) { %> <span class="pip pip--solid"><%= pendingClaims %></span><% } %></a>
   <a class="feedtabs__tab" href="/admin/translations"><%= t('Translations') %></a>
   <a class="feedtabs__tab" href="/admin/how-it-works"><%= t('How it works') %></a>
+  <a class="feedtabs__tab" href="/admin/style-guide"><%= t('UI system') %></a>
 </div>
 
 <% if (tab === 'users') { %>

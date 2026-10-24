@@ -37,7 +37,7 @@ const showCertificate = Boolean(mine && certSource && certKeys.some((key) => cer
 const leading = standings.length && standings[0].id === build.id;
 %>
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('build') %><% if (build.visibility === 'private') { %> · <%= t('private') %><% } %><% if (build.for_sale) { %> · <%= t('For sale') %><% } %></p>
     <h1 class="display"><%= build.title %></h1>
     <p class="lede">

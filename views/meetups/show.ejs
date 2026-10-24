@@ -158,7 +158,7 @@ const isTouge = meetup.category === 'touge' && meetup.route_start_lat != null &&
       <h2 class="section-title"><%- include('../partials/icon', { name: 'clock', size: 17 }) %> <%= t('Requests ({n})', { n: requested.length }) %></h2>
       <ul class="rows">
         <% requested.forEach(function (person) { %>
-          <li class="row">
+          <li class="row row--stack">
             <a class="row__id" href="/u/<%= person.username %>">
               <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
               <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>

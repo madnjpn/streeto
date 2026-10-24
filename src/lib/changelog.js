@@ -11,6 +11,29 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.3.0',
+    date: '2026-10-24',
+    scope: 'web',
+    items: [
+      'One shared UI system now keeps buttons, avatars, headers and text consistent on web, Android and the future iOS app.',
+      'A live UI style guide is available in the admin console.',
+      'Controls and safe areas are ready for notched phones.',
+      'Desktop, mobile and WebView now share one set of layout and component rules.',
+    ],
+  },
+  {
+    version: '1.2.5',
+    date: '2026-10-24',
+    scope: 'web',
+    items: [
+      'Small-screen layout fixes for partner logos, filters and action buttons.',
+      'Activity, search results and pin-drop text wraps instead of being cut off.',
+      'Registration certificates fit the screen in Fines.',
+      'Route maps keep both pins visible on a phone.',
+      'Footer links stay clear of the chat and menu buttons.',
+    ],
+  },
+  {
     version: '1.2.4',
     date: '2026-10-24',
     scope: 'web',

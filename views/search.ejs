@@ -1,5 +1,5 @@
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('search') %></p>
     <h1 class="display"><% if (q) { %><%= t('Results for "{q}"', { q: q }) %><% } else { %><%= t('Search the network') %><% } %></h1>
     <p class="lede"><% if (q) { %><%= total === 1 ? t('{n} match', { n: total }) : t('{n} matches', { n: total }) %><% } else { %><%= t('Drivers, groups, builds, meetups, parts, services and posts.') %><% } %></p>
@@ -80,13 +80,13 @@
       <h2 class="section-title"><%- include('partials/icon', { name: 'wall', size: 17 }) %> <%= t('Posts ({n})', { n: posts.length }) %></h2>
       <ul class="rows">
         <% posts.forEach(function (post) { %>
-          <li class="row">
+          <li class="row row--stack">
             <a class="row__id" href="/posts/<%= post.id %>">
               <%- include('partials/avatar', { u: { username: post.username, display_name: post.display_name, avatar: post.avatar }, cls: 'avatar--sm' }) %>
               <span>
                 <strong>@<%= post.username %></strong>
                 <span class="muted small"> · <%= f.timeAgo(post.created_at) %></span>
-                <br><span><%= f.truncate(post.body || t('Photo post'), 130) %></span>
+                <span class="row__snippet"><%= f.truncate(post.body || t('Photo post'), 130) %></span>
               </span>
             </a>
           </li>

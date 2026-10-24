@@ -87,7 +87,7 @@ const isStaff = Boolean(staff);
         <h2 class="section-title"><%- include('../partials/icon', { name: 'gps', size: 17 }) %> <%= t('Pin drops') %></h2>
         <ul class="rows">
           <% pinned.forEach(function (spot) { %>
-            <li class="row">
+            <li class="row row--stack">
               <span class="row__id">
                 <%- include('../partials/icon', { name: spot.post_type === 'emergency' ? 'alert' : 'pin', size: 16 }) %>
                 <span><strong><%= spot.place_name || t('Pinned spot') %></strong> <span class="muted"><%= t('by @{user}', { user: spot.username }) %></span></span>
@@ -157,7 +157,7 @@ const isStaff = Boolean(staff);
         <h3 class="mini__title"><%= t('Join requests') %> <span class="muted">(<%= pending.length %>)</span></h3>
         <ul class="rows">
           <% pending.forEach(function (person) { %>
-            <li class="row">
+            <li class="row row--stack">
               <a class="row__id" href="/u/<%= person.username %>">
                 <%- include('../partials/avatar', { u: person, cls: 'avatar--sm' }) %>
                 <span><strong><%= person.display_name || person.username %></strong> <span class="muted">@<%= person.username %></span></span>
@@ -247,7 +247,7 @@ const isStaff = Boolean(staff);
         <h2 class="section-title"><%- include('../partials/icon', { name: 'gps', size: 17 }) %> <%= t('Pin drops') %></h2>
         <ul class="rows">
           <% pinned.forEach(function (spot) { %>
-            <li class="row">
+            <li class="row row--stack">
               <span class="row__id">
                 <%- include('../partials/icon', { name: spot.post_type === 'emergency' ? 'alert' : 'pin', size: 16 }) %>
                 <span><strong><%= spot.place_name || t('Pinned spot') %></strong> <span class="muted"><%= t('by @{user}', { user: spot.username }) %></span></span>

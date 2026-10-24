@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.2.4` (`package.json`), Android `1.2.1`
+**Current in this tree:** web `1.3.0` (`package.json`), Android `1.2.1`
 (`versionCode 7`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -711,8 +711,12 @@ required. A muted chat never produces one.
   update banner, global scripts.
 - `views/partials/*` — nav, icons, cards, chat dock, share dialog, etc.
 - `views/<area>/*` — one page per route.
-- `public/css/style.css` — complete design system: themes via `data-theme`,
-  responsive breakpoints, custom fonts, animations.
+- `public/css/style.css` - complete theme and page styling: themes via
+  `data-theme`, responsive breakpoints, custom fonts, animations.
+- `public/css/ui-system.css` - the shared UI contract loaded after
+  `style.css`: tokens, controls, avatars, headers, safe areas.
+  The rules and the live example page are documented in
+  [`docs/UI_SYSTEM.md`](docs/UI_SYSTEM.md) and `/admin/style-guide`.
 - `public/js/*` — ES modules (`type="module"`), no bundler.
 - `public/sw.js` — push notifications; it does not cache pages or assets.
 
@@ -929,7 +933,7 @@ The update check runs on app page loads and when the user taps
 4. Deploy/pull and restart the server (`npm ci --omit=dev` if dependencies
    changed). Static JS/CSS need no restart; the asset stamp updates.
 5. Verify `/api/app/version`, the footer, and Settings → Changes.
-6. Run `npm run smoke`.
+6. Run `npm run ui:check` and `npm run smoke`.
 
 No APK build or reinstall is needed; apps get the new site on next load.
 
@@ -1381,6 +1385,7 @@ cookie jars, logs with personal data.
 | --- | --- |
 | Brand, nav, footer | `views/partials/nav.ejs`, `views/layout.ejs`, `websitelogo.png`, `favicon.ico` |
 | Global CSS / themes | `public/css/style.css` (theme blocks at the top, responsive rules at the bottom) |
+| Shared UI contract / tokens / live guide | `public/css/ui-system.css`, `docs/UI_SYSTEM.md`, `views/admin/style-guide.ejs` |
 | Global interactions | `public/js/app.js` |
 | Web/Android versions, footer, update banner | `src/lib/app-version.js`, `public/js/version.js`, `views/layout.ejs` |
 | Settings update/changes card | `views/profile/settings.ejs`, `src/routes/profile.js` |
@@ -1433,7 +1438,7 @@ cookie jars, logs with personal data.
 2. Server-side validation and permissions added.
 3. Migration added if the schema changed; existing data still works.
 4. New strings translated in `ka.js` (and `CLIENT_KEYS` if browser-only).
-5. `npm run smoke` passes.
+5. `npm run ui:check` and `npm run smoke` pass.
 6. Version/changelog updated if users will notice the change.
 7. No secrets or ignored files staged (`git status` clean apart from intended
    changes).
@@ -1442,7 +1447,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.2.4`
+- Web version: `package.json` → `1.3.0`
 - Android version: `android/app/build.gradle.kts` → `1.2.1` (versionCode `7`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`

@@ -396,6 +396,16 @@ router.post('/admin/font/delete', requireAdmin, verifyCsrf, (req, res) => {
 });
 
 /* ── partners management ───────────────────────────────────────── */
+/* The living style guide: one page that shows the components every other
+   page must use. It is admin-only, so it never becomes public content. */
+router.get('/admin/style-guide', (req, res) =>
+  res.page('admin/style-guide', {
+    title: `UI system - ${config.siteName}`,
+    active: 'admin',
+    wide: true,
+  }),
+);
+
 router.get('/admin/partners', requireAdmin, (req, res) => {
   return res.page('admin/partners', {
     title: `Partners - ${config.siteName}`,

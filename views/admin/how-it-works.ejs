@@ -7,7 +7,7 @@ const kaText = (typeof kaOf !== 'undefined' && typeof kaOf === 'function') ? kaO
 const usedIcons = [...new Set(sections.map((section) => section.icon).filter((name) => name && iconNames.includes(name)))];
 %>
 <div class="pagehead">
-  <div>
+  <div class="pagehead__main">
     <p class="eyebrow"><%= t('control room') %></p>
     <h1 class="display"><%= t('How it works') %></h1>
     <p class="lede"><%= t('Write the manual. Every line you type appears on the page, and its English becomes a key in the Translations console.') %></p>

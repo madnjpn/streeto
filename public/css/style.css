@@ -1547,6 +1547,13 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 .row:hover { border-color: var(--line); }
 .row__id { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
 .row__id > span { min-width: 0; }
+/* A search result row carries a post excerpt under its author line. */
+.row__snippet {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
 .row__actions { display: flex; gap: 8px; align-items: center; }
 .row__actions form { margin: 0; }
 .row--activity.is-fresh { border-color: rgba(var(--neon-rgb), 0.3); background: rgba(var(--neon-rgb), 0.04); }
@@ -3322,10 +3329,13 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 
 /* Compact certificate used as the technical-passport badge in Fines. */
 .regcert--badge {
+  width: 100%;
   max-width: 430px;
+  min-width: 0;
   margin-top: 12px;
   padding: 12px 14px 10px;
   border-radius: 10px;
+  box-sizing: border-box;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
 }
 .regcert--badge .regcert__head { gap: 8px; margin-bottom: 8px; }
@@ -3343,9 +3353,10 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 .regcert--badge .regcert__value {
   display: block;
   font-size: 10.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }
 .regcert--badge .regcert__value--wrap { white-space: normal; overflow: visible; }
 .regcert--badge .regcert__label { font-size: 8px; }
@@ -3887,6 +3898,13 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 .feedtabs__spacer { flex: 1; }
 .feedtabs__tab--sm { font-size: 11px; padding: 6px 11px; text-transform: none; letter-spacing: 0.04em; }
 
+@media (max-width: 620px) {
+  /* Service filters have four items; wrap them instead of hiding the last
+     one off the right edge of the screen. */
+  .feedtabs--wrap { flex-wrap: wrap; overflow-x: visible; }
+  .feedtabs--wrap .feedtabs__spacer { display: none; }
+}
+
 .cards--builds { grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); }
 .build-card { display: flex; flex-direction: column; overflow: hidden; }
 .build-card__media-wrap { position: relative; }
@@ -4090,7 +4108,8 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
   .layout-sidebar { display: none; }
   .layout-shell { padding: 18px 8px 96px; }
   .shell { padding-bottom: 40px; }
-  .footer { padding-bottom: 28px; }
+  /* Keep the footer links clear of the fixed menu and chat buttons. */
+  .footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
   .footer__versions { margin-left: 0; width: 100%; }
   .update-banner { top: auto; bottom: 14px; }
   .brand__text strong { font-size: 19px; }
@@ -5369,6 +5388,25 @@ a.chip.is-active .chip__n { color: var(--neon); }
 .partneradmin__item .btn--danger { flex: 0 0 auto; margin-left: auto; }
 .sortable-ghost { opacity: 0.2; background: var(--neon-3-rgb) !important; }
 
+@media (max-width: 620px) {
+  /* A banner logo needs a wider preview, and the row must not push the
+     delete button past the card edge on a phone. */
+  .partneradmin__item {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .partneradmin__logo { width: 60px; height: 40px; }
+  .partneradmin__name {
+    flex: 1 1 90px;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .partneradmin__url { display: none; }
+  .partneradmin__edit { margin-left: auto; }
+}
+
 /* ── iOS: no zoom when a field is focused ───────────────────────── */
 /* Safari zooms the whole page in when a field with a font under 16px
    is focused, and the zoom cannot be switched off without taking
@@ -6228,9 +6266,30 @@ a.chip.is-active .chip__n { color: var(--neon); }
   .row { flex-wrap: nowrap; gap: 8px; padding: 11px 12px; }
   .row__id { flex: 1 1 0; min-width: 0; }
   .row__id > span:not(.avatar) { display: flex; align-items: baseline; gap: 4px; min-width: 0; flex: 1 1 auto; }
-  .row__id strong { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row__id strong { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row__id .muted { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row > .btn { flex-shrink: 0; margin-left: auto; height: auto; min-height: 40px; min-width: 84px; padding: 8px 14px; font-size: 12px; white-space: nowrap; }
+
+  /* Activity, search-post and pin-drop rows carry a sentence, not just a
+     name. Let the sentence wrap instead of squeezing the author or time. */
+  .row--stack { align-items: flex-start; }
+  .row--stack .row__id { align-items: flex-start; }
+  .row--stack .row__id > span:not(.avatar) {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    line-height: 1.45;
+  }
+  .row--stack .row__id strong,
+  .row--stack .row__id .muted {
+    display: inline;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  /* Keep "2d ago" together; it may move to the next line, but not split. */
+  .row--stack .row__id .muted { white-space: nowrap; }
 }
 
   /* The numbers under the tabs. */
