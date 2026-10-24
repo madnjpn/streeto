@@ -6126,7 +6126,7 @@ a.chip.is-active .chip__n { color: var(--neon); }
      button tall enough for Georgian copy, never squeezed. */
   .row { flex-wrap: nowrap; gap: 8px; padding: 11px 12px; }
   .row__id { flex: 1 1 0; min-width: 0; }
-  .row__id > span { display: flex; align-items: baseline; gap: 4px; min-width: 0; flex: 1 1 auto; }
+  .row__id > span:not(.avatar) { display: flex; align-items: baseline; gap: 4px; min-width: 0; flex: 1 1 auto; }
   .row__id strong { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row__id .muted { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row > .btn { flex-shrink: 0; margin-left: auto; height: auto; min-height: 40px; min-width: 84px; padding: 8px 14px; font-size: 12px; white-space: nowrap; }
