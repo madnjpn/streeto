@@ -187,8 +187,9 @@ On a phone:
 Small-phone rules:
 
 - `<= 380 px`: the composer privacy note moves to its own line.
-- `<= 360 px`: Meetups and Activity leave the top bar; both remain in the
-  account menu / app menu. This keeps the avatar menu on-screen.
+- The top bar keeps only the Activity bell, language/currency and the account
+  menu. Chat lives in the floating chat launcher and Meetups in the app menu /
+  sidebar; do not add them back as top-bar icons.
 - 320 px is treated as a hard minimum; if a new component cannot fit, wrap it
   or move it into a sheet — do not hide its text under `overflow: hidden`.
 

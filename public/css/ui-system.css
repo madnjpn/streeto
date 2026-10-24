@@ -297,13 +297,9 @@ body {
   bottom: calc(88px + var(--ui-safe-bottom));
 }
 
-@media (max-width: 360px) {
-  /* Keep the avatar menu on-screen on the smallest iOS-sized screens.
-     Activity and Meetups remain in the app menu and the account menu. */
-  .topbar__shortcut--optional {
-    display: none;
-  }
-}
+/* The top bar carries one notification bell, the account menu and the
+   language/currency switches. Chat and Meetups live in the menus and the
+   floating chat launcher, so no extra icons are needed on small screens. */
 
 @media (max-width: 620px) {
   .notif-prompt {

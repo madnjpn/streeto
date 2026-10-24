@@ -2377,6 +2377,7 @@ export default {
   'One shared UI system now keeps buttons, avatars, headers and text consistent on web, Android and the future iOS app.': 'ერთი საერთო ინტერფეისის სისტემა ახლა ერთნაირად აწესრიგებს ღილაკებს, ავატარებს, სათაურებსა და ტექსტს ვებზე, Android-სა და მომავალ iOS აპში.',
   'A live UI style guide is available in the admin console.': 'ცოცხალი ინტერფეისის გზამკვლევი ხელმისაწვდომია ადმინის პანელში.',
   'Controls and safe areas are ready for notched phones.': 'კონტროლები და უსაფრთხო ზონები მზადაა ჩაღრმავებიანი ტელეფონებისთვის.',
+  'The top bar keeps only the Activity bell; Chat stays in the floating launcher and Meetups in the menus.': 'ზედა ზოლში რჩება მხოლოდ აქტივობის ზარი; ჩატი რჩება მოტივტივე ღილაკში, ხოლო შეხვედრები — მენიუებში.',
   'Desktop, mobile and WebView now share one set of layout and component rules.': 'დესკტოპი, მობილური და WebView ახლა იზიარებენ განლაგებისა და კომპონენტების ერთ საერთო წესებს.',
 
   /* ── UI system / living style guide ─────────────────────────── */

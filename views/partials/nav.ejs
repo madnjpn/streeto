@@ -35,16 +35,7 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
           <%- include('lang-switch') %>
           <%- include('currency-switch') %>
 
-          <a class="iconbtn <%= isActive('chat') %>" href="/chat" aria-label="<%= t('Chat') %>">
-            <%- include('icon', { name: 'chat', size: 20 }) %>
-            <% if (unreadMessages) { %><span class="pip pip--dot" data-badge="chat"><%= unreadMessages > 9 ? '9+' : unreadMessages %></span><% } %>
-          </a>
-
-          <a class="iconbtn topbar__shortcut--optional <%= isActive('meetups') %>" href="/meetups" aria-label="<%= t('Meetups') %>">
-            <%- include('icon', { name: 'pin', size: 20 }) %>
-          </a>
-
-          <a class="iconbtn topbar__shortcut--optional <%= isActive('activity') %>" href="/notifications" aria-label="<%= t('Activity') %>">
+          <a class="iconbtn <%= isActive('activity') %>" href="/notifications" aria-label="<%= t('Activity') %>">
             <%- include('icon', { name: 'bell', size: 20 }) %>
             <% if (unreadNotifications) { %><span class="pip pip--dot" data-badge="notifications"><%= unreadNotifications > 99 ? '99+' : unreadNotifications %></span><% } %>
           </a>

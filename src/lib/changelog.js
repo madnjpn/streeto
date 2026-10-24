@@ -18,6 +18,7 @@ export const CHANGELOG = [
       'One shared UI system now keeps buttons, avatars, headers and text consistent on web, Android and the future iOS app.',
       'A live UI style guide is available in the admin console.',
       'Controls and safe areas are ready for notched phones.',
+      'The top bar keeps only the Activity bell; Chat stays in the floating launcher and Meetups in the menus.',
       'Desktop, mobile and WebView now share one set of layout and component rules.',
     ],
   },
