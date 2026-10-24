@@ -29,7 +29,8 @@ const isOnline = typeof m.online !== 'undefined' ? m.online : false;
       <% if (m.media_path && m.media_type === 'photo') { %>
         <a href="<%= config.uploadUrl %>/<%= m.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= m.media_path %>"<% if (srcset(m.media_path)) { %> srcset="<%= srcset(m.media_path) %>" sizes="(max-width: 760px) 100vw, 340px"<% } %> alt="<%= t('Attachment') %>" loading="lazy"></a>
       <% } else if (m.media_path && m.media_type === 'video') { %>
-        <video src="<%= config.uploadUrl %>/<%= m.media_path %>" controls preload="metadata" playsinline></video>
+        <% const videoPoster = poster(m.media_path); %>
+        <video src="<%= config.uploadUrl %>/<%= m.media_path %>"<% if (videoPoster) { %> poster="<%= config.uploadUrl %>/<%= videoPoster %>"<% } %> controls preload="none" playsinline></video>
       <% } else if (m.media_path) { %>
         <a class="msg__file" href="<%= config.uploadUrl %>/<%= m.media_path %>" target="_blank" rel="noopener">
           <%- include('icon', { name: 'card', size: 18 }) %>

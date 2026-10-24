@@ -24,6 +24,7 @@ const REFERENCES = [
   ['users', 'avatar'],
   ['groups', 'avatar'],
   ['posts', 'media_path'],
+  ['comments', 'media_path'],
   ['messages', 'media_path'],
   ['messages', 'share_image'],
   ['builds', 'cover'],
@@ -43,6 +44,15 @@ for (const [table, column] of REFERENCES) {
   }
 }
 db.close();
+
+// A video's generated poster belongs to the video, even though its own path
+// is not stored in the database.
+const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov', '.mkv', '.ogv']);
+for (const file of [...used]) {
+  if (VIDEO_EXT.has(path.extname(file).toLowerCase())) {
+    used.add(file.replace(/\.[^.]+$/, '.jpg'));
+  }
+}
 
 /** Every file under a folder, with its full path. */
 function walk(dir) {

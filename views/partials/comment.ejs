@@ -18,7 +18,8 @@ const postId = post ? post.id : '';
       <% if (c.media_path) { %>
         <div class="comment__media">
           <% if (c.media_type === 'video') { %>
-            <video src="<%= config.uploadUrl %>/<%= c.media_path %>" controls preload="metadata" class="comment__mediafile"></video>
+            <% const videoPoster = poster(c.media_path); %>
+            <video src="<%= config.uploadUrl %>/<%= c.media_path %>"<% if (videoPoster) { %> poster="<%= config.uploadUrl %>/<%= videoPoster %>"<% } %> controls preload="none" playsinline class="comment__mediafile"></video>
           <% } else { %>
             <a href="<%= config.uploadUrl %>/<%= c.media_path %>" target="_blank" rel="noopener">
               <img src="<%= config.uploadUrl %>/<%= c.media_path %>" alt="" class="comment__mediafile" loading="lazy">

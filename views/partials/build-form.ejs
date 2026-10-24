@@ -193,7 +193,8 @@ const hasBuild = typeof buildId !== 'undefined' && buildId;
             <% if (item.media_type === 'photo') { %>
               <img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 640px"<% } %> alt="" loading="lazy">
             <% } else { %>
-              <video src="<%= config.uploadUrl %>/<%= item.media_path %>" muted preload="metadata" playsinline></video>
+              <% const videoPoster = poster(item.media_path); %>
+              <video src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (videoPoster) { %> poster="<%= config.uploadUrl %>/<%= videoPoster %>"<% } %> muted preload="metadata" playsinline></video>
             <% } %>
             <button class="media-manage__x" type="submit" form="del-media-<%= item.id %>" aria-label="<%= t('Remove file') %>"><%- include('icon', { name: 'x', size: 14 }) %></button>
           </figure>

@@ -2365,6 +2365,7 @@ export default {
   'Animated splash screen.': 'ანიმირებული გახსნის ეკრანი.',
   'STREETO.NET signature at the bottom of the splash screen.': 'STREETO.NET-ის წარწერა გახსნის ეკრანის ქვედა ნაწილში.',
   'A one-time post-login prompt offers to turn on notifications.': 'შესვლის შემდეგ ერთჯერადი შეტყობინება გთავაზობთ შეტყობინებების ჩართვას.',
+  'Video posts now show a real thumbnail before playback.': 'ვიდეო პოსტებს ახლა აქვთ ნამდვილი პატარა სურათი დაკვრამდე.',
   'Activity avatars stay round and centred on mobile.': 'აქტივობის ავატარები მობილურზე მრგვალი და ცენტრირებული რჩება.',
   'Mute a chat by swiping right; delete is still a left swipe. Mouse drags work too.': 'ჩატის დადუმება მარჯვნივ გასმით; წაშლა კვლავ მარცხნივ გასმაა. მაუსით გადათრევაც მუშაობს.',
   'Browser and Android notifications for messages, friend requests, comments, likes and activity.': 'ბრაუზერისა და Android-ის შეტყობინებები მესიჯებზე, მეგობრის მოთხოვნებზე, კომენტარებზე, მოწონებებსა და აქტივობაზე.',

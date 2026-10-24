@@ -13,6 +13,7 @@ import {
   publicUploadUrl,
 } from './upload-paths.js';
 import { processImage, forgetPicture } from './images.js';
+import { makePoster, removePoster } from './video-posters.js';
 
 /** How wide a picture may be when nothing else is said. */
 const DEFAULT_MAX = 1600;
@@ -63,7 +64,13 @@ export async function optimizeUpload(req, _res, next) {
   const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : (req.file ? [req.file] : []);
   const max = Number(req.uploadMax) || DEFAULT_MAX;
   for (const file of files) {
-    if (!file || !file.path || !IMAGE_TYPES.has(file.mimetype) || file.mimetype === 'image/gif') continue;
+    if (!file || !file.path) continue;
+    if (file.mimetype?.startsWith('video/')) {
+      const rel = relativeUploadPath(file.path);
+      if (rel) await makePoster(rel);
+      continue;
+    }
+    if (!IMAGE_TYPES.has(file.mimetype) || file.mimetype === 'image/gif') continue;
     try {
       const done = await processImage(file.path, max);
       // The folder stays: the database keeps the path inside the upload
@@ -407,6 +414,7 @@ export function removeUpload(filename) {
   if (!target) return;
   // The smaller copies go with it.
   forgetPicture(filename);
+  removePoster(filename);
   fs.rm(target, { force: true }, () => {});
 }
 

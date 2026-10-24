@@ -10,6 +10,7 @@ import { renderView } from './lib/views.js';
 import { mailUsable } from './lib/mail.js';
 import { srcsetFor } from './lib/images.js';
 import { webVersion, androidVersion } from './lib/app-version.js';
+import { posterFor } from './lib/video-posters.js';
 
 // Safety net for a database created before migration 020 (the migration
 // itself adds the column). Wrapped, so two processes starting at the same
@@ -365,6 +366,7 @@ app.use((req, res, next) => {
   // The smaller copies of a picture, so the browser can take the one
   // that fits the screen it is on.
   res.locals.srcset = (stored) => srcsetFor(stored);
+  res.locals.poster = posterFor;
   res.locals.query = req.query || {};
   res.locals.path = req.path;
   res.locals.title = config.siteName;

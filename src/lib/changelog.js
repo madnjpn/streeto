@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.2.3',
+    date: '2026-10-24',
+    scope: 'web',
+    items: [
+      'Video posts now show a real thumbnail before playback.',
+    ],
+  },
+  {
     version: '1.2.2',
     date: '2026-10-24',
     scope: 'web',

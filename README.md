@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.2.2` (`package.json`), Android `1.2.1`
+**Current in this tree:** web `1.2.3` (`package.json`), Android `1.2.1`
 (`versionCode 7`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -175,7 +175,7 @@ Browser / Android WebView
 | DB | SQLite via `node:sqlite` | One file, WAL, easy backups, enough for one server. |
 | Passwords | scrypt (`node:crypto`) | No bcrypt/argon native dependency. |
 | Maps | MapLibre GL + OpenFreeMap | No map API key. Vector tiles with 3D buildings. |
-| Uploads | multer + sharp | MIME allowlist, random names, responsive variants. |
+| Uploads | multer + sharp + ffmpeg-static | MIME allowlist, random names, responsive image variants, video posters. |
 | Realtime | Socket.IO + polling | Typing/presence now; chat still polls for reliability. |
 | Mail | nodemailer (Gmail SMTP) | Password resets and scheduled letters; can capture locally. |
 | Push | web-push (VAPID) + Firebase Cloud Messaging | Browser notifications and near-realtime Android alerts. |
@@ -261,6 +261,22 @@ streeto/
 - CI runs `npm run smoke` only if you add it to a workflow; the local smoke
   suite is the gate before deploying.
 
+### Project-local runtime assets
+
+The project is self-contained after `npm ci`:
+
+- **ffmpeg** — `ffmpeg-static` installs the binary under
+  `node_modules/ffmpeg-static`; no machine-wide ffmpeg or Desktop folder is
+  required. `FFMPEG_PATH` is only an optional override.
+- **Firebase server key** — `firebase-service-account.json` at the project root
+  (git-ignored).
+- **Android client config** — `android/app/google-services.json` (tracked).
+- **Android signing key** — `android/signing/` (git-ignored).
+- **TLS / data / uploads / backups** — `certs/`, `data/`, `uploads/`
+  (git-ignored).
+
+Do not point the app at files outside this folder; copy them in instead.
+
 ---
 
 ## 4. Configuration
@@ -310,6 +326,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `UPLOAD_DIR` | `uploads` | Uploaded photos/videos. |
 | `UPLOAD_URL` | `/uploads` | Public URL prefix for media. |
 | `MAX_UPLOAD_MB` | `25` | Per-file upload limit. |
+| `FFMPEG_PATH` | bundled `ffmpeg-static` | Optional override for video poster extraction. |
 | `BACKUP_DIR` | `data/backups` | Database snapshots. |
 | `BACKUP_INTERVAL_MS` | 6 hours | Automatic snapshot interval; `0` disables. |
 | `BACKUP_KEEP` | `24` | Automatic snapshots kept (manual ones are never pruned). |
@@ -554,9 +571,27 @@ Uploads live in `uploads/` with random filenames and a strict MIME allowlist.
 | `node scripts/partner-logos.mjs` | Import/normalise partner logos. |
 | `node scripts/restore-partner-logo.mjs` | Restore a partner logo. |
 | `node scripts/parts-keys.mjs` | Regenerate part-catalogue translation keys. |
+| `npm run posters` | Generate missing video thumbnails (`ffmpeg-static`). |
 
 Run maintenance scripts with the server stopped or during a quiet period, and
 take a DB backup first. Do not delete uploads by hand.
+
+### 6.5 Video posters
+
+`ffmpeg-static` is installed with npm, so the binary lives inside
+`node_modules/ffmpeg-static` and the project has no external ffmpeg
+dependency. When a video is uploaded, `optimizeUpload` extracts a frame and
+saves it next to the video as `<name>.jpg`; the video templates use it as a
+`poster`, and the video itself uses `preload="none"` so the feed does not
+download the whole clip just to show a preview.
+
+- Backfill existing videos: `npm run posters`.
+- The poster path is derived from the video path; no extra database column.
+- Deleting a video removes its poster.
+- `prune-orphan-uploads.mjs` keeps posters that belong to a referenced video.
+- Optional override: set `FFMPEG_PATH` in the environment.
+- If your npm policy blocks package install scripts, approve `ffmpeg-static`
+  (or provide `FFMPEG_PATH`) so the bundled binary is present.
 
 ---
 
@@ -1360,6 +1395,7 @@ cookie jars, logs with personal data.
 | Env/config | `src/config.js`, `.env.example`, `.env.production` |
 | Server/TLS/startup jobs | `server.js` |
 | Static assets/routes/CSP | `src/app.js` |
+| Video posters | `src/lib/video-posters.js`, `src/lib/uploads.js`, `scripts/build-video-posters.mjs` (`npm run posters`) |
 | Android shell | `android/app/src/main/java/net/streeto/app/MainActivity.java`, `AndroidManifest.xml`, `res/*` |
 | Launcher icon | `android/icon-source.png`; run `npm run icons:android` to regenerate every density |
 | Android build/signing/CI | `android/app/build.gradle.kts`, `android/build.gradle.kts`, `.github/workflows/android.yml`, `android/README.md` |
@@ -1399,7 +1435,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.2.2`
+- Web version: `package.json` → `1.2.3`
 - Android version: `android/app/build.gradle.kts` → `1.2.1` (versionCode `7`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
