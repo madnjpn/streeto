@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.1.1` (`package.json`), Android `1.1.2`
-(`versionCode 4`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.1.1` (`package.json`), Android `1.1.3`
+(`versionCode 5`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -728,6 +728,7 @@ The Android project is in `android/`; the deeper build/signing notes are in
 A native **Java WebView shell** around `https://streeto.net`:
 
 - full-screen WebView, app icon/name, no browser chrome
+- animated launch screen: the white S mark settles in, the STREETO wordmark rises, and a cyan line draws in before the site appears
 - native back button (history, then exit), pull-to-refresh, offline retry screen
 - gallery **or camera** uploads, GPS permission
 - cookies persist (stay logged in)
@@ -1351,7 +1352,7 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 ### Current release reminder
 
 - Web version: `package.json` → `1.1.1`
-- Android version: `android/app/build.gradle.kts` → `1.1.2` (versionCode `4`)
+- Android version: `android/app/build.gradle.kts` → `1.1.3` (versionCode `5`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

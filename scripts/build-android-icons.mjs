@@ -84,4 +84,28 @@ await write(
   }),
 );
 
+// A transparent white S for the animated splash screen and the Android 12
+// system splash. The source background is dark, so luminance becomes alpha.
+const markSize = 512;
+const { data: pixels } = await sharp(source)
+  .resize(markSize, markSize, { fit: 'cover' })
+  .ensureAlpha()
+  .raw()
+  .toBuffer({ resolveWithObject: true });
+const mark = Buffer.alloc(markSize * markSize * 4);
+for (let i = 0, j = 0; i < pixels.length; i += 4, j += 4) {
+  const max = Math.max(pixels[i], pixels[i + 1], pixels[i + 2]);
+  const alpha = Math.max(0, Math.min(255, Math.round(((max - 70) / 150) * 255)));
+  mark[j] = 255;
+  mark[j + 1] = 255;
+  mark[j + 2] = 255;
+  mark[j + 3] = alpha;
+}
+const markDir = path.join(RES, 'drawable-nodpi');
+fs.mkdirSync(markDir, { recursive: true });
+await write(
+  path.join(markDir, 'streeto_mark.png'),
+  sharp(mark, { raw: { width: markSize, height: markSize, channels: 4 } }),
+);
+
 console.log(`\nLauncher icons generated from ${path.relative(ROOT, source)}`);

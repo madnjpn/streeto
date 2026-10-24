@@ -3,7 +3,7 @@
 
     <style name="Theme.Streeto" parent="Theme.Streeto.Base">
         <item name="android:windowSplashScreenBackground">@color/streeto_bg</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/streeto_mark</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/streeto_bg</item>
     </style>
 

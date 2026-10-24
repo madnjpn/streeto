@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.1.3',
+    date: '2026-10-24',
+    scope: 'android',
+    items: [
+      'Animated splash screen.',
+    ],
+  },
+  {
     version: '1.1.2',
     date: '2026-10-24',
     scope: 'android',

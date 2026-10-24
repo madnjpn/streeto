@@ -12,6 +12,7 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 - Geolocation permission for the map / “Use my GPS”
 - Cookies persist between launches (stay logged in)
 - Offline screen with a retry button
+- Animated launch screen: the S mark settles in, the STREETO wordmark rises, and a cyan line draws in; the Android 12 system splash uses the same S mark
 - Thin cyan progress line while pages load
 - In-app update check: **Settings → App & updates** shows the web and app versions, and the shell downloads a newer signed APK, checks its SHA-256 and opens the installer
 - A dismissible update banner appears when a newer release is being served
@@ -26,12 +27,29 @@ npm run icons:android
 ```
 
 This writes the legacy square icons, the circular API 24/25 round icons, the
-432 px adaptive background and the transparent adaptive foreground. Commit the
+432 px adaptive background, the transparent adaptive foreground and the
+transparent white `streeto_mark.png` used by the splash screen. Commit the
 generated resources under `app/src/main/res/`. To use a different source:
 
 ```bash
 node scripts/build-android-icons.mjs path/to/icon.png
 ```
+
+## Splash screen
+
+- `res/layout/activity_main.xml` has a full-screen `#splash` overlay above the
+  WebView.
+- `res/drawable/splash_bg.xml` is the dark background with a maroon radial
+  glow; `splash_line.xml` is the cyan underline.
+- `res/drawable-nodpi/streeto_mark.png` is generated from the icon source by
+  `npm run icons:android` — replace the icon source and rerun to update both
+  the launcher icon and the splash mark.
+- `MainActivity.startSplash()` runs the intro animation; `hideSplash()` fades
+  the overlay out when the first page finishes (minimum 1.2 s, 10 s safety).
+- Android 12+ uses the same mark as the system splash icon in
+  `res/values-v31/themes.xml`.
+- To tune the look, edit the two drawables and the durations in
+  `startSplash()`; no other files need to change.
 
 ## Build
 
@@ -114,6 +132,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.1.2 (versionCode 4)
+- Version: 1.1.3 (versionCode 5)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

@@ -1,6 +1,8 @@
 package net.streeto.app;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
@@ -15,9 +17,16 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
@@ -28,7 +37,9 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -81,6 +92,15 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver updateReceiver;
     private boolean updateReceiverRegistered = false;
 
+    private View splash;
+    private ImageView splashMark;
+    private TextView splashWord;
+    private View splashLine;
+    private ObjectAnimator splashPulse;
+    private final Handler splashHandler = new Handler(Looper.getMainLooper());
+    private long splashStartedAt;
+    private boolean splashHidden;
+
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         applyInsets();
         bindViews();
+        startSplash();
         configureWebView();
         bindBackButton();
 
@@ -121,10 +142,86 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         progress = findViewById(R.id.progress);
         refresh = findViewById(R.id.refresh);
+        splash = findViewById(R.id.splash);
+        splashMark = findViewById(R.id.splashMark);
+        splashWord = findViewById(R.id.splashWord);
+        splashLine = findViewById(R.id.splashLine);
 
         refresh.setColorSchemeColors(0xFF1FE0FF);
         refresh.setProgressBackgroundColorSchemeColor(0xFF07080B);
         refresh.setOnRefreshListener(() -> webView.reload());
+    }
+
+    /** Play the launching animation once, while the first page loads. */
+    private void startSplash() {
+        splashStartedAt = SystemClock.uptimeMillis();
+
+        splashMark.setAlpha(0f);
+        splashMark.setScaleX(0.82f);
+        splashMark.setScaleY(0.82f);
+        splashWord.setAlpha(0f);
+        splashWord.setTranslationY(dp(12));
+        splashLine.setAlpha(0f);
+        splashLine.setScaleX(0f);
+
+        splashMark.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(650)
+                .setInterpolator(new OvershootInterpolator(0.55f))
+                .start();
+        splashWord.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(220)
+                .setDuration(520)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+        splashLine.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .setStartDelay(460)
+                .setDuration(520)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+
+        // A quiet pulse while a slow page is still loading.
+        splashPulse = ObjectAnimator.ofFloat(splashLine, View.ALPHA, 0.3f, 1f);
+        splashPulse.setDuration(1100);
+        splashPulse.setStartDelay(1200);
+        splashPulse.setRepeatCount(ValueAnimator.INFINITE);
+        splashPulse.setRepeatMode(ValueAnimator.REVERSE);
+        splashPulse.setInterpolator(new AccelerateDecelerateInterpolator());
+        splashPulse.start();
+
+        // Never trap the user behind the splash if the page never reports back.
+        splashHandler.postDelayed(this::hideSplash, 10_000);
+    }
+
+    /** Fade the splash out once the first page is ready (minimum 1.2 s). */
+    private void hideSplash() {
+        if (splashHidden || splash == null) return;
+        splashHidden = true;
+
+        long elapsed = SystemClock.uptimeMillis() - splashStartedAt;
+        long delay = Math.max(0, 1200 - elapsed);
+        splashHandler.postDelayed(() -> {
+            if (splashPulse != null) {
+                splashPulse.cancel();
+                splashPulse = null;
+            }
+            splash.animate()
+                    .alpha(0f)
+                    .setDuration(320)
+                    .setInterpolator(new AccelerateInterpolator())
+                    .withEndAction(() -> splash.setVisibility(View.GONE))
+                    .start();
+        }, delay);
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -169,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                 progress.setVisibility(View.GONE);
                 refresh.setRefreshing(false);
                 CookieManager.getInstance().flush();
+                if (url != null && !url.startsWith("about:")) hideSplash();
             }
 
             @Override
@@ -504,6 +602,7 @@ public class MainActivity extends AppCompatActivity {
                 + getString(R.string.offline_text) + "</p><a href='" + START_URL + "'>"
                 + getString(R.string.retry) + "</a></div></body></html>";
         webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+        hideSplash();
     }
 
     @Override
@@ -569,6 +668,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        splashHandler.removeCallbacksAndMessages(null);
+        if (splashPulse != null) {
+            splashPulse.cancel();
+            splashPulse = null;
+        }
         if (updateReceiverRegistered && updateReceiver != null) {
             try {
                 unregisterReceiver(updateReceiver);
