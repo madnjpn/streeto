@@ -1,6 +1,5 @@
 import express from 'express';
 import * as friends from '../models/friends.js';
-import * as pushLib from '../lib/push.js';
 import * as users from '../models/users.js';
 import * as chat from '../models/chat.js';
 import * as notifications from '../models/notifications.js';
@@ -81,7 +80,6 @@ router.post('/friends/request/:username', requireAuth, verifyCsrf, (req, res, ne
       url: '/friends',
       text: 'sent you a friend request',
     });
-    pushLib.sendToUser(target.id, { title: `Friend request from @${req.user.username}`, body: 'Tap to accept or decline.', url: '/friends', tag: 'friend-request' });
   } else {
     notifications.notify({
       userId: target.id,
@@ -91,7 +89,6 @@ router.post('/friends/request/:username', requireAuth, verifyCsrf, (req, res, ne
       url: `/u/${req.user.username}`,
       text: 'accepted your friend request',
     });
-    pushLib.sendToUser(target.id, { title: `@${req.user.username} accepted your request`, body: 'You are now friends.', url: `/u/${req.user.username}`, tag: 'friend-accept' });
   }
 
   if (wantsJson(req)) {

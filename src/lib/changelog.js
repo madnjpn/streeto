@@ -11,6 +11,17 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.2.0',
+    date: '2026-10-24',
+    scope: 'both',
+    items: [
+      'Activity avatars stay round and centred on mobile.',
+      'Mute a chat by swiping right; delete is still a left swipe. Mouse drags work too.',
+      'Browser and Android notifications for messages, friend requests, comments, likes and activity.',
+      'Near-realtime Android notifications through Firebase Cloud Messaging.',
+    ],
+  },
+  {
     version: '1.1.3',
     date: '2026-10-24',
     scope: 'android',

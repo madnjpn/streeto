@@ -1,10 +1,12 @@
 import { all, count, get, run } from '../db.js';
+import { pushToUser } from '../lib/push-all.js';
+import { translate } from '../lib/i18n.js';
 
 /**
  * Lightweight notification feed. Rows are written by the routes when
  * something interesting happens (friend request, comment, invite...).
  */
-export function notify({ userId, actorId = null, type, entityId = null, url = null, text }) {
+export function notify({ userId, actorId = null, type, entityId = null, url = null, text, push = true }) {
   if (!userId || (actorId && actorId === userId)) return null;
   const info = run(
     `INSERT INTO notifications (user_id, actor_id, type, entity_id, url, text)
@@ -16,7 +18,35 @@ export function notify({ userId, actorId = null, type, entityId = null, url = nu
     url,
     text,
   );
-  return info.lastInsertRowid;
+  const id = info.lastInsertRowid;
+
+  // The activity row and the push are one event. Chat messages send their
+  // own push (they are not activity rows), and a DM mention opts out here
+  // because that message already produced one.
+  if (push) {
+    try {
+      const actor = actorId ? get('SELECT username FROM users WHERE id = ?', actorId) : null;
+      const lang = get('SELECT language FROM users WHERE id = ?', userId)?.language || 'en';
+      const parts = String(text || '').split('|');
+      let vars;
+      if (parts.length >= 4 && parts[0].includes('{n}')) {
+        vars = { n: parts[1], plural: parts[2], name: parts.slice(3).join('|') };
+      } else if (parts.length > 1) {
+        vars = { name: parts.slice(1).join('|') };
+      }
+      const body = translate(lang, parts[0], vars);
+      pushToUser(userId, {
+        title: actor ? `@${actor.username}` : 'STREETO',
+        body,
+        url: url || '/notifications',
+        tag: `notif-${type}-${entityId || id}`,
+      });
+    } catch {
+      /* push is best-effort; the activity row is already saved */
+    }
+  }
+
+  return id;
 }
 
 export const recent = (userId, limit = 40) =>

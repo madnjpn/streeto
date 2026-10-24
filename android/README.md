@@ -16,6 +16,7 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 - Thin cyan progress line while pages load
 - In-app update check: **Settings → App & updates** shows the web and app versions, and the shell downloads a newer signed APK, checks its SHA-256 and opens the installer
 - A dismissible update banner appears when a newer release is being served
+- Firebase Cloud Messaging notifications for messages and activity (Settings → Notifications), opening the relevant chat/activity when tapped
 
 ## Launcher icon
 
@@ -50,6 +51,22 @@ node scripts/build-android-icons.mjs path/to/icon.png
   `res/values-v31/themes.xml`.
 - To tune the look, edit the two drawables and the durations in
   `startSplash()`; no other files need to change.
+
+## Notifications (FCM)
+
+The app uses Firebase Cloud Messaging for near-realtime alerts:
+
+- Client config: `app/google-services.json` (tracked; project `streeto-bbbc5`,
+  package `net.streeto.app`). It is client configuration, not a server secret.
+- Server credential: `../firebase-service-account.json` (git-ignored) or
+  `FIREBASE_SERVICE_ACCOUNT_PATH` on the Node server.
+- **Settings → Notifications** requests Android 13+ permission, fetches the FCM
+  token and registers it with `POST /api/push/device`.
+- The server sends data-only messages; `StreetoMessagingService` posts the
+  notification and opens the chat/activity page. Foreground messages are
+  skipped because the site already shows the badge.
+- Logging out or turning notifications off removes the token.
+- A muted chat produces no alert.
 
 ## Build
 
@@ -132,6 +149,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.1.3 (versionCode 5)
+- Version: 1.2.0 (versionCode 6)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

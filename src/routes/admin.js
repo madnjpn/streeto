@@ -15,7 +15,6 @@ import * as translations from '../models/translations.js';
 import * as howitworks from '../models/howitworks.js';
 import { usedKeys, manualKeys } from '../lib/used-keys.js';
 import { ICON_NAMES } from '../lib/icons.js';
-import * as pushLib from '../lib/push.js';
 import * as backup from '../lib/backup.js';
 import { removeUpload, fontUpload, partnerUpload, validateFont, uploadUrl, fontCssFormat } from '../lib/uploads.js';
 import { prepareLogo, nameFromLogoFile, cleanPartnerUrl } from '../lib/logos.js';
@@ -696,12 +695,6 @@ router.post('/admin/service-claims/:id/approve', requireAdmin, verifyCsrf, (req,
       entityId: claim.service_id,
       url: `/services/maintenance/${claim.service_id}`,
       text: 'your claim on {name} was approved|' + service.title,
-    });
-    pushLib.sendToUser(claim.claimant_id, {
-      title: 'Claim approved',
-      body: `You now own ${service.title}`,
-      url: `/services/maintenance/${claim.service_id}`,
-      tag: `service-claim-${claim.service_id}`,
     });
   }
 

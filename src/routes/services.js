@@ -13,7 +13,6 @@ import { formatPhone, isValidPhone, PHONE_PLACEHOLDER } from '../lib/phone.js';
 import { normalizeCurrency } from '../lib/currency.js';
 import { wantsJson, jsonOk, jsonError, pagination, backTo } from '../lib/http.js';
 import * as notifications from '../models/notifications.js';
-import * as pushLib from '../lib/push.js';
 
 const router = express.Router();
 
@@ -33,7 +32,7 @@ const SERVICE_SORTS = { new: 'Newest', rating: 'Top rated' };
  * when a driver claims a listing and when a provider publishes their own
  * (which files a claim for them).
  */
-function notifyAdminsAboutClaim({ serviceId, serviceTitle, actorId, actorUsername }) {
+function notifyAdminsAboutClaim({ serviceId, serviceTitle, actorId }) {
   notifications.notifyAdmins({
     actorId,
     type: 'service_claim',
@@ -41,14 +40,6 @@ function notifyAdminsAboutClaim({ serviceId, serviceTitle, actorId, actorUsernam
     url: '/admin/service-claims',
     text: 'claims ownership of {name}|' + serviceTitle,
   });
-  for (const admin of users.adminIds()) {
-    pushLib.sendToUser(admin, {
-      title: 'New service claim',
-      body: `${actorUsername} claims ${serviceTitle}`,
-      url: '/admin/service-claims',
-      tag: `service-claim-${serviceId}`,
-    });
-  }
 }
 
 /* ── form helpers ─────────────────────────────────────────────── */

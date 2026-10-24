@@ -95,6 +95,20 @@
     <p class="small" data-update-status role="status" aria-live="polite"></p>
   </section>
 
+  <section class="card card--form" id="notifications">
+    <h2 class="card__title"><%= t('Notifications') %></h2>
+    <p class="muted small"><%= t('Get notified about messages, friend requests, comments, likes and meetups.') %></p>
+    <div class="kv">
+      <span><%= t('Notification status') %></span><strong data-push-state>—</strong>
+    </div>
+    <div class="btnrow">
+      <button class="btn btn--primary" type="button" data-push-enable><%- include('../partials/icon', { name: 'bell', size: 16 }) %> <%= t('Enable notifications') %></button>
+      <button class="btn btn--ghost" type="button" data-push-disable hidden><%- include('../partials/icon', { name: 'bell', size: 16 }) %> <%= t('Turn off notifications') %></button>
+    </div>
+    <p class="small" data-push-status role="status" aria-live="polite"></p>
+    <p class="muted small" data-push-note hidden><%= t('Android keeps a small STREETO notification while realtime alerts are on.') %></p>
+  </section>
+
   <section class="card card--form">
     <h2 class="card__title"><%= t('Letters') %></h2>
     <p class="muted small"><%= t('The site can write to you now and then - a weekly letter with what happened on the street, and a reminder before a car has to go to the technical inspection.') %></p>

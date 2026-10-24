@@ -275,6 +275,22 @@ export const CLIENT_KEYS = [
   'Check failed. Try again.',
   'Allow installs for STREETO, then tap Update again.',
   'Could not start the update. Try again.',
+
+  /* notifications & chat mute */
+  'Enabled',
+  'Disabled',
+  'Blocked',
+  'Not supported',
+  'Notifications are on.',
+  'Notifications are off.',
+  'Notifications are blocked. Allow them in your browser settings.',
+  'Notifications are blocked. Allow them in your phone settings.',
+  'Allow notifications in the system prompt.',
+  'This browser does not support notifications.',
+  'Could not enable notifications. Try again.',
+  'Mute',
+  'Unmute',
+  'Muted',
 ];
 
 /** Build the key -> translation map handed to the browser. */

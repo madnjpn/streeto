@@ -61,6 +61,7 @@ export const listConversations = (userId) =>
         c.id,
         c.created_at,
         cm.cleared_at,
+        cm.muted,
         (${OTHER_USER}) AS other_id,
         (SELECT u.username FROM conversation_members cm2 JOIN users u ON u.id = cm2.user_id
            WHERE cm2.conversation_id = c.id AND cm2.user_id <> :me LIMIT 1) AS other_username,
@@ -102,7 +103,7 @@ export const listConversations = (userId) =>
 /** One conversation header (other member + unread) for the chat page. */
 export const summary = (conversationId, userId) =>
   get(
-    `SELECT c.id, c.created_at, c.kind, c.name, c.topic, cm.cleared_at, cm.last_read_id,
+    `SELECT c.id, c.created_at, c.kind, c.name, c.topic, cm.cleared_at, cm.muted, cm.last_read_id,
             (SELECT COUNT(*) FROM conversation_members x WHERE x.conversation_id = c.id) AS member_count,
             (${OTHER_USER}) AS other_id,
             (SELECT u.username FROM conversation_members cm2 JOIN users u ON u.id = cm2.user_id
@@ -121,6 +122,9 @@ export const summary = (conversationId, userId) =>
 
 export const isMember = (conversationId, userId) =>
   Boolean(get('SELECT 1 AS x FROM conversation_members WHERE conversation_id = ? AND user_id = ?', conversationId, userId));
+
+export const kindOf = (conversationId) =>
+  get('SELECT kind FROM conversations WHERE id = ?', conversationId)?.kind || null;
 
 export const memberIds = (conversationId) =>
   all('SELECT user_id FROM conversation_members WHERE conversation_id = ?', conversationId).map((r) => r.user_id);
@@ -150,7 +154,7 @@ export function globalConversation(userId) {
   joinGlobal(userId);
   return (
     get(
-      `SELECT c.id, c.kind, c.name, c.topic, cm.cleared_at, cm.last_read_id,
+      `SELECT c.id, c.kind, c.name, c.topic, cm.cleared_at, cm.muted, cm.last_read_id,
               (SELECT COUNT(*) FROM conversation_members x WHERE x.conversation_id = c.id) AS member_count,
               (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_body,
               (SELECT m.media_type FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_media_type,
@@ -321,6 +325,7 @@ export function sendMessage({
       if (!mentioned || mentioned.id === senderId) return;
       // Only notify if they're a member of the conversation (or it's global)
       if (isGlobal || isMember(conversationId, mentioned.id)) {
+        if (isMuted(conversationId, mentioned.id)) return;
         if (notifications) {
           notifications.notify({
             userId: mentioned.id,
@@ -329,6 +334,9 @@ export function sendMessage({
             entityId: msg.id,
             url: isGlobal ? '/chat/' + conversationId : '/chat/' + conversationId,
             text: 'mentioned you in {name}|' + (isGlobal ? 'global channel' : 'chat'),
+            // A direct message already sends its own chat push; for the
+            // global channel the mention is the only alert.
+            push: isGlobal,
           });
         }
       }
@@ -351,6 +359,34 @@ export function markRead(conversationId, userId, upToId = null) {
     conversationId,
     userId,
   );
+}
+
+/** Whether this member turned notifications off for the conversation. */
+export const isMuted = (conversationId, userId) =>
+  Boolean(
+    get(
+      'SELECT muted FROM conversation_members WHERE conversation_id = ? AND user_id = ?',
+      conversationId,
+      userId,
+    )?.muted,
+  );
+
+/** Flip the member's mute flag and return the new state. */
+export function toggleMute(conversationId, userId) {
+  const row = get(
+    'SELECT muted FROM conversation_members WHERE conversation_id = ? AND user_id = ?',
+    conversationId,
+    userId,
+  );
+  if (!row) return false;
+  const muted = row.muted ? 0 : 1;
+  run(
+    'UPDATE conversation_members SET muted = ? WHERE conversation_id = ? AND user_id = ?',
+    muted,
+    conversationId,
+    userId,
+  );
+  return Boolean(muted);
 }
 
 /** Delete a chat for one user only. The global channel cannot be deleted. */
@@ -476,9 +512,10 @@ export function deleteAllForUser(userId) {
 }
 
 export default {
-  between, ensureConversation, listConversations, summary, isMember, memberIds,
+  between, ensureConversation, listConversations, summary, isMember, kindOf, memberIds,
   globalChannel, joinGlobal, globalConversation,
   messages, sendMessage, markRead, deleteForUser, deleteAllForUser,
+  isMuted, toggleMute,
   deleteMessage, clearGlobalChat, searchMessages, extractMentions,
   toggleReaction, attachReactions, messageById, editMessage,
 };

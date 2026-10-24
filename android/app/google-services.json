@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "92203148003",
+    "project_id": "streeto-bbbc5",
+    "storage_bucket": "streeto-bbbc5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:92203148003:android:f0a610488191ce3717dbd6",
+        "android_client_info": {
+          "package_name": "net.streeto.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGd5HxVxl_HrdehkkJXKyKyFtkVl2LTeo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -12,4 +12,9 @@
     <string name="update_corrupt">განახლების ფაილი დაზიანებულია. სცადეთ ხელახლა.</string>
     <string name="update_allow_installs">ნება მიეცით STREETO-ს აპების დაყენებაზე, შემდეგ კვლავ დააჭირეთ განახლებას.</string>
     <string name="update_open_failed">ინსტალერი ვერ გაიხსნა</string>
+    <string name="notify_channel_activity">STREETO-ს აქტივობა</string>
+    <string name="notify_channel_activity_desc">შეტყობინებები, მეგობრის მოთხოვნები, კომენტარები და აქტივობა</string>
+    <string name="notify_activity_title">ახალი აქტივობა</string>
+    <string name="notify_enabled">შეტყობინებები ჩართულია</string>
+    <string name="notify_permission_denied">დაუშვით შეტყობინებები STREETO-სთვის სისტემის პარამეტრებში</string>
 </resources>

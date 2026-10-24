@@ -13,4 +13,9 @@
     <string name="update_corrupt">The update file is damaged. Try again.</string>
     <string name="update_allow_installs">Allow STREETO to install apps, then tap Update again.</string>
     <string name="update_open_failed">Could not open the installer</string>
+    <string name="notify_channel_activity">STREETO activity</string>
+    <string name="notify_channel_activity_desc">Messages, friend requests, comments and activity</string>
+    <string name="notify_activity_title">New activity</string>
+    <string name="notify_enabled">Notifications enabled</string>
+    <string name="notify_permission_denied">Allow notifications for STREETO in system settings</string>
 </resources>

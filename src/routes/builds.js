@@ -8,7 +8,6 @@ import * as notifications from '../models/notifications.js';
 import { requireAuth } from '../middleware/auth.js';
 import { verifyCsrf } from '../middleware/csrf.js';
 import { buildUpload, timelineUpload, removeUpload, mediaKind, uploadUrl, optimizeAs } from '../lib/uploads.js';
-import * as pushLib from '../lib/push.js';
 import { wantsJson, jsonOk, jsonError, pagination, backTo } from '../lib/http.js';
 import { cleanText } from '../lib/validate.js';
 import { removeUploadIfUnused } from '../lib/media-refs.js';
@@ -71,12 +70,6 @@ function announceForSale(build, owner) {
       url: `/builds/${build.id}`,
       text: 'put {name} up for sale|' + label,
     });
-    pushLib.sendToUser(fan.user_id, {
-      title: 'A car you follow is for sale',
-      body: `${label} is up for sale`,
-      url: `/builds/${build.id}`,
-      tag: `build-sale-${build.id}`,
-    });
   });
 }
 
@@ -95,12 +88,6 @@ function announceUpdate(build, owner, changes) {
       url: `/builds/${build.id}`,
       text: 'updated their build {name}|' + label,
     });
-    pushLib.sendToUser(fan.user_id, {
-      title: 'A car you follow was updated',
-      body: `${label} — ${changes}`,
-      url: `/builds/${build.id}`,
-      tag: `build-update-${build.id}`,
-    });
   });
 }
 
@@ -118,12 +105,6 @@ function announcePhotos(build, owner, count) {
       entityId: build.id,
       url: `/builds/${build.id}`,
       text: 'added {n} new photo{plural} to {name}|' + count + '|' + (count === 1 ? '' : 's') + '|' + label,
-    });
-    pushLib.sendToUser(fan.user_id, {
-      title: 'New photos for a car you follow',
-      body: `${label} — ${count} new photo${count === 1 ? '' : 's'}`,
-      url: `/builds/${build.id}`,
-      tag: `build-photo-${build.id}`,
     });
   });
 }
@@ -686,7 +667,6 @@ router.post('/builds/:id/vote', requireAuth, verifyCsrf, (req, res, next) => {
       url: `/builds/${id}`,
       text: 'voted for your build',
     });
-    pushLib.sendToUser(build.user_id, { title: `Vote for your build`, body: `${req.user.username} voted for ${build.title}`, url: `/builds/${id}`, tag: `build-vote-${id}` });
   }
 
   if (wantsJson(req)) {

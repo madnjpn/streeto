@@ -120,6 +120,8 @@ if (root) {
   let activeId = null;
   let lastUnread = null;
   let lastMsgId = 0;
+  /** Closes whichever dock row currently has its actions open. */
+  let closeOpenRow = null;
   /** A conversation that wrote to us while another one was open. */
   let incoming = null;
 
@@ -186,7 +188,7 @@ if (root) {
 
     const row = document.createElement('button');
     row.type = 'button';
-    row.className = `chatdock__row${c.unread ? ' is-unread' : ''}${c.kind === 'global' ? ' chatdock__row--global' : ''}`;
+    row.className = `chatdock__row${c.unread ? ' is-unread' : ''}${c.muted ? ' is-muted' : ''}${c.kind === 'global' ? ' chatdock__row--global' : ''}`;
     row.append(avatarNode(c));
 
     const text = document.createElement('div');
@@ -198,7 +200,14 @@ if (root) {
     name.textContent = c.title;
     const time = document.createElement('time');
     time.textContent = timeAgo(c.lastAt);
-    top.append(name, time);
+    top.append(name);
+    if (c.muted) {
+      const mutedTag = document.createElement('span');
+      mutedTag.className = 'chatdock__muted';
+      mutedTag.textContent = t('Muted');
+      top.append(mutedTag);
+    }
+    top.append(time);
 
     const preview = document.createElement('div');
     preview.className = 'chatdock__preview';
@@ -236,61 +245,109 @@ if (root) {
       } catch {}
     });
 
-    wrap.append(row, del);
-
-    // Swipe to reveal delete (touch + mouse)
-    let startX = 0, startY = 0, moved = false, dragging = false;
-    const clamp = (dx) => Math.max(-80, dx);
-    const apply = (dx) => { row.style.transform = `translateX(${clamp(dx)}px)`; };
-    const finish = () => {
-      row.style.transition = 'transform 0.2s ease';
-      const val = parseInt((row.style.transform.replace(/[^-0-9]/g, '')) || 0);
-      if (moved && val < -40) {
-        row.style.transform = 'translateX(-80px)';
-        wrap.classList.add('is-swiped');
-      } else {
-        row.style.transform = '';
-        wrap.classList.remove('is-swiped');
-      }
-      moved = false;
-      dragging = false;
-    };
-    const onDown = (clientX, clientY) => {
-      startX = clientX; startY = clientY; moved = false; dragging = true;
-      row.style.transition = 'none';
-    };
-    const onMove = (clientX, clientY) => {
-      if (!dragging) return;
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-      if (Math.abs(dy) > Math.abs(dx)) return;
-      if (dx > 0) return; // only swipe left
-      moved = true;
-      apply(dx);
-    };
-    const onUp = () => {
-      if (!dragging) return;
-      finish();
-    };
-    // Touch
-    row.addEventListener('touchstart', (e) => onDown(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    row.addEventListener('touchmove', (e) => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    row.addEventListener('touchend', onUp, { passive: true });
-    row.addEventListener('touchcancel', onUp, { passive: true });
-    // Mouse (desktop)
-    row.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
-      onDown(e.clientX, e.clientY);
-      e.preventDefault();
+    // Mute (left) and Delete (right), revealed by swiping the row.
+    const mute = document.createElement('button');
+    mute.type = 'button';
+    mute.className = 'chatdock__rowmute';
+    mute.textContent = t(c.muted ? 'Unmute' : 'Mute');
+    mute.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const res = await request(`/chat/${c.id}/mute`, {
+          method: 'POST',
+          headers: { 'x-csrf-token': csrf },
+        });
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
+        c.muted = typeof data.muted === 'boolean' ? data.muted : !c.muted;
+        closeSwipe();
+        renderList();
+        refresh();
+      } catch {}
     });
-    window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY), { passive: true });
-    window.addEventListener('mouseup', onUp);
 
-    row.addEventListener('click', () => {
-      // If swiped open, close it instead of opening thread
-      if (row.style.transform && row.style.transform !== '') {
-        row.style.transform = '';
-        wrap.classList.remove('is-swiped');
+    wrap.append(mute, row, del);
+
+    // Swipe left for Delete, right for Mute. Pointer events cover touch,
+    // pen and desktop mouse drags; touch-action: pan-y keeps scrolling.
+    const MAX = 80;
+    let startX = 0;
+    let startY = 0;
+    let base = 0;
+    let current = 0;
+    let moved = false;
+    let dragging = false;
+    let axis = null;
+    let openSide = null;
+
+    const clamp = (dx) => Math.max(-MAX, Math.min(MAX, dx));
+    const setOpen = (side) => {
+      if (side && closeOpenRow && closeOpenRow !== closeSwipe) closeOpenRow();
+      openSide = side;
+      if (side) closeOpenRow = closeSwipe;
+      else if (closeOpenRow === closeSwipe) closeOpenRow = null;
+      row.style.transition = 'transform 0.2s ease';
+      row.style.transform =
+        side === 'delete' ? `translateX(-${MAX}px)` : side === 'mute' ? `translateX(${MAX}px)` : '';
+      wrap.classList.toggle('is-swiped', side === 'delete');
+      wrap.classList.toggle('is-muted-open', side === 'mute');
+    };
+    const closeSwipe = () => {
+      if (!openSide && !row.style.transform) return;
+      setOpen(null);
+    };
+    const finish = () => {
+      if (!dragging) return;
+      dragging = false;
+      row.style.userSelect = '';
+      if (current <= -40) setOpen('delete');
+      else if (current >= 40) setOpen('mute');
+      else setOpen(null);
+      if (moved) {
+        setTimeout(() => { moved = false; }, 80);
+      }
+    };
+
+    row.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      base = openSide === 'delete' ? -MAX : openSide === 'mute' ? MAX : 0;
+      current = base;
+      moved = false;
+      dragging = true;
+      axis = null;
+      row.style.transition = 'none';
+      if (row.setPointerCapture) {
+        try { row.setPointerCapture(e.pointerId); } catch {}
+      }
+      if (e.pointerType === 'mouse') row.style.userSelect = 'none';
+    });
+    row.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const rawX = e.clientX - startX;
+      const rawY = e.clientY - startY;
+      if (!axis && (Math.abs(rawX) > 6 || Math.abs(rawY) > 6)) {
+        axis = Math.abs(rawX) > Math.abs(rawY) ? 'x' : 'y';
+        if (axis === 'y') moved = true;
+      }
+      if (axis !== 'x') return;
+      current = clamp(base + rawX);
+      if (Math.abs(current - base) > 4) moved = true;
+      row.style.transform = `translateX(${current}px)`;
+      if (e.cancelable) e.preventDefault();
+    });
+    row.addEventListener('pointerup', finish);
+    row.addEventListener('pointercancel', finish);
+
+    row.addEventListener('click', (e) => {
+      if (moved) {
+        e.preventDefault();
+        return;
+      }
+      if (openSide) {
+        e.preventDefault();
+        closeSwipe();
         return;
       }
       openThread(c);

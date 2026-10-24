@@ -13,6 +13,7 @@ uploads/
 .env
 .env.*
 !.env.example
+firebase-service-account.json
 
 # TLS certificates and private keys (the Cloudflare Origin CA key and the
 # local self-signed pair are secrets - never commit them)

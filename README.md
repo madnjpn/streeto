@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.1.1` (`package.json`), Android `1.1.3`
-(`versionCode 5`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.2.0` (`package.json`), Android `1.2.0`
+(`versionCode 6`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -51,7 +51,8 @@ truth; `GET /api/app/version` reports what the live server is serving.
 | **Wall** | Text, photo, video, location-pin and SOS posts, likes, threaded comments, polls, tags, reports. `Everyone` / `My crew` scopes. |
 | **Builds** | Car spec sheets with up to 8 photos/clips, public/private garages, weekly voting, derived Build of the Week/Month/Year awards, timeline, watchers, for-sale flag. |
 | **People** | Search by username/name/city/car, friend requests, suggestions, presence dots. |
-| **Chat** | One global channel plus 1:1 threads, attachments, edits, reactions, replies, search, delete-for-me. Polling every 3 s; Socket.IO for typing/presence. |
+| **Chat** | One global channel plus 1:1 threads, attachments, edits, reactions, replies, search, delete-for-me, and per-chat mute (swipe right; delete is swipe left, mouse drag works). Polling every 3 s; Socket.IO for typing/presence. |
+| **Notifications** | In-app activity feed + badges, browser Web Push, and near-realtime Android FCM. Messages, friend requests, comments, likes, invites and meetups; muted chats stay quiet. |
 | **Crews** | Open/private/invite-only groups, roles, join requests, invites, crew wall, crew meetups, shared items. |
 | **Meetups** | Open/private/invite-only events, capacity/maybe, invites, GPS or street search, directions, Touge route A/B, elevation, 3D preview, saved camera view, weather forecast. |
 | **Services** | Parts marketplace, maintenance/service listings, reviews, claims, provider badges. |
@@ -159,6 +160,7 @@ Browser / Android WebView
               pti.ge (technical inspection)
               protocols.ge via headless Edge/Chrome (fines)
               Google Gemini (certificate OCR, optional)
+              Firebase Cloud Messaging (Android push, optional)
               RockAuto via reader or Python FastAPI service (parts, optional)
 ```
 
@@ -176,7 +178,7 @@ Browser / Android WebView
 | Uploads | multer + sharp | MIME allowlist, random names, responsive variants. |
 | Realtime | Socket.IO + polling | Typing/presence now; chat still polls for reliability. |
 | Mail | nodemailer (Gmail SMTP) | Password resets and scheduled letters; can capture locally. |
-| Push | web-push (VAPID) | Browser notifications; optional. |
+| Push | web-push (VAPID) + Firebase Cloud Messaging | Browser notifications and near-realtime Android alerts. |
 | Android | Java WebView shell | The web app stays the single product. |
 
 ### Design rules
@@ -335,7 +337,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | `VAPID_PRIVATE_KEY` | Private VAPID key. **Secret.** |
 | `VAPID_SUBJECT` | Contact URI, e.g. `mailto:admin@streeto.net`. |
 
-Without these, push is simply disabled.
+Without these, browser push is simply disabled.
+
+#### Firebase Cloud Messaging (Android, optional)
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT_PATH` | `firebase-service-account.json` | Server service-account JSON, git-ignored. |
+| `FIREBASE_SERVICE_ACCOUNT` | – | Raw JSON or base64 service account instead of the file. **Secret.** |
+
+The Android client config is `android/app/google-services.json` (tracked; it is
+client configuration, not a server secret). Without a service account FCM is
+disabled and the app falls back to the in-app activity feed.
 
 #### External lookups (optional features)
 
@@ -489,7 +502,7 @@ by `src/migrations/*.sql` and recorded in `_migrations`.
 | Meetups | `meetups`, `meetup_attendees` |
 | Garage | `vehicles`, `vehicle_maintenance` |
 | Services/parts | `parts`, `part_photos`, `services`, `service_reviews`, `service_claims`, `partners` |
-| Activity | `notifications`, `push_subscriptions`, `mail_log` |
+| Activity | `notifications`, `push_subscriptions`, `device_tokens`, `mail_log` |
 | Content/i18n | `translations`, `how_sections`, `how_blocks`, `settings`, `custom_fonts` |
 | Media | `upload_variants` |
 | Runtime | `config`, `_migrations` |
@@ -596,8 +609,10 @@ Expensive/external endpoints have rate limits.
 | `GET /api/parts/vin` | – | VIN decode/fitment. |
 | `GET /api/chat/dock` | user | Chat dock unread list. |
 | `GET /api/push/vapid-public-key` | – | Public key (empty if push off). |
-| `POST /api/push/subscribe` | user | Save a push subscription. |
-| `POST /api/push/unsubscribe` | – | Remove by endpoint. |
+| `POST /api/push/subscribe` | user | Save a Web Push subscription. |
+| `POST /api/push/unsubscribe` | – | Remove a Web Push subscription by endpoint. |
+| `POST /api/push/device` | user | Register/refresh an Android FCM token. |
+| `POST /api/push/device/remove` | user | Remove an Android FCM token (logout/disable). |
 | `POST /api/ocr/certificate` | user | Multipart photo → Gemini OCR; photo deleted after extraction. |
 
 Mutating **form** routes use session CSRF (`_csrf`) and an Origin check. Fetch
@@ -635,9 +650,12 @@ Google **App Password** in `MAIL_PASS` (Google Account → Security → 2-Step
 Verification → App passwords). For local testing set `MAIL_CAPTURE=1` and read
 `data/mail-capture/`.
 
-**Web push** — generate keys with `npx web-push generate-vapid-keys`, set
-`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT`, and serve over HTTPS.
-Push is for browsers; the Android WebView does not support Web Push.
+**Notifications** — browsers use standard Web Push (VAPID); the Android app
+uses Firebase Cloud Messaging, with `android/app/google-services.json` for the
+client and `firebase-service-account.json` on the server. Both are turned on
+per member from **Settings → Notifications**. The Android app receives data
+messages and posts the notification natively; no persistent notification is
+required. A muted chat never produces one.
 
 **Fines / PTI / certificate OCR** — headless Edge/Chrome (fines), pti.ge
 (inspection) and a Gemini key (OCR) are optional. See the environment table and
@@ -671,7 +689,7 @@ Push is for browsers; the Android WebView does not support Web Push.
 | `map-picker.js`, `map-style.js` | MapLibre picker + dark basemap. |
 | `touge-route-picker.js` | A/B Touge route, elevation, 3D preview, fullscreen, saved view. |
 | `part-search.js` | Parts tabs, catalogue tree, part results. |
-| `push.js`, `push-init.js` | Web-push subscription. |
+| `push.js`, `push-init.js` | Web Push subscription, the Settings notification card, and the native Android notification bridge. |
 | `share.js` | Share dialog. |
 | `mentions.js` | `@name` picker/links. |
 | `admin*.js` | Admin console, translations, how-it-works editor. |
@@ -735,6 +753,7 @@ A native **Java WebView shell** around `https://streeto.net`:
 - links to other sites open in the phone browser
 - `window.StreetNative` bridge exposing version info and an in-app updater
 - footer shows `Web vX · App vY`; Settings shows update/check/changes UI
+- Firebase Cloud Messaging notifications for messages and activity (Settings → Notifications); tapping opens the chat or activity page
 
 Package `net.streeto.app`; min Android 7.0 (API 24); target/compile SDK 35.
 The launcher icon source is `android/icon-source.png`; `npm run icons:android`
@@ -835,6 +854,23 @@ APK update: the shell loads the live site.
 
 The update check runs on app page loads and when the user taps
 **Check for updates**; it is not a background push service.
+
+### 9.5 Notifications (Firebase Cloud Messaging)
+
+- Firebase project **`streeto-bbbc5`**; Android package `net.streeto.app`.
+- Client config: `android/app/google-services.json` (tracked; it is client
+  configuration, not a server secret).
+- Server credential: `firebase-service-account.json` in the project root
+  (git-ignored) or `FIREBASE_SERVICE_ACCOUNT_PATH` / `FIREBASE_SERVICE_ACCOUNT`.
+- **Settings → Notifications** requests Android 13+ notification permission,
+  fetches the FCM token and posts it to `POST /api/push/device`. Logging out or
+  turning notifications off removes it.
+- The server sends **data-only** high-priority messages; `StreetoMessagingService`
+  renders the notification and opens the relevant chat/activity page. It skips
+  the buzz while the app is in the foreground.
+- Muted chats are filtered server-side, so they never produce a message alert.
+- No persistent foreground-service notification is needed; FCM delivers while
+  the app is backgrounded or closed (subject to Doze/Google Play services).
 
 ---
 
@@ -1150,13 +1186,16 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 | `GEMINI_API_KEY` | `.env.production` | Certificate OCR; rotate if exposed. |
 | `MAIL_PASS` | `.env.production` | Gmail App Password. |
 | `VAPID_PRIVATE_KEY` | `.env.production` | Web push. |
+| Firebase service account | `firebase-service-account.json` (git-ignored) or env | Android FCM. **Secret.** |
+| `google-services.json` | `android/app/` (tracked) | Android client config; not a server secret. |
 | `CF_API_TOKEN` | `.env.production` | Cloudflare automation. |
 | `CF_TUNNEL_TOKEN` | `.env.production` / `go-live.bat` | Tunnel connector. |
 | `JINA_API_KEY`, `PROXIFLY_API_KEY` | `.env.production` | Optional parts helpers. |
 | Android keystore + passwords | `android/signing/` + GitHub Secrets | **Losing it blocks app updates.** |
 
 `.gitignore` excludes `.env*` (except `.env.example`), `certs/`, `data/`,
-`uploads/`, `*.apk`, `*.jks`, `*.keystore`, `android/signing/` and build output.
+`uploads/`, `*.apk`, `*.jks`, `*.keystore`, `android/signing/`,
+`firebase-service-account.json` and build output.
 
 ### Rules
 
@@ -1201,7 +1240,8 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 | Map is blank | Run `npm install` (MapLibre assets are served from `node_modules`), allow tile network access. |
 | Certificate OCR returns 503/400 | `GEMINI_API_KEY` missing/invalid, quota exhausted, or the photo is unreadable. Check `/admin` logs/console. |
 | Password reset does not send mail | `MAIL_PASS` (App Password) missing; use `MAIL_CAPTURE=1` in dev and read `data/mail-capture/`. |
-| Web push does not arrive | VAPID keys missing, site not HTTPS, permission denied, or browser/OS blocked. WebView apps do not support Web Push. |
+| Web push does not arrive | VAPID keys missing, site not HTTPS, permission denied, or browser/OS blocked. Web Push is browser-only. |
+| Android notifications do not arrive | Enable in Settings → Notifications; allow POST_NOTIFICATIONS; check `google-services.json` and the server FCM service account; confirm `/api/push/device` was called. Doze/Google Play services can delay. |
 | Fines lookup fails | `protocols.ge` changed, or no Edge/Chrome; set `BROWSER_PATH`/`CHROME_PATH`/`EDGE_PATH`. |
 | Part search fails/timeouts | RockAuto/reader unavailable, or `ROCKAUTO_SERVICE_URL` points at a stopped Python service. |
 | PTI status stale/unknown | `pti.ge` unreachable or plate unknown; `PTI_LOOKUP=off` in tests. |
@@ -1221,10 +1261,14 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 
 - **Website-only Android distribution.** No Play Store, no silent auto-update;
   the user taps Update and confirms the Android installer.
-- **Update checks run on app launch/settings**, not in the background. A native
-  FCM push service would be needed for “notify while closed”.
-- **Web Push is not available inside the WebView app.** Chat works while the
-  app is open via polling/Socket.IO; browser push works on the website.
+- **App-update checks run on launch/settings**, not in the background. The
+  separate notification channel uses FCM and works while the app is closed
+  (subject to Doze/Google Play services).
+- **Web Push is browser-only.** The WebView app uses native FCM notifications
+  instead; both are fed by the same notification events.
+- **Android notifications need Google Play services and an FCM token.** Devices
+  without Play services, or users who deny notification permission, only get
+  the in-app activity feed.
 - **One server / one SQLite file.** Not horizontally scalable; run a single
   Node process.
 - **External services can change or rate-limit:** Nominatim/OpenFreeMap/OSRM,
@@ -1277,12 +1321,14 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 - `uploads/`
 - `public/downloads/STREETO-android.apk` (or rebuild)
 - `android/signing/` (keystore + `SIGNING.txt`)
+- `firebase-service-account.json` (FCM server key, secure transfer)
 - GitHub Secrets are in GitHub, not on disk
 
 ### Never commit / never share
 
 `.env` / `.env.production`, `certs/` and keys, `data/`, `uploads/`, `*.apk`,
-`android/signing/`, `*.jks`/`*.keystore`, cookie jars, logs with personal data.
+`android/signing/`, `*.jks`/`*.keystore`, `firebase-service-account.json`,
+cookie jars, logs with personal data.
 
 ---
 
@@ -1305,7 +1351,7 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 | Garage/vehicles/PTI/fines | `src/routes/garage.js`, `src/models/vehicles.js`, `src/lib/pti*.js`, `src/lib/fines.js`, `views/garage/*` |
 | Services/parts/RockAuto | `src/routes/services.js`, `src/models/parts.js`, `src/lib/rockauto*.js`, `src/routes/api.js`, `views/services/*`, `public/js/part-search.js` |
 | Friends/people | `src/routes/friends.js`, `src/models/friends.js`, `views/friends/*` |
-| Notifications/push | `src/models/notifications.js`, `src/lib/push.js`, `public/js/push*.js`, `views/notifications/*` |
+| Notifications/push | `src/models/notifications.js`, `src/lib/push-all.js`, `src/lib/push.js`, `src/lib/fcm.js`, `src/models/devices.js`, `public/js/push*.js`, `views/notifications/*`, `android/.../StreetoMessagingService.java` |
 | Auth/password recovery | `src/routes/auth.js`, `src/routes/recover.js`, `src/lib/password.js`, `src/lib/mail.js` |
 | Admin console | `src/routes/admin.js`, `views/admin/*`, `public/js/admin*.js` |
 | Database/migrations | `src/db.js`, `src/migrations/*.sql`, `src/models/*` |
@@ -1351,8 +1397,8 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.1.1`
-- Android version: `android/app/build.gradle.kts` → `1.1.3` (versionCode `5`)
+- Web version: `package.json` → `1.2.0`
+- Android version: `android/app/build.gradle.kts` → `1.2.0` (versionCode `6`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

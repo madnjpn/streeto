@@ -1187,6 +1187,26 @@ try {
     });
   }
   {
+    const res = await b.post(`/chat/${conversationId}/mute`, { headers: b.jsonHeaders() });
+    const body = await res.json();
+    check('a chat can be muted for one member', () => {
+      assert.equal(res.status, 200);
+      assert.equal(body.muted, true);
+    });
+
+    const dock = await b.request('GET', '/api/chat/dock', { headers: b.jsonHeaders() });
+    const dockBody = await dock.json();
+    const row = dockBody.conversations.find((c) => c.id === conversationId);
+    check('the dock marks the muted conversation', () => {
+      assert.ok(row);
+      assert.equal(row.muted, true);
+    });
+
+    const again = await b.post(`/chat/${conversationId}/mute`, { headers: b.jsonHeaders() });
+    const againBody = await again.json();
+    check('the mute can be turned off again', () => assert.equal(againBody.muted, false));
+  }
+  {
     const res = await b.post(`/chat/${conversationId}/delete`, b.formWithCsrf({}));
     check('B deletes the chat for themselves', () => assert.equal(res.status, 302));
     const cleared = get(

@@ -10,6 +10,7 @@ import * as parts from '../models/parts.js';
 import * as maintenance from '../models/maintenance.js';
 import * as vehicles from '../models/vehicles.js';
 import * as pushSubs from '../models/push.js';
+import * as devices from '../models/devices.js';
 import * as friends from '../models/friends.js';
 import * as notifications from '../models/notifications.js';
 import config from '../config.js';
@@ -174,10 +175,13 @@ router.get('/search', searchLimiter, (req, res) => {
 router.get('/pulse', requireAuth, (req, res) => {
   const me = req.user.id;
   const global = chat.globalConversation(me);
-  const dmUnread = chat.listConversations(me).reduce((total, row) => total + (row.unread || 0), 0);
+  const dmUnread = chat.listConversations(me).reduce(
+    (total, row) => total + (row.muted ? 0 : (row.unread || 0)),
+    0,
+  );
   return jsonOk(res, {
     ok: true,
-    messages: (global?.unread || 0) + dmUnread,
+    messages: ((global && !global.muted) ? (global.unread || 0) : 0) + dmUnread,
     notifications: notifications.unreadCount(me),
     requests: friends.incomingRequests(me).length,
   });
@@ -537,6 +541,7 @@ function dockConversation(row, me) {
     lastAt: row.last_at ?? null,
     lastMine: row.last_sender_id === me,
     unread: row.unread || 0,
+    muted: Boolean(row.muted),
   };
 }
 
@@ -550,7 +555,7 @@ router.get('/chat/dock', requireAuth, (req, res) => {
     conversations.push(dockConversation(row, me));
   }
 
-  const unread = conversations.reduce((total, row) => total + (row.unread || 0), 0);
+  const unread = conversations.reduce((total, row) => total + (row.muted ? 0 : (row.unread || 0)), 0);
 
   // A thread that was just started has no messages yet, so it is not in
   // the list - the dock asks for it by id when it opens such a link.
@@ -581,6 +586,21 @@ router.post('/push/subscribe', requireAuth, (req, res) => {
 router.post('/push/unsubscribe', (req, res) => {
   const endpoint = req.body?.subscription?.endpoint || req.body?.endpoint;
   if (endpoint) pushSubs.unsubscribe(endpoint);
+  return jsonOk(res, { ok: true });
+});
+
+/* Android FCM installation tokens. The native shell posts its token after
+   login; the server fans notifications out through FCM as well as Web Push. */
+router.post('/push/device', requireAuth, (req, res) => {
+  const token = String(req.body?.token || '').trim();
+  if (!token || token.length > 4096) return jsonError(res, 'No device token.', 400);
+  devices.upsert(req.user.id, token, 'android');
+  return jsonOk(res, { ok: true });
+});
+
+router.post('/push/device/remove', requireAuth, (req, res) => {
+  const token = String(req.body?.token || '').trim();
+  if (token) devices.remove(token);
   return jsonOk(res, { ok: true });
 });
 

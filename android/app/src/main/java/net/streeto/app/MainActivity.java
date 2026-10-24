@@ -73,9 +73,16 @@ import java.security.MessageDigest;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String START_URL = "https://streeto.net/";
+    private static final String START_URL_BASE = "https://streeto.net";
+    private static final String START_URL = START_URL_BASE + "/";
     private static final int REQ_FILE = 1001;
     private static final int REQ_LOCATION = 1002;
+    private static final int REQ_NOTIFICATIONS = 1003;
+
+    /** Extra used by notifications to open a specific page in the shell. */
+    public static final String EXTRA_PATH = "net.streeto.app.OPEN_PATH";
+    /** FCM messages stay quiet while the site is already on screen. */
+    public static volatile boolean isForeground = false;
 
     private WebView webView;
     private ProgressBar progress;
@@ -115,10 +122,32 @@ public class MainActivity extends AppCompatActivity {
         configureWebView();
         bindBackButton();
 
+        NativeNotifications.createChannels(this);
+        DeviceRegistrar.registerIfEnabled(this);
+
         if (savedInstanceState == null) {
-            webView.loadUrl(START_URL);
+            webView.loadUrl(startUrl(getIntent()));
         } else {
             webView.restoreState(savedInstanceState);
+        }
+    }
+
+    /** Page requested by a notification, or the normal start page. */
+    private String startUrl(Intent intent) {
+        String path = intent != null ? intent.getStringExtra(EXTRA_PATH) : null;
+        if (path != null && path.startsWith("/") && !path.startsWith("//")) {
+            return START_URL_BASE + path;
+        }
+        return START_URL;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        String path = intent != null ? intent.getStringExtra(EXTRA_PATH) : null;
+        if (webView != null && path != null && path.startsWith("/") && !path.startsWith("//")) {
+            webView.loadUrl(START_URL_BASE + path);
         }
     }
 
@@ -361,6 +390,40 @@ public class MainActivity extends AppCompatActivity {
          * when the user must allow installs from STREETO first, or "failed".
          */
         @JavascriptInterface
+        public boolean notificationsEnabled() {
+            return NativeNotifications.isEnabled(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public String enableNotifications() {
+            if (NativeNotifications.isEnabled(MainActivity.this)) return "enabled";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                    && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                runOnUiThread(() -> ActivityCompat.requestPermissions(
+                        MainActivity.this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        REQ_NOTIFICATIONS));
+                return "requested";
+            }
+
+            if (!NativeNotifications.allowed(MainActivity.this)) {
+                runOnUiThread(MainActivity.this::openNotificationSettings);
+                return "denied";
+            }
+
+            NativeNotifications.setEnabled(MainActivity.this, true);
+            DeviceRegistrar.register(MainActivity.this);
+            return "enabled";
+        }
+
+        @JavascriptInterface
+        public void disableNotifications() {
+            runOnUiThread(() -> DeviceRegistrar.unregister(MainActivity.this));
+        }
+
+        @JavascriptInterface
         public String downloadAndInstall(String url, String sha256) {
             if (!isUpdateUrl(url)) return "failed";
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
@@ -393,6 +456,24 @@ public class MainActivity extends AppCompatActivity {
                     Uri.parse("package:" + getPackageName())));
         } catch (ActivityNotFoundException ignored) {
             /* the installer will ask on its own */
+        }
+    }
+
+    private void openNotificationSettings() {
+        Toast.makeText(this, R.string.notify_permission_denied, Toast.LENGTH_LONG).show();
+        try {
+            Intent intent;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            } else {
+                intent = new Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:" + getPackageName()));
+            }
+            startActivity(intent);
+        } catch (ActivityNotFoundException ignored) {
+            /* no settings screen on this device */
         }
     }
 
@@ -609,6 +690,16 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_NOTIFICATIONS) {
+            if (NativeNotifications.allowed(this)) {
+                NativeNotifications.setEnabled(this, true);
+                DeviceRegistrar.register(this);
+                Toast.makeText(this, R.string.notify_enabled, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, R.string.notify_permission_denied, Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
         if (requestCode != REQ_LOCATION) return;
         boolean granted = hasLocationPermission();
         if (geoCallback != null) {
@@ -655,6 +746,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        isForeground = false;
         if (webView != null) webView.onPause();
         CookieManager.getInstance().flush();
         super.onPause();
@@ -663,6 +755,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        isForeground = true;
         if (webView != null) webView.onResume();
     }
 

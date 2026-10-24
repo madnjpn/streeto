@@ -90,6 +90,14 @@ export const config = {
   /** How long we wait for a Gemini OCR reply (ms). */
   geminiTimeoutMs: toNum(process.env.GEMINI_TIMEOUT_MS, 60000),
 
+  /** Firebase Cloud Messaging (Android). The service account JSON stays
+   *  outside version control; the path is relative to the project root. */
+  firebaseServiceAccountPath: path.resolve(
+    ROOT,
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH || 'firebase-service-account.json',
+  ),
+  firebaseServiceAccount: process.env.FIREBASE_SERVICE_ACCOUNT || '',
+
   /** MapLibre GL is served straight out of node_modules so the map works
    *  offline. It draws the vector basemap with 3D buildings. */
   maplibreDir: path.resolve(ROOT, 'node_modules', 'maplibre-gl', 'dist'),

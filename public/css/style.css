@@ -605,6 +605,17 @@ h1, h2, h3, h4 {
     linear-gradient(140deg, hsl(var(--h, 190) 55% 15%), var(--panel));
   border-color: hsl(var(--h, 190) 70% 40% / 0.55);
 }
+/* The mobile activity row turns its text span into a flex child; the
+   generated initials avatar is also a span and must stay a square with
+   its initials centred. */
+.row__id > span.avatar {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  align-items: center;
+  justify-items: center;
+  line-height: 1;
+}
 .avatar--xs { --size: 26px; }
 .avatar--sm { --size: 36px; }
 .avatar--md { --size: 46px; }
@@ -4616,7 +4627,7 @@ dialog { color-scheme: var(--native-scheme); }
 .chatdock__headbtns { display: flex; gap: 2px; }
 .chatdock__body { flex: 1; min-height: 0; display: flex; }
 .chatdock__list { flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
-.chatdock__row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border-radius: 10px; text-align: left; color: var(--text-dim); background: var(--panel-2, rgba(255,255,255,0.03)); min-height: 50px; }
+.chatdock__row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border-radius: 10px; text-align: left; color: var(--text-dim); background: var(--panel-2, rgba(255,255,255,0.03)); min-height: 50px; touch-action: pan-y; }
 .chatdock__rowwrap { position: relative; overflow: hidden; border-radius: 10px; width: 100%; background: transparent; margin-bottom: 2px; min-height: 50px; }
 .chatdock__row:hover { background: rgba(var(--veil), 0.05); }
 .chatdock__row.is-unread { background: rgba(var(--neon-2-rgb), 0.05); }
@@ -6197,6 +6208,29 @@ a.chip.is-active .chip__n { color: var(--neon); }
 .chatdock__rowwrap.is-swiped .chatdock__rowdelete {
   opacity: 1; pointer-events: auto;
 }
+.chatdock__rowmute {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 80px; display: flex; align-items: center; justify-content: center;
+  background: #f2c14e; color: #1a1206; border: none;
+  font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 10px 0 0 10px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+}
+.chatdock__rowwrap.is-muted-open .chatdock__rowmute {
+  opacity: 1; pointer-events: auto;
+}
+.chatdock__row.is-muted { opacity: 0.8; }
+.chatdock__muted {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.chatdock__rowtop strong { flex: 1 1 auto; min-width: 0; }
 .chatdock__avatar--globe {
   display: grid;
   place-items: center;

@@ -1,6 +1,6 @@
 import express from 'express';
 import * as chat from '../models/chat.js';
-import * as pushLib from '../lib/push.js';
+import { pushToUser } from '../lib/push-all.js';
 import * as users from '../models/users.js';
 import * as friends from '../models/friends.js';
 import * as notifications from '../models/notifications.js';
@@ -189,17 +189,23 @@ router.post('/chat/:id/send', chatUpload, optimizeAs('chat'), verifyCsrf, (req, 
     }
   } catch (e) {}
 
-  // Push notifications for recipients.
+  // Push notifications for recipients. The global channel does not push
+  // every message (that would be an alert for every driver); mentions are
+  // handled separately. A muted thread never pushes.
   try {
-    const recipients = chat.memberIds(id).filter((uid) => uid !== req.user.id);
-    recipients.forEach((uid) => {
-      pushLib.sendToUser(uid, {
-        title: `New message from @${req.user.username}`,
-        body: body ? body.slice(0, 120) : 'Sent a photo',
-        url: `/chat/${id}`,
-        tag: `chat-${id}`,
+    if (chat.kindOf(id) !== 'global') {
+      const recipients = chat.memberIds(id).filter(
+        (uid) => uid !== req.user.id && !chat.isMuted(id, uid),
+      );
+      recipients.forEach((uid) => {
+        pushToUser(uid, {
+          title: `New message from @${req.user.username}`,
+          body: body ? body.slice(0, 120) : 'Sent a photo',
+          url: `/?chat=${id}`,
+          tag: `chat-${id}`,
+        });
       });
-    });
+    }
   } catch (e) {}
 
   if (wantsJson(req)) {
@@ -292,12 +298,14 @@ router.post('/share', requireAuth, verifyCsrf, async (req, res, next) => {
     } catch (e) {}
 
     try {
-      pushLib.sendToUser(target.id, {
-        title: `New message from @${req.user.username}`,
-        body: note ? note.slice(0, 120) : `Shared a ${SHARE_LABELS[card.type] || 'link'}`,
-        url: `/chat/${conversation.id}`,
-        tag: `chat-${conversation.id}`,
-      });
+      if (!chat.isMuted(conversation.id, target.id)) {
+        pushToUser(target.id, {
+          title: `New message from @${req.user.username}`,
+          body: note ? note.slice(0, 120) : `Shared a ${SHARE_LABELS[card.type] || 'link'}`,
+          url: `/?chat=${conversation.id}`,
+          tag: `chat-${conversation.id}`,
+        });
+      }
     } catch (e) {}
 
     if (wantsJson(req)) {
@@ -325,6 +333,21 @@ router.post('/chat/:id/delete', verifyCsrf, (req, res) => {
   }
   req.flash('success', result.purged ? 'Chat deleted for both sides.' : 'Chat removed from your inbox. It will come back if they write again.');
   return res.redirect('/chat');
+});
+
+/* ── mute a chat for this member ──────────────────────────────── */
+router.post('/chat/:id/mute', verifyCsrf, (req, res) => {
+  const id = Number(req.params.id);
+  if (!chat.isMember(id, req.user.id)) {
+    if (wantsJson(req)) return jsonError(res, 'Not your chat.', 403);
+    req.flash('error', 'That chat is not yours.');
+    return res.redirect('/chat');
+  }
+
+  const muted = chat.toggleMute(id, req.user.id);
+  if (wantsJson(req)) return jsonOk(res, { muted });
+  req.flash('success', muted ? 'Chat muted.' : 'Chat unmuted.');
+  return res.redirect(backTo(req, '/?chat=1'));
 });
 
 /* ── edit a message ──────────────────────────────────────────────── */
