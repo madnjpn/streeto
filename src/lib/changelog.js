@@ -5,7 +5,9 @@
  * release changed the website, the Android shell or both. The strings are
  * English source keys, translated through t() when the page is rendered.
  *
- * Add the new entry at the top when releasing. Keep the date in ISO form.
+ * When releasing: add the new entry at the top (version, ISO date, scope and
+ * the English strings), then add the Georgian translation for every new
+ * string to src/lib/locales/ka.js.
  */
 export const CHANGELOG = [
   {

@@ -29,12 +29,34 @@ on the login page serves the new build. Distribution is website-only — there i
 ### Versions
 
 The site reads the Android `versionCode` and `versionName` from
-`app/build.gradle.kts`, and the web version from the root `package.json`, so
-bump both when preparing a release. Add a matching entry to
-`src/lib/changelog.js` so the **Changes** panel in Settings explains the
-release. The download button and the in-app update check always use whatever
-APK is at `public/downloads/STREETO-android.apk`; its SHA-256 is computed on
-the fly for the native update check.
+`app/build.gradle.kts`, and the web version from the root `package.json`.
+The download button and the in-app update check always use whatever APK is at
+`public/downloads/STREETO-android.apk`; its SHA-256 is computed on the fly for
+the native update check.
+
+### Release checklist
+
+1. Bump the versions:
+   - Android: `versionCode` and `versionName` in `app/build.gradle.kts`
+   - Web: `npm version <version> --no-git-tag-version`
+2. Add a new entry at the **top** of `src/lib/changelog.js`:
+   ```js
+   {
+     version: '1.2.0',
+     date: '2026-10-25',
+     scope: 'both', // 'web' | 'android' | 'both'
+     items: [
+       'English source string.',
+       'Another change.',
+     ],
+   }
+   ```
+3. Add the Georgian translation for **every new string** to
+   `src/lib/locales/ka.js`, using the same English key.
+4. If the Android shell changed: push, download the signed APK artifact and
+   copy it to `public/downloads/STREETO-android.apk`.
+5. Restart the server and verify `https://streeto.net/api/app/version` and the
+   **Settings → App & updates → Changes** panel.
 
 ### Signing
 
