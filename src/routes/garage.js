@@ -31,15 +31,8 @@ async function refreshPtiForPlate(plate, { vehicleIds = [], buildIds = [] } = {}
   }
 }
 
-// Hub page
-router.get('/garage', (req, res) => {
-  const userId = req.user?.id ?? 0;
-  return res.page('garage/index', {
-    title: `My Garage - ${req.app.locals.config.siteName}`,
-    active: 'garage',
-    vehicles: userId ? vehicles.listByUser(userId) : [],
-  });
-});
+// Garage opens on My Ride. There is no separate hub or Fines tab any more.
+router.get('/garage', (req, res) => res.redirect('/garage/ride'));
 
 // My Ride page
 router.get('/garage/ride', requireAuth, async (req, res) => {
@@ -357,7 +350,7 @@ router.post('/garage/ride/:id/delete', requireAuth, verifyCsrf, (req, res) => {
   return res.redirect('/garage/ride');
 });
 
-// Fines page
+// Fines tab (next to My Ride).
 router.get('/garage/fines', requireAuth, (req, res) => {
   const userId = req.user.id;
   const userVehicles = vehicles.listByUser(userId);

@@ -2,7 +2,32 @@
   <p class="eyebrow"><%= t('explore') %></p>
   <h1 class="display"><%= t('Explore the network') %></h1>
   <p class="lede"><%= t('Hot posts, builds, meetups and groups from the last week.') %></p>
-  <p><a class="btn btn--ghost btn--sm" href="/near"><%- include('../partials/icon', { name: 'pin', size: 15 }) %> <%= t('Find what is near you') %></a></p>
+  <nav class="explore-hub" aria-label="<%= t('Explore sections') %>">
+    <a class="explore-hub__item" href="/builds">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'car', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Builds') %></span>
+    </a>
+    <a class="explore-hub__item" href="/groups">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'shield', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Groups') %></span>
+    </a>
+    <a class="explore-hub__item" href="/services">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'wrench', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Services') %></span>
+    </a>
+    <a class="explore-hub__item" href="/people">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'users', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Drivers') %></span>
+    </a>
+    <a class="explore-hub__item" href="/friends">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'users', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Friends') %></span>
+    </a>
+    <a class="explore-hub__item" href="/near">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'pin', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Near me') %></span>
+    </a>
+  </nav>
 
   <% if (trending && trending.length) { %>
     <div class="card mini">

@@ -262,6 +262,19 @@ app.use(
     etag: true,
   }),
 );
+app.use(
+  '/fonts',
+  express.static(path.join(ROOT, 'public', 'fonts'), {
+    maxAge: config.isProd ? '30d' : 0,
+    immutable: config.isProd,
+    etag: true,
+    setHeaders(res, filePath) {
+      // Safari is happiest with the legacy font MIME for TrueType files.
+      if (/\.ttf$/i.test(filePath)) res.setHeader('Content-Type', 'application/x-font-ttf');
+      if (/\.woff2$/i.test(filePath)) res.setHeader('Content-Type', 'font/woff2');
+    },
+  }),
+);
 app.get('/manifest.webmanifest', (req, res) => {
   res.sendFile(path.join(ROOT, 'public', 'manifest.webmanifest'), {
     headers: { 'Content-Type': 'application/manifest+json; charset=utf-8' },

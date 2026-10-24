@@ -63,6 +63,12 @@
 <% } %>
 <!-- Camera modal styles for certificate scanning -->
 <link rel="stylesheet" href="/assets/<%= assetStamp %>/css/camera-modal.css">
+<!-- Self-hosted brand fonts load after the uploaded custom faces, so every
+     platform uses the same Latin and Georgian files. -->
+<link rel="preload" href="/fonts/bpg-mrgvlovani-2010.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<%- include('partials/custom-fonts') %>
+<link rel="stylesheet" href="/assets/<%= assetStamp %>/css/fonts.css">
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>" data-authed="<%= isAuthenticated ? '1' : '0' %>">
 <a class="skip-link" href="#main"><%= t('Skip to content') %></a>
@@ -71,7 +77,6 @@
 <div class="scanlines" aria-hidden="true"></div>
 
 <%- include('partials/i18n-data') %>
-<%- include('partials/custom-fonts') %>
 
 <%- include('partials/nav') %>
 
@@ -97,7 +102,7 @@
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'meetups' ? 'is-active' : '' %>" href="/meetups"><%- include('partials/icon', { name: 'pin', size: 19 }) %> <span><%= t('Meetups') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'services' ? 'is-active' : '' %>" href="/services"><%- include('partials/icon', { name: 'wrench', size: 19 }) %> <span><%= t('Services') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'chat' ? 'is-active' : '' %>" href="/chat"><%- include('partials/icon', { name: 'chat', size: 19 }) %> <span><%= t('Chat') %></span></a>
-        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'garage' ? 'is-active' : '' %>" href="/garage"><%- include('partials/icon', { name: 'key', size: 19 }) %> <span><%= t('My Garage') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'garage' ? 'is-active' : '' %>" href="/garage/ride"><%- include('partials/icon', { name: 'key', size: 19 }) %> <span><%= t('My Garage') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'people' ? 'is-active' : '' %>" href="/people"><%- include('partials/icon', { name: 'users', size: 19 }) %> <span><%= t('Drivers') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'friends' ? 'is-active' : '' %>" href="/friends"><%- include('partials/icon', { name: 'users', size: 19 }) %> <span><%= t('Friends') %></span><% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
       </nav>

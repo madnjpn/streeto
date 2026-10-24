@@ -33,7 +33,7 @@
       <span class="cert-edit-check"><%- include('icon', { name: 'check', size: 13 }) %></span>
       <span class="cert-edit-spinner" aria-hidden="true"></span>
     </button>
-    <button type="button" class="cert-tab cert-tab--scan" data-cert-scan title="<%= t('Scan certificate') %>"><%- include('icon', { name: 'camera', size: 13 }) %></button>
+    <label class="cert-tab cert-tab--scan" for="cert-camera-input" data-cert-scan role="button" tabindex="0" title="<%= t('Scan certificate') %>" aria-label="<%= t('Scan certificate') %>"><%- include('icon', { name: 'camera', size: 13 }) %></label>
   </div>
 
   <div class="regcert" data-cert-face="front">

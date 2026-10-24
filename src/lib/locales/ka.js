@@ -2587,4 +2587,14 @@ export default {
   'link': 'ბმული',
 
   'Test build · Android 7.0+': 'სატესტო ვერსია · Android 7.0+',
+  'Explore sections': 'აღმოჩენის სექციები',
+  'Explore now uses the same section hub on desktop and mobile.': 'Explore ახლა ერთსა და იმავე სექციების ცენტრს იყენებს დესკტოპსა და მობილურზე.',
+  'Garage opens directly on My Ride, with fines checked inside each vehicle.': 'გარაჟი პირდაპირ იხსნება My Ride-ზე, ჯარიმები კი თითოეული მანქანის ბარათში მოწმდება.',
+  'Android now uses the same floating tab bar as the iOS PWA.': 'Android ახლა იმავე მოტივტივე ტაბების ზოლს იყენებს, რასაც iOS PWA.',
+  'Android 1.3.1 removes the native bottom bar and keeps one shared navigation.': 'Android 1.3.1-ში მოშორებულია ნატიური ქვედა ზოლი და დარჩა ერთი საერთო ნავიგაცია.',
+  'DOWNLOAD | ANDROID & iOS': 'ჩამოტვირთვა | ANDROID & iOS',
+  'Android APK + iPhone Home Screen install': 'Android APK + iPhone-ის მთავარ ეკრანზე დაყენება',
+  'Garage opens directly on My Ride, and My Ride / Fines stay in one switch.': 'გარაჟი პირდაპირ იხსნება My Ride-ზე, ხოლო My Ride / Fines ერთ გადამრთველში რჩება.',
+  'One download button on the login page opens the Android and iOS install page.': 'შესვლის გვერდზე ერთი ჩამოტვირთვის ღილაკი ხსნის Android-ისა და iOS-ის ინსტალაციის გვერდს.',
+  'Text uses the same Manrope and BPG fonts on web, Android, iOS and the PWA.': 'ტექსტი იყენებს იმავე Manrope და BPG ფონტებს ვებზე, Android-ზე, iOS-სა და PWA-ში.',
 };

@@ -239,6 +239,86 @@ body {
   gap: var(--ui-space-2);
 }
 
+/* The Explore tab is the single hub for every section on both desktop and
+   mobile. Six equal entries keep the same order everywhere and replace the
+   old, easy-to-miss row of pills. */
+.explore-hub {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ui-space-3);
+  margin: var(--ui-space-5) 0 var(--ui-space-6);
+}
+
+.explore-hub__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-card);
+  background:
+    linear-gradient(135deg, rgba(var(--neon-rgb), 0.06), transparent 55%),
+    rgba(var(--veil), 0.025);
+  color: var(--text);
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
+}
+
+.explore-hub__item:hover,
+.explore-hub__item:focus-visible {
+  border-color: rgba(var(--neon-rgb), 0.5);
+  background:
+    linear-gradient(135deg, rgba(var(--neon-rgb), 0.13), transparent 60%),
+    rgba(var(--veil), 0.04);
+  transform: translateY(-1px);
+}
+
+.explore-hub__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(var(--neon-rgb), 0.25);
+  border-radius: 10px;
+  background: rgba(var(--neon-rgb), 0.08);
+  color: var(--neon);
+}
+
+.explore-hub__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .explore-hub {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ui-space-2);
+    margin: var(--ui-space-4) 0 var(--ui-space-5);
+  }
+
+  .explore-hub__item {
+    min-height: 54px;
+    padding: 9px 10px;
+    font-size: 11.5px;
+    gap: 9px;
+  }
+
+  .explore-hub__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+}
+
 /* --------------------------------------------------------------------------
    Avatars
    -------------------------------------------------------------------------- */
@@ -428,7 +508,7 @@ body {
   left: calc(var(--ui-space-4) + var(--ui-safe-left));
 }
 
-/* Mobile tab bar: the PWA / browser equivalent of the native Android bar. */
+/* Mobile tab bar: shared by the PWA, iOS Home Screen app and Android WebView. */
 .tabbar {
   display: none;
 }
@@ -521,14 +601,7 @@ body {
   }
 }
 
-/* The Android WebView uses a real BottomNavigationView; do not draw a second bar. */
-html.native-shell .tabbar,
-html.native-shell .appmenu__trigger,
-html.native-shell .chatdock__launcher {
-  display: none !important;
-}
-
-/* A standalone PWA gets the full app treatment, not the browser link. */
+/* A standalone PWA and the Android WebView both get the full app treatment. */
 html.is-standalone .install-prompt {
   display: none;
 }

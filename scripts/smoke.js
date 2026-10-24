@@ -1667,6 +1667,22 @@ try {
       assert.equal(row.pti_expires_at, '2020-01-01');
       assert.match(ride.html, /pti-badge--expired/);
     });
+    check('Garage keeps My Ride, Fines and Add vehicle in one switch', () => {
+      assert.match(ride.html, /href="\/garage\/ride"/);
+      assert.match(ride.html, /href="\/garage\/fines"/);
+      assert.match(ride.html, /id="toggle-add-vehicle"/);
+    });
+    const fines = await a.page('/garage/fines');
+    check('the Fines tab opens the fines page', () => {
+      assert.equal(fines.res.status, 200);
+      assert.match(fines.html, /Check traffic fines/);
+      assert.match(fines.html, /href="\/garage\/fines"/);
+    });
+    const garage = await a.page('/garage');
+    check('the Garage route opens My Ride directly', () => {
+      assert.equal(garage.res.status, 302);
+      assert.equal(garage.res.headers.get('location'), '/garage/ride');
+    });
     db.prepare('DELETE FROM vehicles WHERE id = ?').run(vehicleId);
   }
   {

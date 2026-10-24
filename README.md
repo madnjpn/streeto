@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.5.0` (`package.json`), Android `1.3.0`
-(`versionCode 9`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.5.1` (`package.json`), Android `1.3.1`
+(`versionCode 10`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -617,7 +617,7 @@ downloading the whole clip until playback.
 | `/meetups` | Meetups, Touge routes, weather |
 | `/services` | Parts marketplace + maintenance |
 | `/chat` | Global channel and DMs |
-| `/garage` | My Ride, certificate, fines |
+| `/garage`, `/garage/ride`, `/garage/fines` | My Ride and Fines (`/garage` redirects to My Ride) |
 | `/people`, `/friends` | Drivers, friend requests |
 | `/settings` | Profile, theme, letters, app updates/changes, password, delete |
 | `/notifications` | Activity |
@@ -796,11 +796,17 @@ notification handlers. `public/offline.html` is the offline fallback.
 - **Notifications on iOS:** Web Push works only after the PWA is installed to
   the Home Screen (iOS 16.4+), then the normal Settings → Notifications
   permission flow applies.
-- **Native shell:** the Android WebView gets a native
-  `BottomNavigationView` (Wall, Explore, Meetups, Chat, Garage). The browser
-  PWA uses the matching HTML tab bar. `html.native-shell` hides the web bar
-  inside the Android app to avoid two navigations.
-- **Future native iOS:** the PWA tab bar is the visual contract; a future
+- **Fonts:** Manrope and the selected Georgian BPG font are self-hosted as
+  WOFF2 files, so Android, desktop, iOS and the PWA render the same Latin and
+  Georgian text even when Google Fonts or the uploads cache is unavailable.
+- **Camera:** certificate scan controls are native `<label>` elements for a
+  real `capture="environment"` file input, so iOS opens the camera without a
+  programmatic click.
+- **One shared tab bar:** Android, the browser PWA and iOS all use the same
+  in-page tab bar (Wall, Explore, Meetups, Chat, Garage). The Android WebView
+  no longer draws a second native bar, so the active state, spacing and
+  safe-area handling are identical on every platform.
+- **Future native iOS:** the shared tab bar is the visual contract; a future
   WKWebView shell can replace it with `UITabBarController` without changing
   the page routes.
 
@@ -1505,8 +1511,8 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.5.0`
-- Android version: `android/app/build.gradle.kts` → `1.3.0` (versionCode `9`)
+- Web version: `package.json` → `1.5.1`
+- Android version: `android/app/build.gradle.kts` → `1.3.1` (versionCode `10`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

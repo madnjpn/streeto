@@ -11,6 +11,19 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.5.1',
+    date: '2026-10-25',
+    scope: 'both',
+    items: [
+      'Explore now uses the same section hub on desktop and mobile.',
+      'Garage opens directly on My Ride, and My Ride / Fines stay in one switch.',
+      'Android now uses the same floating tab bar as the iOS PWA.',
+      'Android 1.3.1 removes the native bottom bar and keeps one shared navigation.',
+      'One download button on the login page opens the Android and iOS install page.',
+      'Text uses the same Manrope and BPG fonts on web, Android, iOS and the PWA.',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-10-25',
     scope: 'both',

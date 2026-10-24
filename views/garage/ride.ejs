@@ -8,6 +8,11 @@
 
 <%- include('../partials/garage-tabs', { section: 'ride' }) %>
 
+<!-- iOS opens the camera reliably from a real file input / label, not
+     from a programmatic click on an off-screen input. Every scan control
+     points at this one input. -->
+<input class="sr-only" id="cert-camera-input" type="file" accept="image/*" capture="environment" aria-label="<%= t('Scan certificate') %>">
+
 <% if (vehicles && vehicles.length) { %>
   <div class="garage-carousel" role="region" aria-label="<%= t('Your vehicles') %>" tabindex="0">
     <div class="garage-carousel__track">
@@ -94,9 +99,9 @@
             <span><%= t('Vehicle name') %></span>
             <input type="text" name="title" maxlength="90" placeholder="<%= t('e.g. The Midnight Skyline (optional)') %>">
           </label>
-          <button type="button" class="btn btn--ghost cert-scan-btn" data-modal-scan title="<%= t('Scan registration certificate') %>">
+          <label class="btn btn--ghost cert-scan-btn" for="cert-camera-input" data-modal-scan role="button" tabindex="0" title="<%= t('Scan registration certificate') %>">
             <%- include('../partials/icon', { name: 'camera', size: 16 }) %> <%= t('Scan Certificate') %>
-          </button>
+          </label>
         </div>
         <p class="cert-scan-hint"><%= t('Scan the back first (make, model, VIN), then the front (plate, owner).') %></p>
 
@@ -148,6 +153,13 @@
 
 <script>
   (function() {
+    // The modal markup sits inside <main class="shell">, which is a stacking
+    // context (z-index: 2). That let the sticky top bar and page footer paint
+    // over the modal. Move it to <body> before anything else can fail.
+    var modal = document.getElementById('add-vehicle-modal');
+    if (!modal) return;
+    if (modal.parentElement !== document.body) document.body.appendChild(modal);
+
     // Build link: reveal the "copy certificate data" option once a build
     // is selected.
     var buildSelect = document.getElementById('linked-build-id');
@@ -173,23 +185,16 @@
       var linkedSelect = document.getElementById('linked-build-id');
       if (!createBox || !visWrap || !createWrap) return;
       var update = function() {
-        var linked = Boolean(linkedSelect.value);
+        var linked = Boolean(linkedSelect && linkedSelect.value);
         // Hide the entire create-build option when a build is already linked
         createWrap.hidden = linked;
         visWrap.hidden = !createBox.checked;
         if (linkedSelect) linkedSelect.disabled = createBox.checked;
       };
       createBox.addEventListener('change', update);
-      linkedSelect.addEventListener('change', update);
+      if (linkedSelect) linkedSelect.addEventListener('change', update);
       update();
     })();
-    var modal = document.getElementById('add-vehicle-modal');
-    // The modal markup sits inside <main class="shell">, which is a stacking
-    // context (z-index: 2). That let the sticky top bar and page footer paint
-    // over the modal. Move it to <body> so it is always on top.
-    if (modal && modal.parentElement !== document.body) {
-      document.body.appendChild(modal);
-    }
     var openBtn = document.getElementById('toggle-add-vehicle');
     var closeBtns = modal.querySelectorAll('[data-modal-close]');
 
@@ -1531,21 +1536,24 @@
       if (backGuide) backGuide.toggleAttribute('hidden', scanSide !== 'back');
     }
 
-    function openScanner(root, opts) {
+    function setScanContext(root, opts) {
       opts = opts || {};
       scanTarget = (root && root.querySelector) ? root : document.getElementById('add-vehicle-modal');
       var isAdd = Boolean(scanTarget && scanTarget.id === 'add-vehicle-modal');
       scanMode = isAdd ? 'add' : 'manual';
       if (opts.side === 'front' || opts.side === 'back') scanSide = opts.side;
       else scanSide = isAdd ? 'back' : 'front';
-
       ensureProgress();
       ensureResult();
+    }
+
+    function openScanner(root, opts) {
+      setScanContext(root, opts);
 
       // iOS WebKit can expose getUserMedia but still refuses it inside a
-      // WebView, and the fallback click after an async rejection is outside
-      // the user gesture. Use the native camera input directly there so the
-      // Add Vehicle scan always opens something usable.
+      // WebView, and a programmatic click on an off-screen input is not
+      // reliable there. The scan controls are labels for a real file input,
+      // so on iOS the browser opens the camera itself.
       if (isIOS() || !canUseCamera()) {
         // Plain HTTP on a LAN address cannot use getUserMedia, but an
         // <input type="file" capture> still opens the phone camera.
@@ -1555,24 +1563,65 @@
       startCamera();
     }
 
-    document.querySelectorAll('[data-cert-scan]').forEach(function(button) {
-      button.addEventListener('click', function(event) {
+    // The real <input type="file" capture> is in the page, not created by
+    // JavaScript. A label click is a native user gesture in Safari, which is
+    // what iOS requires before it will open the camera.
+    var nativeScanInput = document.getElementById('cert-camera-input');
+    if (nativeScanInput) {
+      nativeScanInput.addEventListener('change', function() {
+        var file = nativeScanInput.files && nativeScanInput.files[0];
+        try { nativeScanInput.value = ''; } catch (err) { /* ignore */ }
+        if (file) handleFile(file);
+      });
+    }
+
+    function scanSideFor(card) {
+      // Start with the side the card is currently showing, so scanning the
+      // back face prompts for the back first.
+      var backFace = card && card.querySelector('[data-cert-face="back"]');
+      return backFace && !backFace.hidden ? 'back' : 'front';
+    }
+
+    function wireScanControl(control, targetFn) {
+      var activate = function(event) {
+        var target = targetFn();
+        var side = target && target.hasAttribute && target.hasAttribute('data-regcert')
+          ? scanSideFor(target)
+          : 'back';
+        setScanContext(target, { side: side });
+        if (isIOS()) return; // let the label open its file input natively
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        openScanner(target, { side: side });
+      };
+      control.addEventListener('click', activate);
+      control.addEventListener('keydown', function(event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
         event.preventDefault();
-        event.stopPropagation();
-        var card = button.closest('[data-regcert]');
-        // Start with the side the card is currently showing, so scanning the
-        // back face prompts for the back first.
-        var backFace = card && card.querySelector('[data-cert-face="back"]');
-        var side = backFace && !backFace.hidden ? 'back' : 'front';
-        openScanner(card, { side: side });
+        var target = targetFn();
+        var side = target && target.hasAttribute && target.hasAttribute('data-regcert')
+          ? scanSideFor(target)
+          : 'back';
+        setScanContext(target, { side: side });
+        if (isIOS() && nativeScanInput) {
+          nativeScanInput.click();
+          return;
+        }
+        openScanner(target, { side: side });
+      });
+    }
+
+    document.querySelectorAll('[data-cert-scan]').forEach(function(control) {
+      wireScanControl(control, function() {
+        return control.closest('[data-regcert]');
       });
     });
 
-    document.querySelectorAll('[data-modal-scan]').forEach(function(button) {
-      button.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        openScanner(document.getElementById('add-vehicle-modal'), { side: 'back' });
+    document.querySelectorAll('[data-modal-scan]').forEach(function(control) {
+      wireScanControl(control, function() {
+        return document.getElementById('add-vehicle-modal');
       });
     });
   })();

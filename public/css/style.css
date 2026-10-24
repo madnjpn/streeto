@@ -2950,6 +2950,14 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 }
 .cert-tab:hover { color: var(--text); border-color: var(--line); }
 .cert-tab.is-active { color: var(--text); background: rgba(var(--veil), 0.1); border-color: var(--line); }
+/* Scan controls are labels so iOS can open the camera as a native gesture. */
+label.cert-tab,
+label.cert-scan-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
 .cert-tabs__label { margin-left: auto; font-size: 11px; color: var(--dim); }
 .cert-tab--edit {
   margin-left: auto;
@@ -3480,9 +3488,15 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
   .regcert__issuer { text-align: left; }
   .cert-tabs__label { display: none; }
 
-  /* Modal responsive */
-  .modal { padding: 12px; }
-  .modal__panel { max-width: 100%; max-height: 95vh; border-radius: 12px; }
+  /* Modal responsive. Do not reset the top padding here: the add-vehicle
+     modal must start below the iOS status bar, not under it. */
+  .modal {
+    padding-top: calc(var(--ui-safe-top) + max(8px, 1.5vh));
+    padding-left: max(8px, 2vw);
+    padding-right: max(8px, 2vw);
+    padding-bottom: calc(var(--ui-safe-bottom) + max(12px, 2vh));
+  }
+  .modal__panel { max-width: 100%; max-height: 100%; border-radius: 12px; }
   .modal__header { padding: 12px 16px; }
   .modal__header h2 { font-size: 16px; }
   .modal__body { padding: 16px; }
@@ -3494,14 +3508,15 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 }
 
 @media (max-width: 640px) {
-  /* Add-vehicle modal: fill the screen, keep the footer reachable. */
+  /* Add-vehicle modal: fill the available viewport, keep the footer reachable.
+     The modal container already subtracts the safe areas, so 100% is the
+     correct ceiling for phones and installed iOS PWAs. */
   #add-vehicle-modal .modal__panel--form {
-    max-height: calc(100vh - 24px);
-    max-height: calc(100dvh - 24px);
+    max-height: 100%;
   }
   .modal__scroll { padding: 14px 14px 6px; }
   .modal__panel--form .modal__footer {
-    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 12px 14px;
   }
   .modal__panel--form .modal__footer .btn { flex: 1 1 0; }
   /* 16px stops iOS Safari from zooming when a field is focused. */
@@ -6237,6 +6252,8 @@ a.chip.is-active .chip__n { color: var(--neon); }
   }
   .srvswitch__tab:last-child { border-right: none; }
   .srvswitch__tab svg { width: 14px; height: 14px; flex-shrink: 0; }
+  /* Garage now has only My Ride + the add button; keep the plus compact. */
+  #toggle-add-vehicle { flex: 0 0 54px; }
   .srvswitch__tab.is-active {
     border-radius: 0;
     box-shadow: none;

@@ -5,7 +5,7 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 ## What it does
 
 - Loads `https://streeto.net` in a full-screen WebView
-- Native bottom navigation: Wall, Explore, Meetups, Chat and Garage
+- Shares the same in-page tab bar as the iOS PWA: Wall, Explore, Meetups, Chat and Garage
 - Stays inside the app for `streeto.net` links; other links open in the browser
 - Native back button (browser history, then exit)
 - Pull to refresh

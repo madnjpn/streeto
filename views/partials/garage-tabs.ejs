@@ -1,5 +1,6 @@
 <%
-/* Section switch shown on every Garage page: My Ride <-> Fines. */
+/* My Ride and Fines are the two Garage sections; the plus button is the
+   add-vehicle action and sits at the end of the same switch. */
 const current = typeof section !== 'undefined' ? section : 'ride';
 %>
 <nav class="srvswitch" aria-label="<%= t('Garage sections') %>">

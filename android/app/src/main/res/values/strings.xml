@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">STREETO</string>
-    <string name="tab_wall">Wall</string>
-    <string name="tab_explore">Explore</string>
-    <string name="tab_meetups">Meetups</string>
-    <string name="tab_chat">Chat</string>
-    <string name="tab_garage">Garage</string>
     <string name="choose_file">Choose a file</string>
     <string name="choose_photo">Choose a photo</string>
     <string name="location_denied">Location permission denied</string>

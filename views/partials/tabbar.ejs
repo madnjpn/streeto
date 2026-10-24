@@ -6,7 +6,7 @@
     if (key === 'chat') return chatOpen || typeof active !== 'undefined' && active === 'chat';
     if (key === 'garage') return currentPath.startsWith('/garage');
     if (key === 'meetups') return currentPath.startsWith('/meetups') || currentPath.startsWith('/routes');
-    if (key === 'explore') return ['/explore', '/near', '/builds', '/groups', '/services', '/search'].some((p) => currentPath.startsWith(p));
+    if (key === 'explore') return ['/explore', '/near', '/builds', '/groups', '/services', '/people', '/friends', '/search'].some((p) => currentPath.startsWith(p));
     return currentPath === '/';
   };
 %>
@@ -30,7 +30,7 @@
     </span>
     <span class="tabbar__label"><%= t('Chat') %></span>
   </a>
-  <a class="tabbar__item <%= tabActive('garage') ? 'is-active' : '' %>" href="/garage">
+  <a class="tabbar__item <%= tabActive('garage') ? 'is-active' : '' %>" href="/garage/ride">
     <span class="tabbar__icon"><%- include('icon', { name: 'key', size: 22 }) %></span>
     <span class="tabbar__label"><%= t('Garage') %></span>
   </a>

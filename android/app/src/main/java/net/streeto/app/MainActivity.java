@@ -57,8 +57,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 import org.json.JSONObject;
 
 import java.io.File;
@@ -91,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ProgressBar progress;
     private SwipeRefreshLayout refresh;
-    private BottomNavigationView bottomNav;
 
     private ValueCallback<Uri[]> fileCallback;
     private Uri cameraUri;
@@ -127,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
         bindViews();
         startSplash();
         configureWebView();
-        configureBottomNav();
         bindBackButton();
 
         NativeNotifications.createChannels(this);
@@ -179,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         progress = findViewById(R.id.progress);
         refresh = findViewById(R.id.refresh);
-        bottomNav = findViewById(R.id.bottomNav);
         splash = findViewById(R.id.splash);
         splashMark = findViewById(R.id.splashMark);
         splashWord = findViewById(R.id.splashWord);
@@ -314,7 +309,6 @@ public class MainActivity extends AppCompatActivity {
                 progress.setVisibility(View.GONE);
                 refresh.setRefreshing(false);
                 CookieManager.getInstance().flush();
-                updateBottomNav(url);
                 if (url != null && !url.startsWith("about:")) hideSplash();
             }
 
@@ -418,68 +412,6 @@ public class MainActivity extends AppCompatActivity {
                 /* nothing can open it */
             }
         });
-    }
-
-    /** Native bottom navigation. The web tab bar hides itself in this shell. */
-    private void configureBottomNav() {
-        if (bottomNav == null) return;
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            String url;
-            if (id == R.id.nav_wall) url = START_URL_BASE + "/";
-            else if (id == R.id.nav_explore) url = START_URL_BASE + "/explore";
-            else if (id == R.id.nav_meetups) url = START_URL_BASE + "/meetups";
-            else if (id == R.id.nav_chat) url = START_URL_BASE + "/?chat=1";
-            else if (id == R.id.nav_garage) url = START_URL_BASE + "/garage";
-            else return false;
-            webView.loadUrl(url);
-            return true;
-        });
-        bottomNav.setOnItemReselectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_wall) webView.loadUrl(START_URL_BASE + "/");
-            else if (id == R.id.nav_explore) webView.loadUrl(START_URL_BASE + "/explore");
-            else if (id == R.id.nav_meetups) webView.loadUrl(START_URL_BASE + "/meetups");
-            else if (id == R.id.nav_chat) webView.loadUrl(START_URL_BASE + "/?chat=1");
-            else if (id == R.id.nav_garage) webView.loadUrl(START_URL_BASE + "/garage");
-        });
-    }
-
-    private void updateBottomNav(String url) {
-        if (bottomNav == null) return;
-        Uri uri = Uri.parse(url == null ? "" : url);
-        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
-        String path = uri.getPath() == null ? "/" : uri.getPath();
-        boolean onStreeto = "streeto.net".equals(host) || host.endsWith(".streeto.net");
-        boolean authPage = path.equals("/login") || path.equals("/register")
-                || path.equals("/forgot") || path.startsWith("/reset")
-                || path.equals("/install") || path.startsWith("/admin");
-        boolean show = onStreeto && !authPage;
-        bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (!show) return;
-
-        int id = 0;
-        if (path.equals("/") || path.isEmpty()) {
-            id = uri.getQueryParameter("chat") != null ? R.id.nav_chat : R.id.nav_wall;
-        } else if (path.startsWith("/chat")) {
-            id = R.id.nav_chat;
-        } else if (path.startsWith("/meetups") || path.startsWith("/routes")) {
-            id = R.id.nav_meetups;
-        } else if (path.startsWith("/garage")) {
-            id = R.id.nav_garage;
-        } else if (path.startsWith("/explore") || path.startsWith("/near")
-                || path.startsWith("/builds") || path.startsWith("/groups")
-                || path.startsWith("/services") || path.startsWith("/search")
-                || path.startsWith("/partners")) {
-            id = R.id.nav_explore;
-        } else if (path.startsWith("/u/") || path.startsWith("/settings")
-                || path.startsWith("/notifications") || path.startsWith("/friends")
-                || path.startsWith("/people")) {
-            id = R.id.nav_wall;
-        }
-        if (id != 0) {
-            bottomNav.getMenu().findItem(id).setChecked(true);
-        }
     }
 
     /** The small JS bridge used by the site's update check. */

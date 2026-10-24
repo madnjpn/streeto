@@ -52,16 +52,11 @@
 
       <div class="auth__android">
         <p class="auth__or" aria-hidden="true"></p>
-        <a class="btn btn--outline btn--block" href="/downloads/STREETO-android.apk" download="STREETO-android.apk">
-          <%- include('../partials/icon', { name: 'download', size: 17 }) %>
-          <span>STREETO.NET | Android</span>
-        </a>
         <a class="btn btn--primary btn--block" href="/install">
-          <%- include('../partials/icon', { name: 'phone', size: 17 }) %>
-          <span>STREETO.NET | <%= t('iPhone / PWA') %></span>
+          <%- include('../partials/icon', { name: 'download', size: 17 }) %>
+          <span><%= t('DOWNLOAD | ANDROID & iOS') %></span>
         </a>
-        <p class="muted small auth__android-note"><%= t('Add it to your Home Screen from Safari') %></p>
-        <p class="muted small auth__android-note"><%= t('Test build · Android 7.0+') %></p>
+        <p class="muted small auth__android-note"><%= t('Android APK + iPhone Home Screen install') %></p>
       </div>
     </div>
   </section>

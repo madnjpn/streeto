@@ -55,7 +55,11 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
                 </div>
               </div>
               <a class="menu__item" href="/u/<%= currentUser.username %>"><%- include('icon', { name: 'user', size: 17 }) %> <%= t('My profile') %></a>
-              <a class="menu__item" href="/builds"><%- include('icon', { name: 'garage', size: 17 }) %> <%= t('My builds') %></a>
+              <a class="menu__item" href="/builds"><%- include('icon', { name: 'garage', size: 17 }) %> <%= t('Builds') %></a>
+              <a class="menu__item" href="/groups"><%- include('icon', { name: 'shield', size: 17 }) %> <%= t('Groups') %></a>
+              <a class="menu__item" href="/services"><%- include('icon', { name: 'wrench', size: 17 }) %> <%= t('Services') %></a>
+              <a class="menu__item" href="/people"><%- include('icon', { name: 'users', size: 17 }) %> <%= t('Drivers') %></a>
+              <a class="menu__item" href="/garage/ride"><%- include('icon', { name: 'key', size: 17 }) %> <%= t('My Garage') %></a>
               <a class="menu__item" href="/friends"><%- include('icon', { name: 'users', size: 17 }) %> <%= t('Friends') %> <% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
               <a class="menu__item" href="/notifications"><%- include('icon', { name: 'bell', size: 17 }) %> <%= t('Activity') %> <% if (unreadNotifications) { %><span class="pip" data-badge="notifications"><%= unreadNotifications > 99 ? '99+' : unreadNotifications %></span><% } %></a>
               <a class="menu__item" href="/chat/new"><%- include('icon', { name: 'send', size: 17 }) %> <%= t('New message') %></a>
@@ -98,7 +102,7 @@ const showTopSearch = isAuthenticated && !ownSearch.includes(path);
   <a class="appmenu__link <%= isActive('meetups') %>" href="/meetups"><%- include('icon', { name: 'pin', size: 20 }) %><span><%= t('Meetups') %></span></a>
   <a class="appmenu__link <%= isActive('services') %>" href="/services"><%- include('icon', { name: 'wrench', size: 20 }) %><span><%= t('Services') %></span></a>
   <a class="appmenu__link <%= isActive('chat') %>" href="/chat"><%- include('icon', { name: 'chat', size: 20 }) %><span><%= t('Chat') %></span></a>
-  <a class="appmenu__link <%= isActive('garage') %>" href="/garage"><%- include('icon', { name: 'key', size: 20 }) %><span><%= t('My Garage') %></span></a>
+  <a class="appmenu__link <%= isActive('garage') %>" href="/garage/ride"><%- include('icon', { name: 'key', size: 20 }) %><span><%= t('My Garage') %></span></a>
   <a class="appmenu__link <%= isActive('people') %>" href="/people"><%- include('icon', { name: 'users', size: 20 }) %><span><%= t('Drivers') %></span></a>
   <a class="appmenu__link <%= isActive('friends') %>" href="/friends"><%- include('icon', { name: 'users', size: 20 }) %><span><%= t('Friends') %></span><% if (pendingRequests) { %><span class="pip" data-badge="friends"><%= pendingRequests %></span><% } %></a>
 </nav>
