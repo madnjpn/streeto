@@ -11,6 +11,17 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.5.2',
+    date: '2026-10-25',
+    scope: 'web',
+    items: [
+      'The installed PWA shows the same animated launch screen as the Android app.',
+      'How it works now explains every STREETO feature, including the Android app and the iPhone/iPad PWA.',
+      'README and the live UI style guide document the shared iOS, Android and PWA tab bar.',
+      'Installed PWA launches run the splash once per app session and respect reduced motion.',
+    ],
+  },
+  {
     version: '1.5.1',
     date: '2026-10-25',
     scope: 'both',

@@ -21,6 +21,16 @@
 </section>
 
 <section class="card sg-section">
+  <h2 class="card__title"><%= t('Navigation') %></h2>
+  <ul class="sg-rules">
+    <li><code>.sidenav</code> - <%= t('Desktop uses the sidebar.') %></li>
+    <li><code>.tabbar</code> - <%= t('Phones, Android, iOS and the PWA use one in-page tab bar.') %></li>
+    <li><%= t('No native UITabBar or Material bar. Keep the same five items, order and active state.') %></li>
+    <li><%= t('The tab bar reserves 64 px plus the safe-area inset.') %></li>
+  </ul>
+</section>
+
+<section class="card sg-section">
   <h2 class="card__title"><%= t('Colour') %></h2>
   <div class="sg-swatches">
     <div class="sg-swatch sg-swatch--neon">--neon</div>

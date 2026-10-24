@@ -41,12 +41,19 @@ admin-only and renders the same CSS the rest of the site uses.
    block that contains copy. Use `min-height` on controls, not on text.
    Truncation is allowed only for metadata previews (chat preview, URL), not
    for the main sentence of a notification, search result or pin drop.
-6. **Navigation and fixed UI have reserved space.** The fixed menu and chat
-   buttons sit above the page; the footer and the last controls must clear
-   them (`env(safe-area-inset-bottom)` plus the `96px` footer clearance).
-7. **430 px is the widest phone we design for.** The test viewport is
+6. **Navigation is one shared contract.** Desktop uses the `.sidenav`.
+   Phones, the browser PWA, the iOS Home Screen app and the Android WebView
+   all use the same in-page `.tabbar` (`.tabbar__item` / `.tabbar__label`):
+   Wall, Explore, Meetups, Chat, Garage, in that order. Do not add a native
+   `UITabBar` or Material `BottomNavigationView` with a different look. If a
+   native shell is introduced later, it must keep the same five items, order,
+   active state and safe-area spacing.
+7. **Navigation and fixed UI have reserved space.** The `.tabbar` sits above
+   the page; the footer and the last controls must clear it
+   (`env(safe-area-inset-bottom)` plus the `--ui-tabbar` clearance).
+8. **430 px is the widest phone we design for.** The test viewport is
    **390 × 844**; also check 430 × 932 before a release.
-8. **No sideways scroll and no off-screen action.** If an action is outside
+9. **No sideways scroll and no off-screen action.** If an action is outside
    the viewport, it is either inside an explicit horizontal carousel (and is
    reachable by swipe) or it is a bug.
 
@@ -170,7 +177,8 @@ blank card without an explanation.
 Breakpoints are inherited from `style.css`:
 
 - `<= 620 px`: phone. Stacks columns, full-width controls, wraps filters.
-- `<= 860 px`: tablet / small laptop. Sidebars hide, fixed menu appears.
+- `<= 860 px`: tablet / small laptop. The `.sidenav` hides and the shared
+  `.tabbar` appears at the bottom.
 - `<= 1080 px`: narrower grid.
 - `> 1080 px`: full desktop shell.
 
@@ -180,16 +188,16 @@ On a phone:
 - one column for forms and facts;
 - `overflow-x: auto` is allowed only for explicit carousels and filter strips;
   give them a visible edge/fade or keep all labels visible;
-- the fixed menu/chat buttons are 52 px circles at the bottom corners; the
-  footer reserves 96 px plus the safe-area inset;
-- no content is clipped under them at the bottom of the page.
+- the `.tabbar` is 64 px tall plus `env(safe-area-inset-bottom)`; the footer
+  and page shell reserve that space;
+- no content is clipped under the tab bar at the bottom of the page.
 
 Small-phone rules:
 
 - `<= 380 px`: the composer privacy note moves to its own line.
 - The top bar keeps only the Activity bell, language/currency and the account
-  menu. Chat lives in the floating chat launcher and Meetups in the app menu /
-  sidebar; do not add them back as top-bar icons.
+  menu. Chat and Meetups live in the shared `.tabbar`; do not add them back as
+  top-bar icons.
 - 320 px is treated as a hard minimum; if a new component cannot fit, wrap it
   or move it into a sheet — do not hide its text under `overflow: hidden`.
 
@@ -207,6 +215,12 @@ The same HTML/CSS should run in a `WKWebView` without a second design.
   bridge (`window.StreetNative` etc.) and keep a browser fallback.
 - The WebView shell owns status-bar colour and the native back gesture; the
   page must keep a readable sticky top bar and a clear back link.
+- Navigation: there is no native `UITabBar` in the current PWA. iOS, Android
+  and the browser all render the same `.tabbar`; a future native shell must
+  keep the same items, order, labels and active state.
+- Launch screen: the installed PWA uses `.pwa-splash` for the same mark,
+  wordmark, line and site-signature animation as Android. It appears once per
+  app session, only in standalone display mode, and respects reduced motion.
 - Notifications: browser Web Push remains the fallback; the iOS native shell
   will use APNs later, behind the same server-side notification fan-out.
 
@@ -218,7 +232,7 @@ The same HTML/CSS should run in a `WKWebView` without a second design.
 - [ ] No fixed height around text; long Georgian copy wraps.
 - [ ] Checked at 390 × 844 and 430 × 932.
 - [ ] No page horizontal overflow.
-- [ ] Footer links and last actions clear the fixed menu/chat buttons.
+- [ ] Footer links and last actions clear the shared `.tabbar`.
 - [ ] Keyboard focus visible; icon-only controls have `aria-label`.
 - [ ] Reduced-motion mode leaves the page usable; no action depends on hover.
 - [ ] `npm run ui:check` passes.

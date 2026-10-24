@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.5.1` (`package.json`), Android `1.3.1`
+**Current in this tree:** web `1.5.2` (`package.json`), Android `1.3.1`
 (`versionCode 10`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -803,13 +803,18 @@ notification handlers. `public/offline.html` is the offline fallback.
 - **Camera:** certificate scan controls are native `<label>` elements for a
   real `capture="environment"` file input, so iOS opens the camera without a
   programmatic click.
+- **Launch screen:** the installed PWA shows the same animated mark, wordmark,
+  neon line and STREETO.NET signature as the Android splash. It runs once per
+  app session, is skipped for normal browser tabs and respects reduced motion.
 - **One shared tab bar:** Android, the browser PWA and iOS all use the same
-  in-page tab bar (Wall, Explore, Meetups, Chat, Garage). The Android WebView
-  no longer draws a second native bar, so the active state, spacing and
-  safe-area handling are identical on every platform.
-- **Future native iOS:** the shared tab bar is the visual contract; a future
-  WKWebView shell can replace it with `UITabBarController` without changing
-  the page routes.
+  in-page HTML/CSS tab bar (`.tabbar`: Wall, Explore, Meetups, Chat, Garage).
+  It is **not** a native `UITabBar` and Android no longer uses a Material
+  `BottomNavigationView`. Desktop keeps the `.sidenav`; phones and tablets use
+  `.tabbar`, so active states, spacing and safe areas are identical everywhere.
+- **Future native iOS/Android shells:** keep the same five items, labels,
+  order and visual contract. A native `UITabBarController` or Material bar is
+  only acceptable if it matches this shared design; the web `.tabbar` remains
+  the source of truth.
 
 ### 8.5 Changelog / "Changes"
 
@@ -1512,7 +1517,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.5.1`
+- Web version: `package.json` → `1.5.2`
 - Android version: `android/app/build.gradle.kts` → `1.3.1` (versionCode `10`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`

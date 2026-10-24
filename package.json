@@ -1,6 +1,6 @@
 {
   "name": "streeto",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "type": "module",
   "description": "STREETO - underground street racing social network (Node.js + SQLite)",

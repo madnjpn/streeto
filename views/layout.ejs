@@ -26,6 +26,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+  // The installed PWA gets one animated launch screen per app session. The
+  // class is set in <head> so the first paint never flashes the page first.
+  (function () {
+    try {
+      // The native Android shell has its own splash; do not cover it.
+      if (window.StreetNative) return;
+      var standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+      if (!standalone) return;
+      if (sessionStorage.getItem('streeto:pwa-splash') === '1') return;
+      sessionStorage.setItem('streeto:pwa-splash', '1');
+      window.__streetoPwaSplashAt = Date.now();
+      document.documentElement.classList.add('pwa-booting');
+      // Safety net if pwa.js never runs.
+      window.setTimeout(function () {
+        document.documentElement.classList.remove('pwa-booting');
+      }, 8000);
+    } catch (error) { /* private mode or old browser */ }
+  })();
+</script>
 <meta name="color-scheme" content="<%= themeName === 'light' ? 'light' : 'dark' %>">
 <meta name="theme-color" content="<%= metaThemeColor %>">
 <meta name="csrf-token" content="<%= csrfToken %>">
@@ -71,6 +93,14 @@
 <link rel="stylesheet" href="/assets/<%= assetStamp %>/css/fonts.css">
 </head>
 <body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>" data-authed="<%= isAuthenticated ? '1' : '0' %>">
+<div class="pwa-splash" data-pwa-splash aria-hidden="true">
+  <div class="pwa-splash__inner">
+    <img class="pwa-splash__mark" src="/icons/streeto-mark.png" alt="" width="132" height="132">
+    <span class="pwa-splash__word">STREETO</span>
+    <span class="pwa-splash__line"></span>
+  </div>
+  <span class="pwa-splash__site">STREETO.NET</span>
+</div>
 <a class="skip-link" href="#main"><%= t('Skip to content') %></a>
 
 <div class="noise" aria-hidden="true"></div>
