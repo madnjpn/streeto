@@ -17,7 +17,8 @@
     "ddns": "node scripts/cf-ddns.mjs",
     "golive": "node scripts/go-live.mjs",
     "prodcheck": "node scripts/prod-check.mjs",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "icons:android": "node scripts/build-android-icons.mjs"
   },
   "dependencies": {
     "curl-impersonate": "^0.0.0",

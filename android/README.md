@@ -16,6 +16,23 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 - In-app update check: **Settings → App & updates** shows the web and app versions, and the shell downloads a newer signed APK, checks its SHA-256 and opens the installer
 - A dismissible update banner appears when a newer release is being served
 
+## Launcher icon
+
+The source artwork is `android/icon-source.png` (a square PNG). Regenerate all
+densities with:
+
+```bash
+npm run icons:android
+```
+
+This writes the legacy square icons, the circular API 24/25 round icons, the
+432 px adaptive background and the transparent adaptive foreground. Commit the
+generated resources under `app/src/main/res/`. To use a different source:
+
+```bash
+node scripts/build-android-icons.mjs path/to/icon.png
+```
+
 ## Build
 
 The signed release APK is built by GitHub Actions (`.github/workflows/android.yml`) on every push to `main` and can be started by hand from **Actions → Build Android APK → Run workflow**.
@@ -97,6 +114,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.1.0 (versionCode 3)
+- Version: 1.1.2 (versionCode 4)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

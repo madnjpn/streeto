@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.1.1` (`package.json`), Android `1.1.0`
-(`versionCode 3`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.1.1` (`package.json`), Android `1.1.2`
+(`versionCode 4`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -736,6 +736,8 @@ A native **Java WebView shell** around `https://streeto.net`:
 - footer shows `Web vX · App vY`; Settings shows update/check/changes UI
 
 Package `net.streeto.app`; min Android 7.0 (API 24); target/compile SDK 35.
+The launcher icon source is `android/icon-source.png`; `npm run icons:android`
+regenerates the legacy, round and adaptive resources.
 
 ### 9.2 Build and release
 
@@ -1310,6 +1312,7 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 | Server/TLS/startup jobs | `server.js` |
 | Static assets/routes/CSP | `src/app.js` |
 | Android shell | `android/app/src/main/java/net/streeto/app/MainActivity.java`, `AndroidManifest.xml`, `res/*` |
+| Launcher icon | `android/icon-source.png`; run `npm run icons:android` to regenerate every density |
 | Android build/signing/CI | `android/app/build.gradle.kts`, `android/build.gradle.kts`, `.github/workflows/android.yml`, `android/README.md` |
 | RockAuto Python service | `rockauto-service/` |
 | Backups | `src/lib/backup.js`, Admin → Backups |
@@ -1348,7 +1351,7 @@ version/code, APK URL, size and SHA-256 that the update checker will use.
 ### Current release reminder
 
 - Web version: `package.json` → `1.1.1`
-- Android version: `android/app/build.gradle.kts` → `1.1.0` (versionCode `3`)
+- Android version: `android/app/build.gradle.kts` → `1.1.2` (versionCode `4`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

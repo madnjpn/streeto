@@ -2361,6 +2361,7 @@ export default {
   'Android': 'Android',
   'Installed': 'დაყენებულია',
   'A Changes panel in Settings lists what was updated.': 'პარამეტრებში დამატებულია „ცვლილებების“ პანელი, სადაც ჩანს, რა განახლდა.',
+  'New STREETO launcher icon.': 'STREETO-ს ახალი აპის ხატულა.',
   'In-app update check with a native APK downloader.': 'აპში განახლებების შემოწმება და APK-ის ჩამოტვირთვა.',
   'Web and Android versions in the footer.': 'ვებისა და Android-ის ვერსიები ფუტერში.',
   'SHA-256 verification before installing an update.': 'განახლების დაყენებამდე SHA-256 შემოწმება.',

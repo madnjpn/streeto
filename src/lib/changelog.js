@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.1.2',
+    date: '2026-10-24',
+    scope: 'android',
+    items: [
+      'New STREETO launcher icon.',
+    ],
+  },
+  {
     version: '1.1.1',
     date: '2026-10-24',
     scope: 'web',
