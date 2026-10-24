@@ -50,7 +50,9 @@ db.close();
 const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov', '.mkv', '.ogv']);
 for (const file of [...used]) {
   if (VIDEO_EXT.has(path.extname(file).toLowerCase())) {
-    used.add(file.replace(/\.[^.]+$/, '.jpg'));
+    const base = file.replace(/\.[^.]+$/, '');
+    used.add(base + '.webp');
+    used.add(base + '.jpg');
   }
 }
 

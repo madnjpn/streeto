@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.2.3` (`package.json`), Android `1.2.1`
+**Current in this tree:** web `1.2.4` (`package.json`), Android `1.2.1`
 (`versionCode 7`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -580,10 +580,15 @@ take a DB backup first. Do not delete uploads by hand.
 
 `ffmpeg-static` is installed with npm, so the binary lives inside
 `node_modules/ffmpeg-static` and the project has no external ffmpeg
-dependency. When a video is uploaded, `optimizeUpload` extracts a frame and
-saves it next to the video as `<name>.jpg`; the video templates use it as a
-`poster`, and the video itself uses `preload="none"` so the feed does not
-download the whole clip just to show a preview.
+dependency. On upload a video is:
+
+1. converted to a browser-safe **H.264/AAC MP4** (max 720 px wide, fast-start),
+2. given a **WebP poster** extracted at ~1 s,
+3. shown with a custom play cover, duration badge and native controls.
+
+The player (`public/js/video.js`) also plays a 2.6 s **muted hover preview** on
+desktop; mobile opens on tap. `preload="metadata"` gets the duration without
+downloading the whole clip until playback.
 
 - Backfill existing videos: `npm run posters`.
 - The poster path is derived from the video path; no extra database column.
@@ -717,6 +722,7 @@ required. A muted chat never produces one.
 | --- | --- |
 | `app.js` | Menus, modals, likes, comments, composer, lightbox, badges, build voting/gallery, onboarding. |
 | `version.js` | Footer versions, `/api/app/version`, update banner, Changes modal, native updater bridge. |
+| `video.js` | Video play cover, duration badge and desktop hover preview. |
 | `i18n.js` | Client `t()` reading the server-provided map. |
 | `chat.js`, `chat-dock.js` | Chat page + dock polling/send/typing. |
 | `search-live.js` | Live search suggestions. |
@@ -1396,6 +1402,7 @@ cookie jars, logs with personal data.
 | Server/TLS/startup jobs | `server.js` |
 | Static assets/routes/CSP | `src/app.js` |
 | Video posters | `src/lib/video-posters.js`, `src/lib/uploads.js`, `scripts/build-video-posters.mjs` (`npm run posters`) |
+| Video player / previews | `views/partials/video.ejs`, `public/js/video.js`, `public/css/style.css` |
 | Android shell | `android/app/src/main/java/net/streeto/app/MainActivity.java`, `AndroidManifest.xml`, `res/*` |
 | Launcher icon | `android/icon-source.png`; run `npm run icons:android` to regenerate every density |
 | Android build/signing/CI | `android/app/build.gradle.kts`, `android/build.gradle.kts`, `.github/workflows/android.yml`, `android/README.md` |
@@ -1435,7 +1442,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.2.3`
+- Web version: `package.json` → `1.2.4`
 - Android version: `android/app/build.gradle.kts` → `1.2.1` (versionCode `7`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`

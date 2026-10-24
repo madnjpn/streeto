@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import sharp from 'sharp';
 import ffmpegPath from 'ffmpeg-static';
 import { resolveUploadPath } from './upload-paths.js';
 
@@ -18,35 +20,110 @@ const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov', '.mkv', '.ogv']);
 const FFMPEG = process.env.FFMPEG_PATH || ffmpegPath || 'ffmpeg';
 
 const isVideo = (mediaPath) => VIDEO_EXT.has(path.extname(String(mediaPath || '')).toLowerCase());
+const baseRel = (mediaPath) => String(mediaPath).replace(/\.[^.]+$/, '');
 
 /** The relative poster path for a video, if one has been generated. */
 export function posterFor(mediaPath) {
   if (!isVideo(mediaPath)) return '';
-  const posterPath = String(mediaPath).replace(/\.[^.]+$/, '.jpg');
-  const full = resolveUploadPath(posterPath);
+  const base = baseRel(mediaPath);
+  for (const ext of ['.webp', '.jpg']) {
+    const candidate = base + ext;
+    const full = resolveUploadPath(candidate);
+    try {
+      if (full && fs.existsSync(full) && fs.statSync(full).size > 0) return candidate;
+    } catch {
+      /* try the next extension */
+    }
+  }
+  return '';
+}
+
+/**
+ * Convert a video to a browser-safe MP4: H.264 video, AAC audio, yuv420p,
+ * fast-start and at most 720 px wide. iPhone HEVC/MOV and Android MKV files
+ * become playable everywhere, and the feed file gets smaller.
+ *
+ * Returns { path, changed }. On failure the original path is returned.
+ */
+export async function transcodeVideo(mediaPath) {
+  if (!isVideo(mediaPath)) return { path: mediaPath, changed: false };
+  const input = resolveUploadPath(mediaPath);
+  if (!input || !fs.existsSync(input)) return { path: mediaPath, changed: false };
+
+  const outputRel = baseRel(mediaPath) + '.mp4';
+  const output = resolveUploadPath(outputRel);
+  if (!output) return { path: mediaPath, changed: false };
+
+  const dir = path.dirname(output);
+  const temp = path.join(
+    dir,
+    `.transcode-${Date.now().toString(36)}-${crypto.randomBytes(6).toString('hex')}.mp4`,
+  );
+
   try {
-    return full && fs.existsSync(full) && fs.statSync(full).size > 0 ? posterPath : '';
-  } catch {
-    return '';
+    await execFileAsync(
+      FFMPEG,
+      [
+        '-hide_banner',
+        '-loglevel', 'error',
+        '-y',
+        '-i', input,
+        '-map', '0:v:0',
+        '-map', '0:a?',
+        '-sn',
+        '-dn',
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-crf', '24',
+        '-pix_fmt', 'yuv420p',
+        '-vf', 'scale=720:-2',
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-ar', '48000',
+        '-movflags', '+faststart',
+        '-max_muxing_queue_size', '1024',
+        temp,
+      ],
+      { timeout: 120_000 },
+    );
+    if (!fs.existsSync(temp) || fs.statSync(temp).size === 0) throw new Error('empty output');
+
+    // Replace the original only after a complete, valid output exists.
+    if (path.resolve(input) !== path.resolve(output)) fs.rmSync(input, { force: true });
+    fs.rmSync(output, { force: true });
+    fs.renameSync(temp, output);
+    return { path: outputRel, changed: outputRel !== mediaPath };
+  } catch (error) {
+    fs.rmSync(temp, { force: true });
+    console.warn('[video] could not transcode', mediaPath, '-', error.message.split('\n')[0]);
+    return { path: mediaPath, changed: false };
   }
 }
 
-/** Extract a frame from the video and save it next to it as a JPEG. */
+/** Extract a frame from the video and save a WebP poster next to it. */
 export async function makePoster(mediaPath) {
   if (!isVideo(mediaPath)) return '';
   const video = resolveUploadPath(mediaPath);
   if (!video || !fs.existsSync(video)) return '';
 
-  const posterPath = String(mediaPath).replace(/\.[^.]+$/, '.jpg');
-  const poster = resolveUploadPath(posterPath);
+  const base = baseRel(mediaPath);
+  const posterRel = base + '.webp';
+  const poster = resolveUploadPath(posterRel);
   if (!poster) return '';
   try {
-    if (fs.existsSync(poster) && fs.statSync(poster).size > 0) return posterPath;
+    if (fs.existsSync(poster) && fs.statSync(poster).size > 0) return posterRel;
   } catch {
-    /* fall through and try to regenerate */
+    /* fall through and regenerate */
   }
 
-  // 1 s in is usually past a fade-in; 0 is the fallback for very short clips.
+  const legacyRel = base + '.jpg';
+  const legacy = resolveUploadPath(legacyRel);
+  const dir = path.dirname(poster);
+  const temp = path.join(
+    dir,
+    `.poster-${Date.now().toString(36)}-${crypto.randomBytes(6).toString('hex')}.jpg`,
+  );
+
   for (const at of ['1', '0']) {
     try {
       await execFileAsync(
@@ -60,24 +137,33 @@ export async function makePoster(mediaPath) {
           '-frames:v', '1',
           '-vf', 'scale=720:-2',
           '-q:v', '3',
-          poster,
+          temp,
         ],
         { timeout: 20_000 },
       );
-      if (fs.existsSync(poster) && fs.statSync(poster).size > 0) return posterPath;
+      if (!fs.existsSync(temp) || fs.statSync(temp).size === 0) continue;
+
+      await sharp(temp).webp({ quality: 80 }).toFile(poster);
+      fs.rmSync(temp, { force: true });
+      if (legacy && fs.existsSync(legacy)) fs.rmSync(legacy, { force: true });
+      return posterRel;
     } catch {
-      /* try the next position / leave the video without a poster */
+      /* try the next position */
     }
   }
+
+  fs.rmSync(temp, { force: true });
   return '';
 }
 
-/** Remove the poster that belongs to a deleted video. */
+/** Remove the poster(s) that belong to a deleted video. */
 export function removePoster(mediaPath) {
   if (!isVideo(mediaPath)) return;
-  const poster = resolveUploadPath(String(mediaPath).replace(/\.[^.]+$/, '.jpg'));
-  if (!poster) return;
-  fs.rm(poster, { force: true }, () => {});
+  const base = baseRel(mediaPath);
+  for (const ext of ['.webp', '.jpg']) {
+    const poster = resolveUploadPath(base + ext);
+    if (poster) fs.rm(poster, { force: true }, () => {});
+  }
 }
 
-export default { posterFor, makePoster, removePoster };
+export default { posterFor, makePoster, transcodeVideo, removePoster };

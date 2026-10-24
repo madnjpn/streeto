@@ -11,6 +11,16 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.2.4',
+    date: '2026-10-24',
+    scope: 'web',
+    items: [
+      'Video cards now have a play cover, duration badge and hover preview.',
+      'Uploads are converted to browser-safe H.264/AAC MP4.',
+      'Video thumbnails are WebP.',
+    ],
+  },
+  {
     version: '1.2.3',
     date: '2026-10-24',
     scope: 'web',

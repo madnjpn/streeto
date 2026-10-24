@@ -1,0 +1,20 @@
+<%
+/* One video card: poster, a custom play cover, native controls once playing,
+   and a duration label filled in by public/js/video.js. */
+const videoSrc = typeof src !== 'undefined' ? src : '';
+const videoPoster = typeof poster !== 'undefined' ? poster : '';
+const videoClass = typeof cls !== 'undefined' && cls ? ` ${cls}` : '';
+%>
+<div class="video-player<%= videoClass %>" data-video-player>
+  <video
+    src="<%= videoSrc %>"
+    <% if (videoPoster) { %>poster="<%= videoPoster %>"<% } %>
+    controls
+    preload="metadata"
+    playsinline
+    data-video></video>
+  <button class="video-player__play" type="button" data-video-play aria-label="<%= t('Play video') %>">
+    <span class="video-player__playicon"><%- include('icon', { name: 'play', size: 26 }) %></span>
+  </button>
+  <span class="video-player__duration" data-video-duration hidden></span>
+</div>

@@ -2066,6 +2066,63 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 .post__media img { width: 100%; max-height: 560px; object-fit: contain; cursor: zoom-in; }
 .post__media video { width: 100%; max-height: 560px; background: #000; }
 .post__media--video { background: #000; }
+
+/* One video card: generated poster + custom play cover; native controls take
+   over once playback starts. */
+.video-player {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  border-radius: inherit;
+}
+.video-player video {
+  display: block;
+  width: 100%;
+  max-height: 560px;
+  background: #000;
+}
+.video-player__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--neon-rgb), 0.6);
+  background: rgba(7, 8, 11, 0.76);
+  color: #fff;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 24px -8px rgba(var(--neon-rgb), 0.55);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+.video-player__play:hover { background: rgba(7, 8, 11, 0.9); transform: translate(-50%, -50%) scale(1.05); }
+.video-player__play svg { fill: currentColor; stroke: none; }
+.video-player__playicon { display: grid; place-items: center; margin-left: 3px; }
+.video-player.is-playing .video-player__play { opacity: 0; visibility: hidden; pointer-events: none; }
+.video-player__duration {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 2;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(7, 8, 11, 0.78);
+  border: 1px solid rgba(var(--veil), 0.12);
+  color: #eef4fb;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+.msg__video video, .comment__media .video-player video { max-height: 320px; }
+.comment__media .video-player { border-radius: 9px; }
+
 .post__stats { display: flex; align-items: center; gap: 4px; margin: 12px 0 0 55px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .stat {
   display: inline-flex; align-items: center; gap: 6px;

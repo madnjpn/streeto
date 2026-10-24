@@ -23,6 +23,7 @@ export const ICONS = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   image: '<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="10" r="1.8"/><path d="m4 17.5 5-4.5 4 3.5 3-2.5 4 3.5"/>',
   video: '<rect x="3" y="6" width="12" height="12" rx="2.5"/><path d="m15 11.5 6-3.5v8l-6-3.5z"/>',
+  play: '<path d="M8 5.5v13l10-6.5z"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3.4v3M16 3.4v3"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 2"/>',
   lock: '<rect x="4.5" y="10" width="15" height="10" rx="2.5"/><path d="M8 10V7.6a4 4 0 0 1 8 0V10"/>',

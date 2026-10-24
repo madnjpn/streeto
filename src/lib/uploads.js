@@ -13,7 +13,7 @@ import {
   publicUploadUrl,
 } from './upload-paths.js';
 import { processImage, forgetPicture } from './images.js';
-import { makePoster, removePoster } from './video-posters.js';
+import { makePoster, removePoster, transcodeVideo } from './video-posters.js';
 
 /** How wide a picture may be when nothing else is said. */
 const DEFAULT_MAX = 1600;
@@ -67,7 +67,18 @@ export async function optimizeUpload(req, _res, next) {
     if (!file || !file.path) continue;
     if (file.mimetype?.startsWith('video/')) {
       const rel = relativeUploadPath(file.path);
-      if (rel) await makePoster(rel);
+      if (!rel) continue;
+      const done = await transcodeVideo(rel);
+      if (done.changed) {
+        const abs = resolveUploadPath(done.path);
+        if (abs) {
+          file.path = abs;
+          file.filename = done.path;
+          file.mimetype = 'video/mp4';
+          file.originalname = String(file.originalname || '').replace(/\.[^.]+$/, '.mp4');
+        }
+      }
+      await makePoster(done.path);
       continue;
     }
     if (!IMAGE_TYPES.has(file.mimetype) || file.mimetype === 'image/gif') continue;

@@ -94,7 +94,10 @@ const leading = standings.length && standings[0].id === build.id;
                 <a href="<%= config.uploadUrl %>/<%= item.media_path %>" data-lightbox><img src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (srcset(item.media_path)) { %> srcset="<%= srcset(item.media_path) %>" sizes="(max-width: 760px) 100vw, 900px"<% } %> alt="" loading="<%= index === 0 ? 'eager' : 'lazy' %>"></a>
               <% } else { %>
                 <% const videoPoster = poster(item.media_path); %>
-                <video src="<%= config.uploadUrl %>/<%= item.media_path %>"<% if (videoPoster) { %> poster="<%= config.uploadUrl %>/<%= videoPoster %>"<% } %> controls preload="none" playsinline></video>
+                <%- include('../partials/video', {
+                  src: config.uploadUrl + '/' + item.media_path,
+                  poster: videoPoster ? config.uploadUrl + '/' + videoPoster : ''
+                }) %>
               <% } %>
             </figure>
           <% }); %>

@@ -118,7 +118,10 @@ const renderedComments = typeof commentsHtml !== 'undefined' ? commentsHtml : ''
   <% } else if (post.media_path && post.media_type === 'video') { %>
     <div class="post__media post__media--video">
       <% const videoPoster = poster(post.media_path); %>
-      <video src="<%= config.uploadUrl %>/<%= post.media_path %>"<% if (videoPoster) { %> poster="<%= config.uploadUrl %>/<%= videoPoster %>"<% } %> controls preload="none" playsinline></video>
+      <%- include('video', {
+        src: config.uploadUrl + '/' + post.media_path,
+        poster: videoPoster ? config.uploadUrl + '/' + videoPoster : ''
+      }) %>
     </div>
   <% } %>
 
