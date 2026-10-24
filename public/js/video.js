@@ -9,7 +9,7 @@ const canHover =
 
 function durationText(seconds) {
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
-  const total = Math.round(seconds);
+  const total = Math.floor(seconds);
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
