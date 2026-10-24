@@ -13,6 +13,7 @@ import { wantsJson, jsonOk, jsonError, backTo } from '../lib/http.js';
 import { cleanText } from '../lib/validate.js';
 import { renderView } from '../lib/views.js';
 import { shareCard, shareUrl, SHARE_LABELS } from '../lib/share.js';
+import { translate } from '../lib/i18n.js';
 
 const router = express.Router();
 
@@ -198,9 +199,15 @@ router.post('/chat/:id/send', chatUpload, optimizeAs('chat'), verifyCsrf, (req, 
         (uid) => uid !== req.user.id && !chat.isMuted(id, uid),
       );
       recipients.forEach((uid) => {
+        const lang = users.findById(uid)?.language || 'en';
+        const fallback = mediaType === 'video'
+          ? 'Sent a video'
+          : mediaType === 'photo'
+            ? 'Sent a photo'
+            : 'Sent a file';
         pushToUser(uid, {
-          title: `New message from @${req.user.username}`,
-          body: body ? body.slice(0, 120) : 'Sent a photo',
+          title: translate(lang, 'New message from @{user}', { user: req.user.username }),
+          body: body ? body.slice(0, 120) : translate(lang, fallback),
           url: `/?chat=${id}`,
           tag: `chat-${id}`,
         });
@@ -299,9 +306,13 @@ router.post('/share', requireAuth, verifyCsrf, async (req, res, next) => {
 
     try {
       if (!chat.isMuted(conversation.id, target.id)) {
+        const lang = users.findById(target.id)?.language || 'en';
+        const what = translate(lang, SHARE_LABELS[card.type] || 'link');
         pushToUser(target.id, {
-          title: `New message from @${req.user.username}`,
-          body: note ? note.slice(0, 120) : `Shared a ${SHARE_LABELS[card.type] || 'link'}`,
+          title: translate(lang, 'New message from @{user}', { user: req.user.username }),
+          body: note
+            ? note.slice(0, 120)
+            : translate(lang, 'Shared a {what}', { what }),
           url: `/?chat=${conversation.id}`,
           tag: `chat-${conversation.id}`,
         });

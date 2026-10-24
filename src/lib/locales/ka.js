@@ -2415,6 +2415,12 @@ export default {
   'Mute': 'დადუმება',
   'Unmute': 'ხმის ჩართვა',
   'Muted': 'დადუმებული',
+  'New message from @{user}': 'ახალი შეტყობინება @{user}-სგან',
+  'Sent a photo': 'გამოგზავნა ფოტო',
+  'Sent a video': 'გამოგზავნა ვიდეო',
+  'Sent a file': 'გამოგზავნა ფაილი',
+  'Shared a {what}': 'გააზიარა {what}',
+  'link': 'ბმული',
 
   'Test build · Android 7.0+': 'სატესტო ვერსია · Android 7.0+',
 };
