@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private View splash;
     private ImageView splashMark;
     private TextView splashWord;
+    private TextView splashSite;
     private View splashLine;
     private ObjectAnimator splashPulse;
     private final Handler splashHandler = new Handler(Looper.getMainLooper());
@@ -174,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
         splash = findViewById(R.id.splash);
         splashMark = findViewById(R.id.splashMark);
         splashWord = findViewById(R.id.splashWord);
+        splashSite = findViewById(R.id.splashSite);
         splashLine = findViewById(R.id.splashLine);
 
         refresh.setColorSchemeColors(0xFF1FE0FF);
@@ -190,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
         splashMark.setScaleY(0.82f);
         splashWord.setAlpha(0f);
         splashWord.setTranslationY(dp(12));
+        splashSite.setAlpha(0f);
+        splashSite.setTranslationY(dp(8));
         splashLine.setAlpha(0f);
         splashLine.setScaleX(0f);
 
@@ -212,6 +216,13 @@ public class MainActivity extends AppCompatActivity {
                 .scaleX(1f)
                 .setStartDelay(460)
                 .setDuration(520)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+        splashSite.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(680)
+                .setDuration(460)
                 .setInterpolator(new DecelerateInterpolator())
                 .start();
 

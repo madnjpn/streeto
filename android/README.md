@@ -12,7 +12,7 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 - Geolocation permission for the map / “Use my GPS”
 - Cookies persist between launches (stay logged in)
 - Offline screen with a retry button
-- Animated launch screen: the S mark settles in, the STREETO wordmark rises, and a cyan line draws in; the Android 12 system splash uses the same S mark
+- Animated launch screen: the S mark settles in, the STREETO wordmark rises, a cyan line draws in, and the STREETO.NET signature sits near the bottom; the Android 12 system splash uses the same S mark
 - Thin cyan progress line while pages load
 - In-app update check: **Settings → App & updates** shows the web and app versions, and the shell downloads a newer signed APK, checks its SHA-256 and opens the installer
 - A dismissible update banner appears when a newer release is being served
@@ -149,6 +149,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.2.0 (versionCode 6)
+- Version: 1.2.1 (versionCode 7)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

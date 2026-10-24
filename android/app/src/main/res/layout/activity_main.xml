@@ -73,6 +73,19 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/splash_line" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/splashSite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="56dp"
+            android:fontFamily="sans-serif-condensed"
+            android:letterSpacing="0.18"
+            android:text="@string/splash_site"
+            android:textColor="#8A96A8"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </FrameLayout>
 
 </FrameLayout>

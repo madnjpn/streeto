@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.2.1',
+    date: '2026-10-24',
+    scope: 'android',
+    items: [
+      'STREETO.NET signature at the bottom of the splash screen.',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-10-24',
     scope: 'both',

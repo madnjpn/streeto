@@ -18,4 +18,5 @@
     <string name="notify_activity_title">New activity</string>
     <string name="notify_enabled">Notifications enabled</string>
     <string name="notify_permission_denied">Allow notifications for STREETO in system settings</string>
+    <string name="splash_site">STREETO.NET</string>
 </resources>
