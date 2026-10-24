@@ -148,6 +148,9 @@ async function enable() {
       const result = String(bridge.enableNotifications() || '');
       if (result === 'requested') {
         paint(t('Disabled'), t('Allow notifications in the system prompt.'));
+        // The native permission dialog is asynchronous; refresh once it
+        // has had time to close so the prompt disappears after a grant.
+        setTimeout(refresh, 1400);
       } else if (result === 'denied') {
         paint(t('Blocked'), t('Notifications are blocked. Allow them in your phone settings.'));
       } else {
