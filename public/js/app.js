@@ -20,6 +20,7 @@ export function openModal(selector) {
   if (modal) {
     modal.hidden = false;
     modal.classList.add('is-open');
+    document.body.classList.add('has-open-modal');
     document.body.style.overflow = 'hidden';
     // Focus first focusable element
     const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -34,6 +35,9 @@ export function closeModal(selector) {
     modal.hidden = true;
     modal.classList.remove('is-open');
     document.body.style.overflow = '';
+    if (!document.querySelector('.modal.is-open')) {
+      document.body.classList.remove('has-open-modal');
+    }
   }
 }
 

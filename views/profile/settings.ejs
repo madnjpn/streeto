@@ -88,6 +88,7 @@
     </div>
     <div class="btnrow">
       <button class="btn btn--ghost" type="button" data-check-updates><%- include('../partials/icon', { name: 'exchange', size: 16 }) %> <%= t('Check for updates') %></button>
+      <button class="btn btn--ghost" type="button" data-show-changes aria-haspopup="dialog"><%- include('../partials/icon', { name: 'clock', size: 16 }) %> <%= t('Changes') %></button>
       <button class="btn btn--primary" type="button" data-update-now-settings hidden><%- include('../partials/icon', { name: 'download', size: 16 }) %> <%= t('Update now') %></button>
       <button class="btn btn--primary" type="button" data-reload-now hidden><%- include('../partials/icon', { name: 'exchange', size: 16 }) %> <%= t('Reload') %></button>
     </div>
@@ -159,4 +160,37 @@
       <button class="btn btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 17 }) %> <%= t('Delete my account') %></button>
     </form>
   </section>
+</div>
+
+<div class="modal" id="changes-modal" role="dialog" aria-modal="true" aria-labelledby="changes-title" hidden>
+  <div class="modal__overlay" tabindex="-1" data-dismiss></div>
+  <div class="modal__panel">
+    <header class="modal__header">
+      <h2 id="changes-title"><%- include('../partials/icon', { name: 'clock', size: 18 }) %> <%= t("What's new") %></h2>
+      <button class="modal__close btn btn--ghost btn--sm" type="button" data-dismiss aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 18 }) %></button>
+    </header>
+    <div class="modal__body">
+      <p class="muted small"><%= t('Everything that changed in recent releases.') %></p>
+      <div class="changelog">
+        <% changelog.forEach(function (entry) { %>
+          <article class="changelog__entry" data-changelog-version="<%= entry.version %>">
+            <header class="changelog__head">
+              <strong class="changelog__version">v<%= entry.version %></strong>
+              <span class="tag tag--tiny"><%= entry.scope === 'both' ? t('Web + Android') : entry.scope === 'android' ? t('Android') : t('Web') %></span>
+              <span class="changelog__date"><%= f.shortDate(entry.date) %></span>
+              <span class="changelog__state" data-changelog-state hidden></span>
+            </header>
+            <ul class="changelog__list">
+              <% entry.items.forEach(function (item) { %>
+                <li><%= t(item) %></li>
+              <% }); %>
+            </ul>
+          </article>
+        <% }); %>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" type="button" data-dismiss><%= t('Close') %></button>
+    </div>
+  </div>
 </div>

@@ -317,6 +317,16 @@ try {
     });
   }
   {
+    const { res, html } = await a.page('/settings');
+    check('settings shows the app update and changes panels', () => {
+      assert.equal(res.status, 200);
+      assert.match(html, /id="changes-modal"/);
+      assert.match(html, /data-show-changes/);
+      assert.match(html, /data-changelog-version="\d+\.\d+\.\d+"/);
+      assert.match(html, /data-footer-app-version/);
+    });
+  }
+  {
     const res = await register(b, B, 'Smoke B');
     check('account B registers', () => assert.equal(res.status, 302));
   }

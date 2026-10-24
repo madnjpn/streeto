@@ -263,6 +263,8 @@ export const CLIENT_KEYS = [
   /* versions & app updates */
   'Installed app version',
   'Latest Android app',
+  'Installed',
+  'New',
   'Downloading the update…',
   'A new version of STREETO is available: v{version}.',
   'Checking…',

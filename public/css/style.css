@@ -1058,6 +1058,7 @@ h1, h2, h3, h4 {
   backdrop-filter: blur(12px);
 }
 .update-banner[hidden] { display: none; }
+body.has-open-modal .update-banner { display: none; }
 .update-banner__text {
   display: flex;
   flex-direction: column;
@@ -1084,6 +1085,66 @@ h1, h2, h3, h4 {
   /* Keep the first card clear of the fixed update banner. */
   body.has-update-banner .layout-shell { padding-top: 96px; }
 }
+
+/* Release notes in Settings → App & updates → Changes. */
+.changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+.changelog__entry {
+  padding: 13px 15px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: rgba(var(--veil), 0.03);
+}
+.changelog__entry.is-installed { border-color: rgba(var(--neon-rgb), 0.24); }
+.changelog__entry.is-new {
+  border-color: rgba(var(--neon-rgb), 0.42);
+  box-shadow: var(--glow);
+}
+.changelog__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+.changelog__version {
+  font-family: var(--font-head);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+.changelog__date {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.changelog__state {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(var(--neon-rgb), 0.13);
+  color: var(--neon);
+}
+.changelog__list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 16px;
+  list-style: disc;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.changelog__list li::marker { color: var(--neon); }
 
 /* ── flashes & alerts ───────────────────────────────────────────── */
 .flashes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }

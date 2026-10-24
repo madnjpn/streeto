@@ -10,6 +10,7 @@
 */
 
 import { t } from './i18n.js';
+import { openModal } from './app.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -128,6 +129,21 @@ function setStatus(text, tone = '') {
   el.dataset.tone = tone;
 }
 
+/** Mark the installed / available release in the Changes modal. */
+function paintChangelog() {
+  $$('[data-changelog-version]').forEach((entry) => {
+    const state = $('[data-changelog-state]', entry);
+    if (!state) return;
+    const version = entry.dataset.changelogVersion;
+    const isInstalled = Boolean(inApp && installed && version === installed.versionName);
+    const isNew = Boolean(release && hasUpdate() && version === release.versionName);
+    state.textContent = isNew ? t('New') : isInstalled ? t('Installed') : '';
+    state.hidden = !isNew && !isInstalled;
+    entry.classList.toggle('is-new', isNew);
+    entry.classList.toggle('is-installed', isInstalled);
+  });
+}
+
 function revealSettingsUpdate() {
   const button = $('[data-update-now-settings]');
   if (button) button.hidden = false;
@@ -214,6 +230,11 @@ if (reloadButton) {
   reloadButton.addEventListener('click', () => location.reload());
 }
 
+const changesButton = $('[data-show-changes]');
+if (changesButton) {
+  changesButton.addEventListener('click', () => openModal('#changes-modal'));
+}
+
 const checkButton = $('[data-check-updates]');
 if (checkButton) {
   checkButton.addEventListener('click', async () => {
@@ -223,6 +244,7 @@ if (checkButton) {
       await loadVersion();
       paintFooter();
       paintSettings();
+      paintChangelog();
 
       if (hasUpdate()) {
         setStatus(t('Update available: v{version}.', { version: release.versionName }));
@@ -254,12 +276,14 @@ if (checkButton) {
 
 paintFooter();
 paintSettings();
+paintChangelog();
 
 if (inApp) {
   loadVersion()
     .then(() => {
       paintFooter();
       paintSettings();
+      paintChangelog();
       if (hasUpdate()) {
         revealSettingsUpdate();
         showBanner();

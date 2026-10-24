@@ -11,6 +11,7 @@ import { avatarUpload, removeUpload, optimizeAs } from '../lib/uploads.js';
 import { hashPassword, verifyPassword } from '../lib/password.js';
 import { checkPassword, cleanText, USERNAME_MAX } from '../lib/validate.js';
 import { pagination, backTo } from '../lib/http.js';
+import { CHANGELOG } from '../lib/changelog.js';
 
 const router = express.Router();
 
@@ -70,6 +71,7 @@ router.get('/settings', requireAuth, (req, res) =>
       is_provider: Boolean(req.user.is_provider),
     },
     maxUsername: USERNAME_MAX,
+    changelog: CHANGELOG,
   }),
 );
 
