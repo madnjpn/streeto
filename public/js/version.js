@@ -95,7 +95,9 @@ function setText(selector, text) {
 }
 
 function paintFooter() {
-  setText('[data-footer-web-version]', `v${pageWebVersion || webLatest || '—'}`);
+  const web = pageWebVersion || webLatest || '—';
+  setText('[data-footer-web-version]', `v${web}`);
+  setText('[data-footer-pwa-version]', `v${web}`);
   const app = $('[data-footer-app-version]');
   if (!app) return;
   if (inApp) {
@@ -119,7 +121,9 @@ function paintSettings() {
     const latest = $('[data-app-latest]');
     if (latest) latest.textContent = `v${release.versionName}`;
   }
-  setText('[data-web-version]', `v${pageWebVersion || webLatest || '—'}`);
+  const web = pageWebVersion || webLatest || '—';
+  setText('[data-web-version]', `v${web}`);
+  setText('[data-ios-version]', `v${web}`);
 }
 
 function setStatus(text, tone = '') {

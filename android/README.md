@@ -5,6 +5,7 @@ A thin, native Android shell around **https://streeto.net** — the full web app
 ## What it does
 
 - Loads `https://streeto.net` in a full-screen WebView
+- Native bottom navigation: Wall, Explore, Meetups, Chat and Garage
 - Stays inside the app for `streeto.net` links; other links open in the browser
 - Native back button (browser history, then exit)
 - Pull to refresh
@@ -151,6 +152,6 @@ adb install -r app-release.apk
 ## App details
 
 - Package: `net.streeto.app`
-- Version: 1.2.2 (versionCode 8)
+- Version: 1.3.0 (versionCode 9)
 - Min Android: 7.0 (API 24)
 - Target: Android 15 (API 35)

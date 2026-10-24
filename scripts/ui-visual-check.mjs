@@ -120,12 +120,17 @@ async function auditLayout(page, route, viewport) {
         return r.width > 28 || r.height > 28;
       })
       .map((input) => ({ name: input.name, ...rect(input) }));
+    const tabbar = document.querySelector('[data-tabbar]');
+    const tabbarInfo = tabbar && visible(tabbar)
+      ? { items: tabbar.querySelectorAll('.tabbar__item').length, ...rect(tabbar) }
+      : null;
     return {
       overflow: document.documentElement.scrollWidth - innerWidth,
       avatars,
       buttons,
       brokenImages,
       hugeChecks,
+      tabbar: tabbarInfo,
       h1: document.querySelector('h1')?.innerText || '',
     };
   });
@@ -135,6 +140,10 @@ async function auditLayout(page, route, viewport) {
   for (const button of result.buttons) record(route, viewport, `action outside viewport ${JSON.stringify(button)}`);
   for (const image of result.brokenImages) record(route, viewport, `broken image ${image}`);
   for (const check of result.hugeChecks) record(route, viewport, `oversized checkbox/radio ${JSON.stringify(check)}`);
+  if (viewport.startsWith('390px') && route !== '/login' && route !== '/register' && route !== '/install'
+      && !route.startsWith('/notifications?') && result.tabbar && result.tabbar.items !== 5) {
+    record(route, viewport, `bottom tab bar has ${result.tabbar.items} items`);
+  }
   return result;
 }
 
@@ -180,7 +189,7 @@ async function visit(page, route, viewport) {
   }
 }
 
-const guestRoutes = ['/login', '/register', '/explore', '/near'];
+const guestRoutes = ['/login', '/register', '/explore', '/near', '/install'];
 const authRoutes = [
   '/',
   '/builds',

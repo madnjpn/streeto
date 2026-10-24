@@ -82,9 +82,10 @@
     <h2 class="card__title"><%= t('App & updates') %></h2>
     <p class="muted small"><%= t('Check whether a newer version of STREETO is available.') %></p>
     <div class="kv">
-      <span><%= t('Web version') %></span><strong>v<%= webVersion %></strong>
-      <span data-app-current-row hidden><%= t('Installed app') %></span><strong data-app-current hidden>—</strong>
-      <span><%= t('Latest Android app') %></span><strong><a href="/downloads/STREETO-android.apk" data-app-latest>v<%= androidRelease.versionName || '—' %></a></strong>
+      <span><%= t('Web version') %></span><strong data-web-version>v<%= webVersion %></strong>
+      <span><%= t('iOS version') %></span><strong data-ios-version>v<%= webVersion %></strong>
+      <span data-app-current-row hidden><%= t('Installed app') %></span><strong data-app-current hidden>-</strong>
+      <span><%= t('Latest Android app') %></span><strong><a href="/downloads/STREETO-android.apk" data-app-latest>v<%= androidRelease.versionName || '-' %></a></strong>
     </div>
     <div class="btnrow">
       <button class="btn btn--ghost" type="button" data-check-updates><%- include('../partials/icon', { name: 'exchange', size: 16 }) %> <%= t('Check for updates') %></button>

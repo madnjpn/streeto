@@ -254,6 +254,26 @@ app.use(
   '/js',
   express.static(path.join(ROOT, 'public', 'js'), { maxAge: 0, etag: true, lastModified: true }),
 );
+app.use(
+  '/icons',
+  express.static(path.join(ROOT, 'public', 'icons'), {
+    maxAge: config.isProd ? '30d' : 0,
+    immutable: config.isProd,
+    etag: true,
+  }),
+);
+app.get('/manifest.webmanifest', (req, res) => {
+  res.sendFile(path.join(ROOT, 'public', 'manifest.webmanifest'), {
+    headers: { 'Content-Type': 'application/manifest+json; charset=utf-8' },
+    maxAge: config.isProd ? '1h' : 0,
+  });
+});
+app.get('/offline.html', (req, res) => {
+  res.sendFile(path.join(ROOT, 'public', 'offline.html'), {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    maxAge: 0,
+  });
+});
 
 // The Android test build. Kept out of the asset stamp on purpose: the
 // file is replaced by a new build without a code change, so it must not

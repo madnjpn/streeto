@@ -4,9 +4,6 @@
     <h1 class="display"><%= t('My Ride') %></h1>
     <p class="lede"><%= t('Add your personal vehicle from its registration certificate and track maintenance, oil changes, and parts replaced.') %></p>
   </div>
-  <div class="pagehead__actions">
-    <a class="btn btn--primary" href="/garage/ride?add=1"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Add vehicle') %></a>
-  </div>
 </div>
 
 <%- include('../partials/garage-tabs', { section: 'ride' }) %>
@@ -223,7 +220,12 @@
     }
 
     if (openBtn) {
-      openBtn.addEventListener('click', openModal);
+      openBtn.addEventListener('click', function(event) {
+        // The tab is also a link to ?add=1 so it still works if this script
+        // never runs. With JS, open the dialog in place like before.
+        if (event) event.preventDefault();
+        openModal();
+      });
     }
 
     closeBtns.forEach(function(btn) {

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="tab_wall">კედელი</string>
+    <string name="tab_explore">აღმოჩენა</string>
+    <string name="tab_meetups">შეხვედრები</string>
+    <string name="tab_chat">ჩატი</string>
+    <string name="tab_garage">გარაჟი</string>
     <string name="choose_file">აირჩიეთ ფაილი</string>
     <string name="choose_photo">აირჩიეთ ფოტო</string>
     <string name="location_denied">მდებარეობის ნებართვა უარყოფილია</string>

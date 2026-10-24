@@ -1,0 +1,62 @@
+<div class="pagehead">
+  <div class="pagehead__main">
+    <p class="eyebrow"><%= t('Get the app') %></p>
+    <h1 class="display"><%= t('Install STREETO') %></h1>
+    <p class="lede"><%= t('Add STREETO to your phone from the browser. It opens full screen, keeps you signed in and can send notifications.') %></p>
+  </div>
+  <div class="pagehead__actions">
+    <a class="btn btn--ghost" href="/"><%- include('../partials/icon', { name: 'back', size: 16 }) %> <%= t('Open STREETO') %></a>
+  </div>
+</div>
+
+<section class="card installhero">
+  <img class="installhero__icon" src="/icons/icon-192.png" alt="" width="96" height="96">
+  <div class="installhero__body">
+    <h2 class="card__title"><%= t('STREETO on your home screen') %></h2>
+    <p class="muted"><%= t('The web app works on iPhone, Android and desktop. On iPhone it needs Safari; on Android use Chrome.') %></p>
+    <div class="btnrow">
+      <button class="btn btn--primary" type="button" data-install-app hidden><%- include('../partials/icon', { name: 'download', size: 16 }) %> <%= t('Install app') %></button>
+      <a class="btn btn--outline" href="/downloads/STREETO-android.apk" download="STREETO-android.apk"><%- include('../partials/icon', { name: 'download', size: 16 }) %> <%= t('Android APK') %></a>
+    </div>
+    <p class="small muted" data-install-status role="status" aria-live="polite"></p>
+    <div class="install-done" data-install-done hidden>
+      <strong><%= t('STREETO is installed.') %></strong>
+      <a class="link" href="/"><%= t('Open the app') %></a>
+    </div>
+  </div>
+</section>
+
+<div class="installgrid">
+  <section class="card installsteps" data-install-ios>
+    <p class="eyebrow"><%= t('iPhone / iPad') %></p>
+    <h2 class="card__title"><%= t('Install from Safari') %></h2>
+    <ol class="installsteps__list">
+      <li><span class="installsteps__n">1</span><span><%= t('Open this page in Safari.') %></span></li>
+      <li><span class="installsteps__n">2</span><span><%= t('Tap the Share button.') %></span></li>
+      <li><span class="installsteps__n">3</span><span><%= t('Choose “Add to Home Screen”.') %></span></li>
+      <li><span class="installsteps__n">4</span><span><%= t('Tap Add. STREETO now opens like an app.') %></span></li>
+    </ol>
+    <p class="muted small"><%= t('On iOS, notifications only work after STREETO is added to the Home Screen.') %></p>
+  </section>
+
+  <section class="card installsteps" data-install-other>
+    <p class="eyebrow"><%= t('Android / desktop') %></p>
+    <h2 class="card__title"><%= t('Install from the browser') %></h2>
+    <ol class="installsteps__list">
+      <li><span class="installsteps__n">1</span><span><%= t('Open STREETO in Chrome, Edge or another modern browser.') %></span></li>
+      <li><span class="installsteps__n">2</span><span><%= t('Use the browser menu and choose “Install app” or “Add to Home screen”.') %></span></li>
+      <li><span class="installsteps__n">3</span><span><%= t('Confirm. STREETO opens in its own window.') %></span></li>
+    </ol>
+    <p class="muted small"><%= t('The Android APK is the native shell; the browser install is the PWA version and updates itself.') %></p>
+  </section>
+</div>
+
+<section class="card installnote">
+  <h2 class="card__title"><%= t('What you get') %></h2>
+  <ul class="ticks">
+    <li><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('Full-screen STREETO without the browser address bar.') %></li>
+    <li><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('Your session and local settings are kept.') %></li>
+    <li><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('Push notifications after you allow them.') %></li>
+    <li><%- include('../partials/icon', { name: 'check', size: 16 }) %> <%= t('The offline screen when the connection drops.') %></li>
+  </ul>
+</section>

@@ -55,6 +55,7 @@
   --ui-content: 760px;
   --ui-content-narrow: 720px;
   --ui-gutter: clamp(12px, 4vw, 22px);
+  --ui-tabbar: 64px;
 
   /* safe areas: iOS notch / home indicator and Android gesture bar */
   --ui-safe-top: env(safe-area-inset-top, 0px);
@@ -268,6 +269,78 @@ body {
   min-width: 0;
 }
 
+.installhero {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-4);
+}
+
+.installhero__icon {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+}
+
+.installhero__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.installgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--ui-space-4);
+  margin-top: var(--ui-space-4);
+}
+
+.installsteps__list {
+  display: grid;
+  gap: var(--ui-space-3);
+  margin: var(--ui-space-3) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.installsteps__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.installsteps__n {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(var(--neon-rgb), 0.12);
+  color: var(--neon);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.installnote {
+  margin-top: var(--ui-space-4);
+}
+
+@media (max-width: 620px) {
+  .installhero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .installhero__icon {
+    width: 76px;
+    height: 76px;
+  }
+}
+
 .nearform {
   display: flex;
   flex-wrap: wrap;
@@ -353,6 +426,111 @@ body {
 .appmenu__trigger {
   bottom: calc(var(--ui-space-4) + var(--ui-safe-bottom));
   left: calc(var(--ui-space-4) + var(--ui-safe-left));
+}
+
+/* Mobile tab bar: the PWA / browser equivalent of the native Android bar. */
+.tabbar {
+  display: none;
+}
+
+.tabbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 52px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tabbar__item.is-active {
+  color: var(--neon);
+}
+
+.tabbar__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+}
+
+.tabbar__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .tabbar {
+    position: fixed;
+    z-index: 70;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: calc(var(--ui-tabbar) + var(--ui-safe-bottom));
+    padding: 4px 4px var(--ui-safe-bottom);
+    border-top: 1px solid var(--line);
+    background: rgba(var(--panel-scrim), 0.97);
+    backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: 0 -12px 30px -24px #000;
+  }
+
+  .tabbar__item {
+    border-radius: 10px;
+  }
+
+  .tabbar__item:active {
+    background: rgba(var(--neon-rgb), 0.08);
+  }
+
+  .appmenu__trigger,
+  .chatdock__launcher {
+    display: none !important;
+  }
+
+  .chatdock {
+    bottom: calc(var(--ui-tabbar) + var(--ui-space-2) + var(--kb) + var(--ui-safe-bottom));
+  }
+
+  .notif-prompt {
+    bottom: calc(var(--ui-tabbar) + var(--ui-space-4) + var(--ui-safe-bottom));
+  }
+
+  .update-banner {
+    bottom: calc(var(--ui-tabbar) + var(--ui-space-2) + var(--ui-safe-bottom));
+  }
+
+  body[data-authed="1"] .shell {
+    padding-bottom: calc(var(--ui-tabbar) + var(--ui-space-6) + var(--ui-safe-bottom));
+  }
+}
+
+/* The Android WebView uses a real BottomNavigationView; do not draw a second bar. */
+html.native-shell .tabbar,
+html.native-shell .appmenu__trigger,
+html.native-shell .chatdock__launcher {
+  display: none !important;
+}
+
+/* A standalone PWA gets the full app treatment, not the browser link. */
+html.is-standalone .install-prompt {
+  display: none;
 }
 
 .chatdock {

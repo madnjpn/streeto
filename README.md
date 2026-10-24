@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.4.1` (`package.json`), Android `1.2.2`
-(`versionCode 8`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.5.0` (`package.json`), Android `1.3.0`
+(`versionCode 9`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -624,6 +624,8 @@ downloading the whole clip until playback.
 | `/search` | Global search |
 | `/near` | City / current-location discovery (meetups, crews, drivers) |
 | `/routes/:id` | Shareable Touge route page |
+| `/install` | iOS / Android / desktop PWA installation manual |
+| `/manifest.webmanifest`, `/offline.html`, `/icons/*` | PWA manifest, offline shell and install icons |
 | `/u/:username` | Public profile |
 | `/about`, `/explore`, `/partners` | Static/marketing pages |
 | `/admin` | Admin console (admin only) |
@@ -747,6 +749,8 @@ required. A muted chat never produces one.
 | `share.js` | Share dialog. |
 | `share-card.js` | Native/downloadable social preview cards for builds, meetups and routes. |
 | `near.js` | Browser geolocation for the city/region discovery page. |
+| `pwa.js` | Registers the offline service worker and marks standalone/native display modes. |
+| `install.js` | PWA install prompt and platform-specific instructions. |
 | `mentions.js` | `@name` picker/links. |
 | `admin*.js` | Admin console, translations, how-it-works editor. |
 
@@ -777,7 +781,30 @@ English source strings **are** the keys:
 `ka.js`; add it to `CLIENT_KEYS` if the browser uses it; run the page and check
 the admin translation list.
 
-### 8.4 Changelog / “Changes”
+### 8.4 PWA / iOS web app
+
+The website is also a full PWA. `/manifest.webmanifest` declares a standalone
+portrait app with 192/512px and maskable icons. `public/sw.js` registers the
+offline shell, caches static interface files and keeps the existing push
+notification handlers. `public/offline.html` is the offline fallback.
+
+- **Install link:** `/install`, also linked under the Android APK button on
+  the login page. It contains iPhone Safari “Add to Home Screen” steps and
+  the Chrome/Edge install flow.
+- **iOS version:** the PWA uses the web version. Settings shows **iOS version**
+  and the footer shows `Web · iOS · Android` versions.
+- **Notifications on iOS:** Web Push works only after the PWA is installed to
+  the Home Screen (iOS 16.4+), then the normal Settings → Notifications
+  permission flow applies.
+- **Native shell:** the Android WebView gets a native
+  `BottomNavigationView` (Wall, Explore, Meetups, Chat, Garage). The browser
+  PWA uses the matching HTML tab bar. `html.native-shell` hides the web bar
+  inside the Android app to avoid two navigations.
+- **Future native iOS:** the PWA tab bar is the visual contract; a future
+  WKWebView shell can replace it with `UITabBarController` without changing
+  the page routes.
+
+### 8.5 Changelog / "Changes"
 
 `src/lib/changelog.js` is the curated release history shown in
 **Settings → App & updates → Changes**. Entries are newest first:
@@ -1478,8 +1505,8 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.4.1`
-- Android version: `android/app/build.gradle.kts` → `1.2.2` (versionCode `8`)
+- Web version: `package.json` → `1.5.0`
+- Android version: `android/app/build.gradle.kts` → `1.3.0` (versionCode `9`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 

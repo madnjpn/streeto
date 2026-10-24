@@ -11,6 +11,18 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.5.0',
+    date: '2026-10-25',
+    scope: 'both',
+    items: [
+      'Install STREETO as an iOS, Android or desktop web app from the new Install page.',
+      'The iOS PWA shows its version in Settings and the footer.',
+      'Android has a native bottom navigation bar; the web app and iOS PWA use an iOS-style tab bar.',
+      'The PWA has an offline screen and caches its interface files.',
+      'Android 1.3.0 adds native tabs and the camera permission fix.',
+    ],
+  },
+  {
     version: '1.4.1',
     date: '2026-10-25',
     scope: 'both',
