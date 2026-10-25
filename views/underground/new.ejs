@@ -94,10 +94,13 @@
       var touge = select.value === 'touge';
       route.hidden = !touge;
       if (touge) {
+        // The route picker is deliberately skipped while its fieldset is
+        // hidden. Boot it only now that the fieldset has a real size.
         setTimeout(function () {
+          window.TougeRoutePicker?.boot();
           var map = document.querySelector('#ug-touge-route');
           if (map && map.__streetoMap) map.__streetoMap.resize();
-        }, 80);
+        }, 90);
       }
     };
     select.addEventListener('change', update);

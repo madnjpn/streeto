@@ -32,10 +32,31 @@ function lineFeature(track) {
     type: 'Feature',
     geometry: {
       type: 'LineString',
-      coordinates: track.map((point) => [Number(point.lng), Number(point.lat)]),
+      coordinates: track.map((point) => Array.isArray(point)
+        ? [Number(point[0]), Number(point[1])]
+        : [Number(point.lng), Number(point.lat)]),
     },
     properties: {},
   };
+}
+
+/** Ask STREETO's routing proxy for the real road line between A and B. */
+async function roadRoute(map, start, end) {
+  if (!map || start?.lat == null || end?.lat == null) return null;
+  try {
+    const response = await fetch(
+      // The API takes lat,lng, while GeoJSON takes lng,lat.
+      '/api/route/profile?from=' + start.lat + ',' + start.lng + '&to=' + end.lat + ',' + end.lng,
+      { credentials: 'same-origin', headers: { 'x-requested-with': 'fetch' } },
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data.ok || !Array.isArray(data.coordinates) || data.coordinates.length < 2) return null;
+    routeLayer(map, data.coordinates);
+    return data.coordinates;
+  } catch {
+    return null;
+  }
 }
 
 function routeLayer(map, track) {
@@ -98,12 +119,24 @@ function initRunMaps() {
     el.dataset.ready = '1';
     let track = [];
     try { track = JSON.parse(el.dataset.track || '[]'); } catch { track = []; }
-    if (!Array.isArray(track) || track.length < 2) return;
+    if (!Array.isArray(track)) track = [];
+    const routeStart = {
+      lat: toNumber(el.dataset.routeStartLat),
+      lng: toNumber(el.dataset.routeStartLng),
+    };
+    const routeEnd = {
+      lat: toNumber(el.dataset.routeEndLat),
+      lng: toNumber(el.dataset.routeEndLng),
+    };
+    const hasTrack = track.length > 1;
+    const hasRoute = routeStart.lat != null && routeStart.lng != null &&
+      routeEnd.lat != null && routeEnd.lng != null;
+    if (!hasTrack && !hasRoute) return;
     if (!hasMap) {
       fallbackMap(el, t('The MapLibre library is not available.'));
       return;
     }
-    const first = track[0];
+    const first = hasTrack ? track[0] : routeStart;
     const map = buildMap(el, {
       center: [Number(first.lng), Number(first.lat)],
       zoom: 13,
@@ -111,18 +144,31 @@ function initRunMaps() {
       bearing: -18,
     });
     map.on('load', () => {
-      routeLayer(map, track);
-      // Start and finish dots so the 3D ribbon reads as a route.
+      if (track.length > 2) {
+        routeLayer(map, track);
+      } else if (hasRoute) {
+        // The run sample is too short to show the road; the A-B route
+        // geometry is the same road the regular Touge page draws.
+        routeLayer(map, [
+          { lat: routeStart.lat, lng: routeStart.lng },
+          { lat: routeEnd.lat, lng: routeEnd.lng },
+        ]);
+        roadRoute(map, routeStart, routeEnd);
+      } else {
+        routeLayer(map, track);
+      }
+      const startPoint = hasRoute ? routeStart : track[0];
+      const endPoint = hasRoute ? routeEnd : track[track.length - 1];
       const start = document.createElement('span');
       start.className = 'ug-runpindot ug-runpindot--a';
       start.textContent = 'A';
       new window.maplibregl.Marker({ element: start, anchor: 'center' })
-        .setLngLat([Number(track[0].lng), Number(track[0].lat)]).addTo(map);
+        .setLngLat([Number(startPoint.lng), Number(startPoint.lat)]).addTo(map);
       const end = document.createElement('span');
       end.className = 'ug-runpindot ug-runpindot--b';
       end.textContent = 'B';
       new window.maplibregl.Marker({ element: end, anchor: 'center' })
-        .setLngLat([Number(track[track.length - 1].lng), Number(track[track.length - 1].lat)]).addTo(map);
+        .setLngLat([Number(endPoint.lng), Number(endPoint.lat)]).addTo(map);
     });
   });
 }
@@ -206,6 +252,7 @@ function initEvent(root) {
           { lat: routeStart.lat, lng: routeStart.lng },
           { lat: routeEnd.lat, lng: routeEnd.lng },
         ]);
+        roadRoute(map, routeStart, routeEnd);
         const a = document.createElement('span');
         a.className = 'ug-runpindot ug-runpindot--a';
         a.textContent = 'A';
@@ -221,6 +268,7 @@ function initEvent(root) {
       try {
         const track = JSON.parse(root.dataset.track || '[]');
         if (Array.isArray(track) && track.length > 1) routeLayer(map, track);
+        else if (type === 'touge' && routeStart.lat != null && routeEnd.lat != null) roadRoute(map, routeStart, routeEnd);
       } catch { /* no saved route */ }
     });
     map.on('dragstart', () => { followId = null; });

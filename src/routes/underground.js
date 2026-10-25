@@ -362,6 +362,18 @@ router.post('/underground/:id/requests/:userId/reject', requireAuth, verifyCsrf,
   return res.redirect(`/underground/${event.id}#requests`);
 });
 
+router.post('/underground/:id/delete', requireAuth, verifyCsrf, (req, res, next) => {
+  const event = underground.byId(Number(req.params.id));
+  if (!event) return next();
+  if (event.host_id !== req.user.id) {
+    req.flash('error', 'Only the host can delete this night.');
+    return res.redirect(`/underground/${event.id}`);
+  }
+  underground.removeEvent(event.id);
+  req.flash('success', 'Underground night deleted.');
+  return res.redirect('/underground');
+});
+
 router.post('/underground/:id/finish', requireAuth, verifyCsrf, async (req, res, next) => {
   const event = underground.byId(Number(req.params.id));
   if (!event) return next();

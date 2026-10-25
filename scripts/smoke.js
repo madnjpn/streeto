@@ -3545,6 +3545,13 @@ try {
       assert.match(mine.html, /data-ug-run-map/);
       assert.match(mine.html, /Top speed/);
     });
+    const removed = await a.post('/underground/' + undergroundId + '/delete', a.formWithCsrf({}));
+    check('the host deletes the night and its runs', () => {
+      assert.equal(removed.status, 302);
+      assert.equal(removed.headers.get('location'), '/underground');
+      assert.equal(get('SELECT 1 AS x FROM underground_events WHERE id = ?', undergroundId), undefined);
+      assert.equal(get('SELECT 1 AS x FROM underground_runs WHERE event_id = ?', undergroundId), undefined);
+    });
   }
 
   /* 16. logout ------------------------------------------------------ */

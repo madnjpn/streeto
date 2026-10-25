@@ -2812,4 +2812,10 @@ export default {
   'Approved drivers get live positions, speed badges, map following and a virtual race lock screen.': 'დადასტურებული მძღოლები იღებენ ცოცხალ მდებარეობას, სიჩქარის ნიშნებს, რუკაზე გაყოლებასა და ვირტუალურ რბოლის ჩაკეტილ ეკრანს.',
   'Runs save top and average speed, distance, acceleration and the 3D route in My Underground.': 'რბოლები ინახავს მაქსიმალურ და საშუალო სიჩქარეს, მანძილს, აჩქარებასა და 3D მარშრუტს My Underground-ში.',
   'The host finishes the night to email every approved driver their run summary.': 'მასპინძელი ღამეს ასრულებს, რომ ყველა დადასტურებულ მძღოლს ელფოსტით გაუგზავნოს რბოლის შეჯამება.',
+  'Delete this night': 'წაშალე ეს ღამე',
+  'This removes the night, its requests and its saved runs for everyone. This cannot be undone.': 'ეს წაშლის ღამეს, მის მოთხოვნებსა და შენახულ რბოლებს ყველასთვის. ამის გაუქმება შეუძლებელია.',
+  'Delete this Underground night and all of its runs?': 'წავშალო ეს Underground ღამე და მისი ყველა რბოლა?',
+  'Delete night': 'ღამის წაშლა',
+  'Only the host can delete this night.': 'ამ ღამის წაშლა მხოლოდ მასპინძელს შეუძლია.',
+  'Underground night deleted.': 'Underground ღამე წაშლილია.',
 };

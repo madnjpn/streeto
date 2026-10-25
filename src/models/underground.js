@@ -314,6 +314,10 @@ export const cancelEvent = (eventId) =>
     eventId,
   );
 
+/** Delete a night and everything attached to it (requests, runs, positions). */
+export const removeEvent = (eventId) =>
+  run('DELETE FROM underground_events WHERE id = ?', eventId);
+
 export default {
   byId,
   listEvents,
@@ -334,4 +338,5 @@ export default {
   finishEvent,
   markSummarySent,
   cancelEvent,
+  removeEvent,
 };
