@@ -269,6 +269,10 @@ export const runFor = (eventId, userId) =>
     userId,
   );
 
+/** Delete one driver's run summary. The event and everyone else stay. */
+export const removeRun = (runId, userId) =>
+  run('DELETE FROM underground_runs WHERE id = ? AND user_id = ?', runId, userId);
+
 export const runsForEvent = (eventId) =>
   all(
     `SELECT r.*, u.username, u.display_name, u.avatar
@@ -333,6 +337,7 @@ export default {
   savePosition,
   saveRun,
   runFor,
+  removeRun,
   runsForEvent,
   runsForUser,
   finishEvent,

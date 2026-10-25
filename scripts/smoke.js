@@ -3545,6 +3545,12 @@ try {
       assert.match(mine.html, /data-ug-run-map/);
       assert.match(mine.html, /Top speed/);
     });
+    const summaryId = get('SELECT id FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId)?.id;
+    const removedSummary = await b.post('/underground/runs/' + summaryId + '/delete', b.formWithCsrf({}));
+    check('a driver deletes their own run summary', () => {
+      assert.equal(removedSummary.status, 302);
+      assert.equal(get('SELECT 1 AS x FROM underground_runs WHERE id = ?', summaryId), undefined);
+    });
     const removed = await a.post('/underground/' + undergroundId + '/delete', a.formWithCsrf({}));
     check('the host deletes the night and its runs', () => {
       assert.equal(removed.status, 302);

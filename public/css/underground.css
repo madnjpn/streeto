@@ -367,7 +367,9 @@ body.page-underground .ug-type {
 .ug-run__stats small { color: var(--muted); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
 .ug-run__stats strong { color: var(--text); font-family: var(--font-head); font-size: 20px; line-height: 1; }
 .ug-run__stats em { color: var(--muted); font-family: var(--font-mono); font-size: 9px; font-style: normal; }
-.ug-run__foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.ug-run__foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+.ug-run__foot form { margin: 0 0 0 auto; }
+.ug-summary__foot { display: flex; justify-content: flex-end; margin-top: 14px; }
 .ug-summary { border-color: rgba(255, 59, 77, 0.32); }
 .ug-summary__map { height: 250px; }
 .ug-summary__close { display: none; float: right; margin: -4px -4px 6px 10px; }

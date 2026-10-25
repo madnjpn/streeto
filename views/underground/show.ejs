@@ -170,6 +170,12 @@
           <% if (event.type === 'drag') { %><span><small><%= t('Acceleration') %></small><strong><%= Number(myRun.acceleration || 0).toFixed(2) %> <em>m/s²</em></strong></span><% } %>
           <% if (event.type !== 'drift') { %><span><small><%= t('Duration') %></small><strong><%= Math.round(myRun.duration_s || 0) %> <em>s</em></strong></span><% } %>
         </div>
+        <div class="ug-summary__foot">
+          <form action="/underground/runs/<%= myRun.id %>/delete" method="post" data-confirm="<%= t('Delete this run summary? This cannot be undone.') %>">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %> <%= t('Delete summary') %></button>
+          </form>
+        </div>
       </section>
     <% } %>
 

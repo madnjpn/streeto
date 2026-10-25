@@ -8,7 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { verifyCsrf } from '../middleware/csrf.js';
 import { cleanText, checkCoords, checkZoom } from '../lib/validate.js';
 import { routeDistanceKm } from '../lib/route-length.js';
-import { wantsJson, jsonOk, jsonError } from '../lib/http.js';
+import { wantsJson, jsonOk, jsonError, backTo } from '../lib/http.js';
 import { vehicleUpload, optimizeAs, mediaKind, removeUpload } from '../lib/uploads.js';
 import { sendMail } from '../lib/mail.js';
 import { translate } from '../lib/i18n.js';
@@ -360,6 +360,14 @@ router.post('/underground/:id/requests/:userId/reject', requireAuth, verifyCsrf,
   });
   req.flash('success', 'Request rejected.');
   return res.redirect(`/underground/${event.id}#requests`);
+});
+
+/* ── a driver removes their own summary ─────────────────────────── */
+router.post('/underground/runs/:id/delete', requireAuth, verifyCsrf, (req, res) => {
+  const info = underground.removeRun(Number(req.params.id), req.user.id);
+  if (!info.changes) req.flash('error', 'That summary was not found.');
+  else req.flash('success', 'Summary deleted.');
+  return res.redirect(backTo(req, '/underground'));
 });
 
 router.post('/underground/:id/delete', requireAuth, verifyCsrf, (req, res, next) => {

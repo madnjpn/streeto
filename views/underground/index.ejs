@@ -81,6 +81,10 @@
             <footer class="ug-run__foot">
               <a class="link" href="/underground/<%= run.event_id %>"><%= t('Open the night') %></a>
               <span class="muted small"><%= t('Saved from your run') %></span>
+              <form action="/underground/runs/<%= run.id %>/delete" method="post" data-confirm="<%= t('Delete this run summary? This cannot be undone.') %>">
+                <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %> <%= t('Delete summary') %></button>
+              </form>
             </footer>
           </article>
         <% }); %>

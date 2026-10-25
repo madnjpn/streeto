@@ -2818,4 +2818,8 @@ export default {
   'Delete night': 'ღამის წაშლა',
   'Only the host can delete this night.': 'ამ ღამის წაშლა მხოლოდ მასპინძელს შეუძლია.',
   'Underground night deleted.': 'Underground ღამე წაშლილია.',
+  'Delete this run summary? This cannot be undone.': 'წავშალო ეს რბოლის შეჯამება? ამის გაუქმება შეუძლებელია.',
+  'Delete summary': 'შეჯამების წაშლა',
+  'That summary was not found.': 'ეს შეჯამება ვერ მოიძებნა.',
+  'Summary deleted.': 'შეჯამება წაშლილია.',
 };
