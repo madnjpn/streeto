@@ -3635,6 +3635,9 @@ label.cert-scan-btn {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -4794,7 +4797,17 @@ dialog { color-scheme: var(--native-scheme); }
 .chatdock__mi, .chatdock__mx { display: grid; place-items: center; }
 .chatdock__headbtns { display: flex; gap: 2px; }
 .chatdock__body { flex: 1; min-height: 0; display: flex; }
-.chatdock__list { flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.chatdock__list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .chatdock__row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border-radius: 10px; text-align: left; color: var(--text-dim); background: var(--panel-2, rgba(255,255,255,0.03)); min-height: 50px; touch-action: pan-y; }
 .chatdock__rowwrap { position: relative; overflow: hidden; border-radius: 10px; width: 100%; background: transparent; margin-bottom: 2px; min-height: 50px; }
 .chatdock__row:hover { background: rgba(var(--veil), 0.05); }
@@ -4808,7 +4821,17 @@ dialog { color-scheme: var(--native-scheme); }
 .chatdock__preview { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chatdock__hint { padding: 16px 10px; font-size: 12.5px; }
 .chatdock__thread { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.chatdock__messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+.chatdock__messages {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .chatdock__composer { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--line-soft); }
 .chatdock__composer input[type="text"] { flex: 1; padding: 8px 14px; font-size: 13px; }
 .chatdock__foot { padding: 8px 12px; border-top: 1px solid var(--line-soft); text-align: center; font-size: 12px; }

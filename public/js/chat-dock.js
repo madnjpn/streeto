@@ -133,6 +133,20 @@ if (root) {
       headers: { 'x-requested-with': 'fetch', ...(options.headers || {}) },
     });
 
+  /**
+   * Android's native pull-to-refresh sits above the WebView and otherwise
+   * steals the downward gesture before the chat list can scroll. The shell
+   * exposes this bridge; browsers simply ignore it.
+   */
+  const nativePullToRefresh = (enabled) => {
+    try {
+      window.StreetNative?.setPullToRefresh?.(Boolean(enabled));
+    } catch {
+      /* not inside the Android shell */
+    }
+  };
+  nativePullToRefresh(true);
+
   function timeAgo(iso) {
     if (!iso) return '';
     const then = new Date(iso).getTime();
@@ -509,6 +523,9 @@ if (root) {
       document.body.style.position = '';
       document.body.style.width = '';
     }
+    // While the chat is fully expanded, a downward drag belongs to the
+    // message list, never to the native page refresh.
+    nativePullToRefresh(!(value && !minimised));
   }
 
   /**
@@ -570,6 +587,7 @@ if (root) {
         document.body.style.width = '100%';
       }
     }
+    nativePullToRefresh(!(open && !value));
     updateHead();
   }
 

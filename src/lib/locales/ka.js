@@ -2841,4 +2841,5 @@ export default {
   'Attach a photo': 'ფოტოს მიმაგრება',
   'Write something or attach a photo.': 'დაწერე რამე ან მიამაგრე ფოტო.',
   'Drivers in this night': 'ამ ღამის მძღოლები',
+  'Chat conversations scroll normally on Android and pull-to-refresh no longer interrupts them.': 'Android-ზე ჩატები ჩვეულებრივად სქროლდება და გვერდის განახლება ხელს აღარ უშლის.',
 };

@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -305,6 +306,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                // Every new page starts with pull-to-refresh available. The
+                // chat page turns it off while a conversation is expanded.
+                if (refresh != null) {
+                    refresh.setRefreshing(false);
+                    refresh.setEnabled(true);
+                }
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
                 refresh.setRefreshing(false);
@@ -426,6 +437,19 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception ignored) {
                 return "{\"versionName\":\"" + versionName() + "\",\"versionCode\":" + versionCode() + "}";
             }
+        }
+
+        /**
+         * Turn the native pull-to-refresh gesture off while the web chat is
+         * expanded, so vertical drags scroll the conversation instead.
+         */
+        @JavascriptInterface
+        public void setPullToRefresh(final boolean enabled) {
+            runOnUiThread(() -> {
+                if (refresh == null) return;
+                refresh.setEnabled(enabled);
+                if (!enabled) refresh.setRefreshing(false);
+            });
         }
 
         /**

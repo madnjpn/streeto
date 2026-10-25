@@ -11,6 +11,14 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.3.2',
+    date: '2026-10-25',
+    scope: 'android',
+    items: [
+      'Chat conversations scroll normally on Android and pull-to-refresh no longer interrupts them.',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-10-25',
     scope: 'web',
