@@ -13,9 +13,9 @@ export const NOTIFICATION_CATEGORIES = Object.freeze({
   groups: ['group_request', 'group_invite', 'group_approved'],
   meetups: ['meetup_request', 'meetup_join', 'meetup_invite', 'meetup_approved'],
   underground: [
-    'underground_event', 'underground_request', 'underground_approved',
-    'underground_rejected', 'underground_finished', 'underground_summary',
-    'underground_cancelled',
+    'underground_event', 'underground_host', 'underground_request',
+    'underground_approved', 'underground_rejected', 'underground_finished',
+    'underground_summary', 'underground_cancelled',
   ],
   builds: ['build_sale', 'build_update', 'build_photo', 'build_vote'],
   services: ['service_claim', 'service_claim_approved', 'service_claim_rejected'],

@@ -1,6 +1,7 @@
 import webpush from 'web-push';
 import config from '../config.js';
 import * as pushSubs from '../models/push.js';
+import * as devices from '../models/devices.js';
 
 let configured = false;
 function ensureConfigured() {
@@ -15,7 +16,15 @@ function ensureConfigured() {
 
 export async function sendToUser(userId, payload) {
   if (!ensureConfigured()) return;
-  const subs = pushSubs.forUser(userId);
+  // An active Android app already covers this member. Do not buzz the same
+  // phone twice through Chrome/PWA; desktop and iOS browser subscriptions
+  // keep working.
+  const hasAndroidApp = devices
+    .forUser(userId)
+    .some((device) => device.platform === 'android');
+  const subs = pushSubs
+    .forUser(userId)
+    .filter((sub) => !(hasAndroidApp && sub.platform === 'android'));
   for (const sub of subs) {
     try {
       await webpush.sendNotification(

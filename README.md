@@ -969,6 +969,11 @@ The update check runs on app page loads and when the user taps
   renders the notification and opens the relevant chat/activity page. It skips
   the buzz while the app is in the foreground.
 - Muted chats are filtered server-side, so they never produce a message alert.
+- Android Chrome/PWA Web Push is skipped while that member has an active FCM
+  token, so one phone does not buzz twice. Desktop and iOS browser
+  subscriptions keep working.
+- The host gets a private “Your Underground night is live” confirmation when
+  creating a night; the public announcement still excludes the host.
 - No persistent foreground-service notification is needed; FCM delivers while
   the app is backgrounded or closed (subject to Doze/Google Play services).
 
@@ -1055,7 +1060,7 @@ meetup → build upload/vote/visibility/delete → certificate/PTI → parts/VIN
 negative auth/validation cases. It never touches the production DB or external
 PTI service.
 
-Current suite: **341 checks** (the number grows with features). The final line
+Current suite: **343 checks** (the number grows with features). The final line
 is `N passed, 0 failed`; any failure exits non-zero.
 
 ### 11.2 Production checks

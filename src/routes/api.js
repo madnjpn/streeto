@@ -585,7 +585,13 @@ router.post('/push/subscribe', requireAuth, (req, res) => {
   const endpoint = subscription.endpoint;
   if (!endpoint) return jsonError(res, 'No subscription.', 400);
   const keys = subscription.keys || {};
-  pushSubs.subscribe(req.user.id, endpoint, keys.p256dh || null, keys.auth || null);
+  const ua = String(req.get('user-agent') || '');
+  const platform = /Android/i.test(ua)
+    ? 'android'
+    : /iPhone|iPad|iPod/i.test(ua)
+      ? 'ios'
+      : 'web';
+  pushSubs.subscribe(req.user.id, endpoint, keys.p256dh || null, keys.auth || null, platform);
   return jsonOk(res, { ok: true });
 });
 

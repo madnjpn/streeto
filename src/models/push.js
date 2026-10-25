@@ -1,10 +1,15 @@
 import { all, get, run } from '../db.js';
 
-export function subscribe(userId, endpoint, p256dh, auth) {
+export function subscribe(userId, endpoint, p256dh, auth, platform = 'web') {
   run(
-    `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)
-     ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth`,
-    userId, endpoint, p256dh, auth,
+    `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, platform)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(endpoint) DO UPDATE SET
+       user_id = excluded.user_id,
+       p256dh = excluded.p256dh,
+       auth = excluded.auth,
+       platform = excluded.platform`,
+    userId, endpoint, p256dh, auth, platform || 'web',
   );
 }
 

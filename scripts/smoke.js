@@ -2329,6 +2329,21 @@ try {
     });
   }
   {
+    const endpoint = 'https://example.test/push-smoke';
+    const res = await a.post('/api/push/subscribe', {
+      json: { subscription: { endpoint, keys: { p256dh: 'smoke-key', auth: 'smoke-auth' } } },
+      headers: {
+        ...a.jsonHeaders(),
+        'user-agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/140.0 Mobile Safari/537.36',
+      },
+    });
+    check('an Android browser subscription is tagged for app deduplication', () => {
+      assert.equal(res.status, 200);
+      assert.equal(get('SELECT platform FROM push_subscriptions WHERE endpoint = ?', endpoint).platform, 'android');
+      db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(endpoint);
+    });
+  }
+  {
     const unread = get(
       'SELECT id FROM notifications WHERE user_id = ? AND read_at IS NULL ORDER BY id DESC LIMIT 1',
       notifUserId,
@@ -3506,6 +3521,14 @@ try {
     });
     check('the network gets an Underground notification', () => {
       assert.ok(get('SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?', bId, 'underground_event', undergroundId));
+    });
+    check('the host gets a private confirmation for their own night', () => {
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        aId,
+        'underground_host',
+        undergroundId,
+      ));
     });
   }
   {

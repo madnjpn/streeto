@@ -27,6 +27,9 @@ export async function ensurePushSubscription() {
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
     }
+    // Post even an existing subscription so the server can refresh which
+    // browser/device it belongs to (Android Chrome can then yield to the
+    // native app while desktop browsers keep their own notifications).
     await fetch('/api/push/subscribe', {
       method: 'POST',
       credentials: 'same-origin',

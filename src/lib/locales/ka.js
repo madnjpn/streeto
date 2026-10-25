@@ -2782,6 +2782,7 @@ export default {
   'Run saved. Opening your summary…': 'რბოლა შენახულია. შეჯამება იხსნება…',
   'Could not save the run. Slide again to retry.': 'რბოლის შენახვა ვერ მოხერხდა. კიდევ გაასრიალე ხელახლა საცდელად.',
   'A new Underground night is live: {name}': 'ახალი Underground ღამე გამოცხადდა: {name}',
+  'Your Underground night is live: {name}': 'შენი Underground ღამე აქტიურია: {name}',
   'asked to join your Underground night: {name}': 'ითხოვს შენს Underground ღამეში შესვლას: {name}',
   'Your Underground request was approved: {name}': 'შენი Underground მოთხოვნა დადასტურდა: {name}',
   'Your Underground request was rejected: {name}': 'შენი Underground მოთხოვნა უარყოფილია: {name}',

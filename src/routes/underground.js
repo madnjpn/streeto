@@ -276,6 +276,26 @@ router.post('/underground/new', requireAuth, verifyCsrf, async (req, res) => {
       category: 'underground',
     });
   }
+
+  // The host gets a private confirmation: the public "new night" notice
+  // excludes them so it does not reveal their own anonymous event.
+  notifications.notify({
+    userId: req.user.id,
+    type: 'underground_host',
+    entityId: event.id,
+    url: `/underground/${event.id}`,
+    text: 'Your Underground night is live: {name}|' + title,
+    push: false,
+    category: 'underground',
+  });
+  pushToUser(req.user.id, {
+    title: 'STREETO Underground',
+    body: translate(req.user.language || 'en', 'Your Underground night is live: {name}', { name: title }),
+    url: `/underground/${event.id}`,
+    tag: `underground-host-${event.id}`,
+    category: 'underground',
+  });
+
   req.flash('success', 'Underground night created. Approve your drivers before the map opens.');
   return res.redirect(`/underground/${event.id}`);
 });
