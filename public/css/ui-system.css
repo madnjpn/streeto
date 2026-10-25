@@ -475,6 +475,14 @@ body {
 
 .notifprefs > .btn {
   margin-top: var(--ui-space-3);
+  width: 100%;
+  height: auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .field input,

@@ -48,7 +48,16 @@ public final class NativeNotifications {
 
     public static boolean isEnabled(Context context) {
         return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .getBoolean(KEY_ENABLED, false) && allowed(context);
+                .getBoolean(KEY_ENABLED, false) && allowed(context) && !channelBlocked(context);
+    }
+
+    /** The activity channel can be blocked separately from the app toggle. */
+    public static boolean channelBlocked(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false;
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
+        if (manager == null) return false;
+        NotificationChannel channel = manager.getNotificationChannel(CHANNEL_ACTIVITY);
+        return channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE;
     }
 
     public static void setEnabled(Context context, boolean enabled) {

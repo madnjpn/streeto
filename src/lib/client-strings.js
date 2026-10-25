@@ -310,6 +310,7 @@ export const CLIENT_KEYS = [
   'Notifications are blocked. Allow them in your browser settings.',
   'Notifications are blocked. Allow them in your phone settings.',
   'Allow notifications in the system prompt.',
+  'Turning on notifications…',
   'This browser does not support notifications.',
   'Could not enable notifications. Try again.',
   'Mute',

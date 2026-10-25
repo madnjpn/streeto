@@ -11,6 +11,15 @@
  */
 export const CHANGELOG = [
   {
+    version: '1.3.3',
+    date: '2026-10-26',
+    scope: 'android',
+    items: [
+      'Notification enablement now confirms FCM registration and explains blocked permissions or channels.',
+      'The Georgian notification settings button wraps inside its card.',
+    ],
+  },
+  {
     version: '1.3.2',
     date: '2026-10-25',
     scope: 'android',

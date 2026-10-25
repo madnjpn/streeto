@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
     private PermissionRequest cameraPermissionRequest;
+    private boolean pendingNotificationEnable = false;
 
     private static final String UPDATE_FILE = "streeto-update.apk";
     private long updateDownloadId = -1;
@@ -476,13 +477,22 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (!NativeNotifications.allowed(MainActivity.this)) {
+                pendingNotificationEnable = true;
                 runOnUiThread(MainActivity.this::openNotificationSettings);
                 return "denied";
             }
 
-            NativeNotifications.setEnabled(MainActivity.this, true);
+            if (NativeNotifications.channelBlocked(MainActivity.this)) {
+                pendingNotificationEnable = true;
+                runOnUiThread(MainActivity.this::openNotificationChannelSettings);
+                return "denied";
+            }
+
+            // The token is only marked enabled after the server accepts it.
+            // Returning "enabling" keeps the web UI honest while FCM obtains
+            // the token and posts it with the current session cookie.
             DeviceRegistrar.register(MainActivity.this);
-            return "enabled";
+            return "enabling";
         }
 
         @JavascriptInterface
@@ -541,6 +551,37 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } catch (ActivityNotFoundException ignored) {
             /* no settings screen on this device */
+        }
+    }
+
+    /** The activity channel can be muted even when the app itself may notify. */
+    private void openNotificationChannelSettings() {
+        Toast.makeText(this, R.string.notify_permission_denied, Toast.LENGTH_LONG).show();
+        try {
+            Intent intent;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName())
+                        .putExtra(Settings.EXTRA_CHANNEL_ID, NativeNotifications.CHANNEL_ACTIVITY);
+            } else {
+                intent = new Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:" + getPackageName()));
+            }
+            startActivity(intent);
+        } catch (ActivityNotFoundException ignored) {
+            openNotificationSettings();
+        }
+    }
+
+    /** Ask the web Settings page to repaint after a permission/settings trip. */
+    private void refreshWebNotifications() {
+        if (webView == null) return;
+        try {
+            webView.evaluateJavascript(
+                    "window.dispatchEvent(new Event('focus'));", null);
+        } catch (Exception ignored) {
+            /* page is between navigations */
         }
     }
 
@@ -764,12 +805,20 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQ_NOTIFICATIONS) {
             if (NativeNotifications.allowed(this)) {
-                NativeNotifications.setEnabled(this, true);
-                DeviceRegistrar.register(this);
-                Toast.makeText(this, R.string.notify_enabled, Toast.LENGTH_SHORT).show();
+                if (NativeNotifications.channelBlocked(this)) {
+                    pendingNotificationEnable = true;
+                    openNotificationChannelSettings();
+                } else {
+                    pendingNotificationEnable = false;
+                    DeviceRegistrar.register(this);
+                    Toast.makeText(this, R.string.notify_enabled, Toast.LENGTH_SHORT).show();
+                }
             } else {
+                pendingNotificationEnable = true;
                 Toast.makeText(this, R.string.notify_permission_denied, Toast.LENGTH_LONG).show();
+                openNotificationSettings();
             }
+            refreshWebNotifications();
             return;
         }
         if (requestCode == REQ_CAMERA) {
@@ -841,6 +890,14 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         isForeground = true;
         if (webView != null) webView.onResume();
+        if (pendingNotificationEnable
+                && NativeNotifications.allowed(this)
+                && !NativeNotifications.channelBlocked(this)) {
+            pendingNotificationEnable = false;
+            DeviceRegistrar.register(this);
+            splashHandler.postDelayed(this::refreshWebNotifications, 2500);
+        }
+        refreshWebNotifications();
     }
 
     @Override

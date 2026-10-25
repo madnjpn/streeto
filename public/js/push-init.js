@@ -151,6 +151,14 @@ async function enable() {
         // The native permission dialog is asynchronous; refresh once it
         // has had time to close so the prompt disappears after a grant.
         setTimeout(refresh, 1400);
+        setTimeout(refresh, 3200);
+      } else if (result === 'enabling') {
+        paint(t('Disabled'), t('Turning on notifications…'));
+        // The token is registered in the background; keep checking until
+        // the native side confirms the server has the installation.
+        setTimeout(refresh, 1800);
+        setTimeout(refresh, 4000);
+        setTimeout(refresh, 8000);
       } else if (result === 'denied') {
         paint(t('Blocked'), t('Notifications are blocked. Allow them in your phone settings.'));
       } else {

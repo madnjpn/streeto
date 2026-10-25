@@ -2570,6 +2570,7 @@ export default {
   'Notifications are blocked. Allow them in your browser settings.': 'შეტყობინებები დაბლოკილია. დაუშვით ისინი ბრაუზერის პარამეტრებში.',
   'Notifications are blocked. Allow them in your phone settings.': 'შეტყობინებები დაბლოკილია. დაუშვით ისინი ტელეფონის პარამეტრებში.',
   'Allow notifications in the system prompt.': 'დაუშვით შეტყობინებები სისტემის მოთხოვნაში.',
+  'Turning on notifications…': 'შეტყობინებები ირთვება…',
   'This browser does not support notifications.': 'ეს ბრაუზერი არ უჭერს მხარს შეტყობინებებს.',
   'Could not enable notifications. Try again.': 'შეტყობინებების ჩართვა ვერ მოხერხდა. სცადეთ ხელახლა.',
   'Mute': 'დადუმება',
@@ -2842,4 +2843,6 @@ export default {
   'Write something or attach a photo.': 'დაწერე რამე ან მიამაგრე ფოტო.',
   'Drivers in this night': 'ამ ღამის მძღოლები',
   'Chat conversations scroll normally on Android and pull-to-refresh no longer interrupts them.': 'Android-ზე ჩატები ჩვეულებრივად სქროლდება და გვერდის განახლება ხელს აღარ უშლის.',
+  'Notification enablement now confirms FCM registration and explains blocked permissions or channels.': 'შეტყობინებების ჩართვა ახლა ადასტურებს FCM რეგისტრაციას და გიხსნით, თუ ნებართვა ან არხი დაბლოკილია.',
+  'The Georgian notification settings button wraps inside its card.': 'ქართული შეტყობინებების პარამეტრების ღილაკი ბარათში ეტევა და ტექსტს გადაიტანს.',
 };

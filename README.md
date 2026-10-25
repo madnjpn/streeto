@@ -14,8 +14,8 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.6.0` (`package.json`), Android `1.3.2`
-(`versionCode 11`, `android/app/build.gradle.kts`). These are the sources of
+**Current in this tree:** web `1.6.0` (`package.json`), Android `1.3.3`
+(`versionCode 12`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
 ---
@@ -1521,7 +1521,7 @@ cookie jars, logs with personal data.
 ### Current release reminder
 
 - Web version: `package.json` → `1.6.0`
-- Android version: `android/app/build.gradle.kts` → `1.3.2` (versionCode `11`)
+- Android version: `android/app/build.gradle.kts` → `1.3.3` (versionCode `12`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`
 
