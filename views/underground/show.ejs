@@ -146,7 +146,8 @@
     </div>
 
     <% if (myRun) { %>
-      <section class="card ug-summary" data-ug-summary-open="<%= event.status === 'finished' ? '1' : '0' %>">
+      <section class="card ug-summary" data-ug-summary data-ug-summary-open="<%= event.status === 'finished' ? '1' : '0' %>">
+        <button type="button" class="btn btn--ghost btn--sm ug-summary__close" data-ug-summary-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 16 }) %></button>
         <p class="eyebrow"><%= t('Your run') %></p>
         <h2 class="card__title"><%= event.title %></h2>
         <% if (showRunMap) { %><div class="ug-run__map ug-summary__map" data-ug-run-map data-track="<%= JSON.stringify(myTrack) %>"></div><% } %>

@@ -512,6 +512,31 @@ function initEvent(root) {
   }, 4000);
 }
 
+function initSummaryModal() {
+  const summary = document.querySelector('[data-ug-summary]');
+  if (!summary || summary.dataset.ugSummaryOpen !== '1') return;
+  const close = summary.querySelector('[data-ug-summary-close]');
+  const backdrop = document.createElement('div');
+  backdrop.className = 'ug-summary-backdrop';
+  document.body.appendChild(backdrop);
+  document.body.appendChild(summary);
+  summary.classList.add('is-modal');
+  document.body.style.overflow = 'hidden';
+  const closeModal = () => {
+    summary.classList.remove('is-modal');
+    summary.remove();
+    backdrop.remove();
+    document.body.style.overflow = '';
+  };
+  close?.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+  setTimeout(() => {
+    const map = summary.querySelector('[data-ug-run-map]');
+    if (map?.__streetoMap) map.__streetoMap.resize();
+  }, 80);
+}
+
 initRunMaps();
+initSummaryModal();
 const eventRoot = document.querySelector('[data-ug-event]');
 if (eventRoot) initEvent(eventRoot);

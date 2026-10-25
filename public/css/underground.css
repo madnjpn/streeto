@@ -358,6 +358,30 @@ body.page-underground .ug-type {
 .ug-run__foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .ug-summary { border-color: rgba(255, 59, 77, 0.32); }
 .ug-summary__map { height: 250px; }
+.ug-summary__close { display: none; float: right; margin: -4px -4px 6px 10px; }
+.ug-summary.is-modal {
+  position: fixed;
+  z-index: 5500;
+  top: max(12px, calc(var(--ui-safe-top) + 12px));
+  right: 12px;
+  bottom: max(12px, calc(var(--ui-safe-bottom) + 12px));
+  left: 12px;
+  width: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--overlay);
+  box-shadow: 0 30px 80px -20px #000;
+}
+.ug-summary.is-modal .ug-summary__close { display: inline-flex; }
+.ug-summary-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5400;
+  background: rgba(3, 1, 2, 0.78);
+  backdrop-filter: blur(5px);
+}
 
 /* The virtual in-app lock screen. */
 .ug-lock {
