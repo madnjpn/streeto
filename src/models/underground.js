@@ -1,4 +1,4 @@
-import { all, get, run } from '../db.js';
+import { all, get, run, tx } from '../db.js';
 
 /**
  * Underground nights.
@@ -26,7 +26,7 @@ export const byId = (id) =>
     `SELECT ${EVENT_SELECT}
        FROM underground_events e
        JOIN users u ON u.id = e.host_id
-      WHERE e.id = ?`,
+      WHERE e.id = ? AND e.deleted_at IS NULL`,
     id,
   );
 
@@ -35,7 +35,7 @@ export const listEvents = ({ limit = 60 } = {}) =>
     `SELECT ${EVENT_SELECT}
        FROM underground_events e
        JOIN users u ON u.id = e.host_id
-      WHERE e.status <> 'cancelled'
+      WHERE e.status <> 'cancelled' AND e.deleted_at IS NULL
       ORDER BY CASE e.status WHEN 'open' THEN 0 ELSE 1 END,
                e.starts_at DESC
       LIMIT ?`,
@@ -286,12 +286,13 @@ export const runsForEvent = (eventId) =>
 
 export const runsForUser = (userId) =>
   all(
-    `SELECT r.*, e.title, e.type, e.starts_at, e.status, e.meet_name,
+    `SELECT r.*, e.title, e.type, e.starts_at, e.status, e.deleted_at, e.meet_name,
             e.meet_lat, e.meet_lng,
             e.route_start_lat, e.route_start_lng, e.route_end_lat, e.route_end_lng
        FROM underground_runs r
        JOIN underground_events e ON e.id = r.event_id
-      WHERE r.user_id = ? AND e.status = 'finished'
+      WHERE r.user_id = ?
+        AND (e.status = 'finished' OR e.deleted_at IS NOT NULL)
       ORDER BY r.finished_at DESC`,
     userId,
   );
@@ -321,9 +322,21 @@ export const cancelEvent = (eventId) =>
     eventId,
   );
 
-/** Delete a night and everything attached to it (requests, runs, positions). */
-export const removeEvent = (eventId) =>
-  run('DELETE FROM underground_events WHERE id = ?', eventId);
+/**
+ * Delete a night from the network without destroying participant stats.
+ * Meetup details, requests and live positions go away; the event row is
+ * archived and its saved runs stay available in My Underground.
+ */
+export const removeEvent = (eventId) => tx(() => {
+  run('DELETE FROM underground_positions WHERE event_id = ?', eventId);
+  run('DELETE FROM underground_requests WHERE event_id = ?', eventId);
+  return run(
+    `UPDATE underground_events
+        SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+      WHERE id = ? AND deleted_at IS NULL`,
+    eventId,
+  );
+});
 
 export default {
   byId,

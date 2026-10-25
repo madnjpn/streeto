@@ -120,6 +120,7 @@ router.get('/underground', requireAuth, (req, res) => {
           type: run.type,
           starts_at: run.starts_at,
           status: run.status,
+          deleted: Boolean(run.deleted_at),
           meet_name: run.meet_name,
           meet_lat: run.meet_lat,
           meet_lng: run.meet_lng,

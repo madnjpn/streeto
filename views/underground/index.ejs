@@ -91,7 +91,11 @@
               </section>
             <% }); %>
             <footer class="ug-run__foot">
-              <a class="link" href="/underground/<%= group.event_id %>"><%= t('Open the night') %></a>
+              <% if (group.deleted) { %>
+                <span class="muted small"><%= t('Meetup deleted') %></span>
+              <% } else { %>
+                <a class="link" href="/underground/<%= group.event_id %>"><%= t('Open the night') %></a>
+              <% } %>
               <span class="muted small"><%= t('{n} runs', { n: group.runs.length }) %></span>
             </footer>
           </article>

@@ -2853,4 +2853,7 @@ export default {
   'A new Underground theme brings the red night palette to the whole site.': 'ახალი Underground თემა წითელ ღამის პალიტრას მთელ საიტზე ავრცელებს.',
   'Switch': 'გადართვა',
   'Capture': 'გადაღება',
+  'Meetup deleted': 'შეხვედრა წაშლილია',
+  'This removes the meetup from the network. Drivers keep their saved run summaries. This cannot be undone.': 'ეს შეხვედრას ქსელიდან შლის. მძღოლებს მათი შენახული რბოლის შეჯამებები რჩებათ. ამის გაუქმება შეუძლებელია.',
+  'Delete this Underground meetup? Drivers will keep their saved summaries.': 'წავშალო ეს Underground შეხვედრა? მძღოლებს მათი შენახული შეჯამებები რჩებათ.',
 };

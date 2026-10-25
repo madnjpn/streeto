@@ -3731,11 +3731,19 @@ try {
       assert.ok(get('SELECT COUNT(*) AS n FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId).n >= 1);
     });
     const removed = await a.post('/underground/' + undergroundId + '/delete', a.formWithCsrf({}));
-    check('the host deletes the night and its runs', () => {
+    check('the host deletes the meetup but participant runs survive', () => {
       assert.equal(removed.status, 302);
       assert.equal(removed.headers.get('location'), '/underground');
-      assert.equal(get('SELECT 1 AS x FROM underground_events WHERE id = ?', undergroundId), undefined);
-      assert.equal(get('SELECT 1 AS x FROM underground_runs WHERE event_id = ?', undergroundId), undefined);
+      assert.ok(get('SELECT deleted_at FROM underground_events WHERE id = ?', undergroundId).deleted_at);
+      assert.ok(get('SELECT COUNT(*) AS n FROM underground_runs WHERE event_id = ?', undergroundId).n >= 1);
+    });
+    const gone = await b.page('/underground/' + undergroundId);
+    const kept = await b.page('/underground?scope=mine');
+    check('the deleted meetup disappears but My Underground keeps the stats', () => {
+      assert.equal(gone.res.status, 404);
+      assert.match(kept.html, /Smoke Underground Night/);
+      assert.match(kept.html, /Meetup deleted/);
+      assert.doesNotMatch(kept.html, />Open the night</);
     });
     check('approved drivers are told when the host cancels the night', () => {
       assert.ok(get(

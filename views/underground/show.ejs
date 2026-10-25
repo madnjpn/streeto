@@ -192,8 +192,8 @@
       <% if (isHost) { %>
         <section class="card ug-danger">
           <h2 class="card__title"><%= t('Delete this night') %></h2>
-          <p class="muted"><%= t('This removes the night, its requests and its saved runs for everyone. This cannot be undone.') %></p>
-          <form action="/underground/<%= event.id %>/delete" method="post" data-confirm="<%= t('Delete this Underground night and all of its runs?') %>">
+          <p class="muted"><%= t('This removes the meetup from the network. Drivers keep their saved run summaries. This cannot be undone.') %></p>
+          <form action="/underground/<%= event.id %>/delete" method="post" data-confirm="<%= t('Delete this Underground meetup? Drivers will keep their saved summaries.') %>">
             <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
             <button class="btn btn--danger" type="submit"><%- include('../partials/icon', { name: 'trash', size: 16 }) %> <%= t('Delete night') %></button>
           </form>
