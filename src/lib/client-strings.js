@@ -137,6 +137,7 @@ export const CLIENT_KEYS = [
   'Could not save the run.',
   'Run saved. Opening your summary…',
   'Could not save the run. Slide again to retry.',
+  'Your run is already saved. Delete your summary before running again.',
 
   /* admin console - translations and the manual editor */
   'Saving…',

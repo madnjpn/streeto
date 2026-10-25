@@ -240,7 +240,16 @@ body.page-underground .ug-type {
 .ug-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--neon); }
 
 /* Live driver marker: avatar + speed badge. */
-.ug-marker { position: relative; width: 42px; height: 52px; cursor: pointer; }
+.ug-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 48px;
+  min-height: 54px;
+  cursor: pointer;
+}
 .ug-marker__avatar {
   display: grid;
   place-items: center;
@@ -258,10 +267,10 @@ body.page-underground .ug-type {
 }
 .ug-marker__avatar img { width: 100%; height: 100%; object-fit: cover; }
 .ug-marker__speed {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
+  position: static;
+  order: -1;
+  align-self: center;
+  transform: none;
   padding: 2px 7px;
   border-radius: 999px;
   background: var(--neon);
@@ -359,6 +368,10 @@ body.page-underground .ug-type {
   background: linear-gradient(135deg, rgba(179, 18, 42, 0.1), transparent 45%), rgba(255, 255, 255, 0.015);
 }
 .ug-run__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ug-run__item { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.ug-run__itemhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.ug-run__itemhead strong { font-family: var(--font-head); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--neon); }
+.ug-run__itemhead form { margin: 0; }
 .ug-run__head h2 { margin: 0; flex: 1; font-family: var(--font-head); font-size: 19px; text-transform: uppercase; }
 .ug-run__date { color: var(--muted); font-size: 11.5px; }
 .ug-run__map { height: 230px; margin: 13px 0; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; background: #070506; }
@@ -373,7 +386,9 @@ body.page-underground .ug-type {
 .ug-summary { border-color: rgba(255, 59, 77, 0.32); }
 .ug-summary__map { height: 250px; }
 .ug-summary__close { display: none; float: right; margin: -4px -4px 6px 10px; }
-.ug-summary.is-modal {
+.ug-summary-stack { display: none; }
+.ug-summary-stack.is-modal {
+  display: block;
   position: fixed;
   z-index: 5500;
   top: max(12px, calc(var(--ui-safe-top) + 12px));
@@ -384,12 +399,29 @@ body.page-underground .ug-type {
   max-width: 720px;
   max-height: calc(100dvh - max(12px, calc(var(--ui-safe-top) + 12px)) - max(12px, calc(var(--ui-safe-bottom) + 12px)));
   margin: 0 auto;
+  padding: 0 2px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--overlay);
+}
+.ug-summary-stack.is-modal > .ug-summary {
+  margin-bottom: 12px;
   box-shadow: 0 30px 80px -20px #000;
 }
-.ug-summary.is-modal .ug-summary__close { display: inline-flex; }
+.ug-summary-stack.is-modal > .ug-summary__close {
+  display: inline-flex;
+  position: sticky;
+  float: right;
+  top: 0;
+  z-index: 2;
+  margin: 8px 8px -36px 0;
+}
+.ug-finished {
+  border-color: rgba(255, 59, 77, 0.4);
+  background:
+    radial-gradient(500px 220px at 90% -20%, rgba(255, 59, 77, 0.18), transparent 65%),
+    rgba(255, 255, 255, 0.015);
+}
+.ug-finished .card__title { text-transform: uppercase; letter-spacing: 0.03em; }
 .ug-summary-backdrop {
   position: fixed;
   inset: 0;

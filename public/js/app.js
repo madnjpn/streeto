@@ -43,8 +43,11 @@ export function closeModal(selector) {
 
 /** Close modal when clicking backdrop or pressing Escape. */
 document.addEventListener('click', (e) => {
-  if (e.target.matches('[data-dismiss]')) {
-    const modal = e.target.closest('.modal');
+  // The header close button contains an SVG; the click lands on the SVG or
+  // one of its paths, not on the button itself. Walk up to the control.
+  const dismiss = e.target.closest?.('[data-dismiss]');
+  if (dismiss) {
+    const modal = dismiss.closest('.modal');
     if (modal) closeModal('#' + modal.id);
   }
 });
@@ -371,6 +374,7 @@ async function loadComments(postId) {
       list.append(p);
     }
     wireMentions(list);
+    wireCommentMedia(list);
   } catch (error) {
     list.dataset.loaded = '0';
     if (loading) loading.textContent = error.message;
@@ -386,10 +390,89 @@ function wireMentions(scope) {
   });
 }
 
+/**
+ * Comment attachments use the same SD/HD contract as the wall composer.
+ * The preview lives inside the form so replies keep their own file.
+ */
+function wireCommentMedia(scope) {
+  (scope || document).querySelectorAll('[data-comment-form]').forEach((form) => {
+    if (form.dataset.mediaWired === '1') return;
+    form.dataset.mediaWired = '1';
+    const input = $('[data-comment-media]', form);
+    const box = $('[data-comment-mediaopts]', form);
+    const preview = $('[data-comment-preview]', form);
+    const quality = $('[data-comment-quality]', form);
+    const qualityInput = $('[data-comment-quality-input]', form);
+
+    const setQuality = (value) => {
+      if (qualityInput) qualityInput.value = value === 'hd' ? 'hd' : 'sd';
+      quality?.querySelectorAll('[data-comment-quality-value]').forEach((button) => {
+        button.classList.toggle('is-on', button.dataset.commentQualityValue === (value === 'hd' ? 'hd' : 'sd'));
+      });
+    };
+
+    const clear = () => {
+      if (form.__commentMediaUrl) {
+        URL.revokeObjectURL(form.__commentMediaUrl);
+        form.__commentMediaUrl = null;
+      }
+      if (preview) preview.replaceChildren();
+      if (box) box.hidden = true;
+      if (quality) quality.hidden = true;
+      setQuality('sd');
+    };
+
+    quality?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-comment-quality-value]');
+      if (!button) return;
+      setQuality(button.dataset.commentQualityValue);
+    });
+
+    input?.addEventListener('change', () => {
+      clear();
+      const file = input.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      form.__commentMediaUrl = url;
+      let node;
+      if (file.type.startsWith('video/')) {
+        node = document.createElement('video');
+        node.src = url;
+        node.muted = true;
+        node.controls = true;
+      } else if (file.type.startsWith('image/')) {
+        node = document.createElement('img');
+        node.src = url;
+        node.alt = t('Preview');
+      } else {
+        node = document.createElement('div');
+        node.className = 'filebox';
+        node.textContent = `${file.name} - ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+      }
+      preview?.append(node);
+      if (box) {
+        box.hidden = false;
+        // Keep the preview and SD/HD switch clear of the fixed tab bar.
+        box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+      if (quality) quality.hidden = !file.type.startsWith('image/');
+      setQuality('sd');
+    });
+  });
+}
+
+function clearCommentMedia(form) {
+  const input = form?.querySelector('[data-comment-media]');
+  if (!input) return;
+  input.value = '';
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // Comments that came down with the page are already rendered; the rest
 // are fetched as soon as their section is visible.
 $$('[data-comments]:not([hidden])').forEach((section) => loadComments(section.dataset.comments));
 wireMentions(document);
+wireCommentMedia(document);
 
 document.addEventListener('click', (event) => {
   const toggle = event.target.closest('[data-comments-toggle]');
@@ -421,15 +504,20 @@ document.addEventListener('submit', async (event) => {
 
   const postId = form.dataset.commentForm;
   const input = $('input[name="body"]', form);
-  const body = input.value.trim();
-  if (!body) return;
+  const mediaInput = $('[data-comment-media]', form);
+  const body = input?.value.trim() || '';
+  if (!body && !mediaInput?.files?.length) {
+    input?.focus();
+    flash(t('Write something or attach a photo/video.'), 'warning');
+    return;
+  }
 
   const submit = $('button[type="submit"]', form);
   setBusy(submit, true);
   try {
-    // URLSearchParams keeps this a normal form-encoded post, which the
-    // server's urlencoded parser understands.
-    const data = await api(form.action, { body: new URLSearchParams(new FormData(form)) });
+    // FormData is required here: URLSearchParams would silently drop the
+    // selected photo or video before it ever reaches the server.
+    const data = await api(form.action, { body: new FormData(form) });
     if (form.hasAttribute('data-reply-form')) {
       // A reply goes under the comment it answers - and a reply can be
       // answered as well, so the box may sit inside another reply.
@@ -438,16 +526,21 @@ document.addEventListener('submit', async (event) => {
       if (box) {
         box.insertAdjacentHTML('beforeend', data.html);
         wireMentions(box);
+        wireCommentMedia(box);
       }
       form.reset();
+      clearCommentMedia(form);
       form.hidden = true;
     } else {
       const list = $(`[data-comments-list="${postId}"]`);
       if (list) {
         list.querySelector('.muted.small')?.remove();
         list.insertAdjacentHTML('beforeend', data.html);
+        wireMentions(list);
+        wireCommentMedia(list);
       }
-      input.value = '';
+      if (input) input.value = '';
+      clearCommentMedia(form);
     }
     const count = $(`[data-comment-count="${postId}"]`);
     if (count) count.textContent = data.count;

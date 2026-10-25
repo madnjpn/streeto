@@ -170,13 +170,21 @@ const renderedComments = typeof commentsHtml !== 'undefined' ? commentsHtml : ''
     <% if (canComment) { %>
       <form class="comments__form" action="/posts/<%= post.id %>/comments" method="post" enctype="multipart/form-data" data-comment-form="<%= post.id %>">
         <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+        <input type="hidden" name="quality" value="sd" data-comment-quality-input>
         <%- include('avatar', { u: currentUser, cls: 'avatar--xs' }) %>
         <input type="text" name="body" placeholder="<%= t('Add a comment…') %>" maxlength="1000" aria-label="<%= t('Write a comment') %>">
         <label class="comment__attach" title="<%= t('Attach a photo') %>">
           <%- include('icon', { name: 'image', size: 16 }) %>
-          <input type="file" name="media" accept="image/*,video/*" hidden>
+          <input type="file" name="media" accept="image/*,video/*" hidden data-comment-media>
         </label>
         <button class="btn btn--primary btn--sm" type="submit"><%- include('icon', { name: 'send', size: 16 }) %><span class="sr-only"><%= t('Send comment') %></span></button>
+        <div class="comment__mediaopts" data-comment-mediaopts hidden>
+          <div class="comment__preview" data-comment-preview></div>
+          <div class="quality quality--tiny" data-comment-quality hidden>
+            <button type="button" class="quality__btn is-on" data-comment-quality-value="sd" title="<%= t('Small and fast - the picture is made for the screen') %>">SD</button>
+            <button type="button" class="quality__btn" data-comment-quality-value="hd" title="<%= t('Full size - a sharp picture, a bigger file') %>">HD</button>
+          </div>
+        </div>
       </form>
     <% } else { %>
       <p class="comments__login"><a href="/login"><%= t('Log in') %></a> <%= t('to like and comment.') %></p>

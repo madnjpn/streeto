@@ -679,11 +679,35 @@ try {
     });
   }
   {
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const fd = new FormData();
+    fd.set('_csrf', b.csrf);
+    fd.set('quality', 'hd');
+    fd.set('body', '');
+    fd.set('media', new Blob([png], { type: 'image/png' }), 'comment-photo.png');
+    const res = await b.post(`/posts/${postId}/comments`, {
+      multipart: fd,
+      headers: { 'x-requested-with': 'fetch' },
+    });
+    const body = await res.json();
+    check('a photo-only comment uploads without text', () => {
+      assert.equal(body.ok, true);
+      assert.match(body.html, /comment__media/);
+      const row = get('SELECT media_path, media_type FROM comments ORDER BY id DESC LIMIT 1');
+      assert.ok(row.media_path);
+      assert.equal(row.media_type, 'photo');
+    });
+  }
+  {
     const res = await a.request('GET', `/posts/${postId}/comments`);
     const body = await res.json();
     check('comments load endpoint returns the thread', () => {
-      assert.equal(body.count, 1);
-      assert.equal(body.comments[0].username, B.username);
+      assert.equal(body.count, 2);
+      assert.ok(body.comments.some((comment) => comment.username === B.username));
+      assert.match(body.html, /See you there\./);
     });
   }
   {
@@ -2273,6 +2297,7 @@ try {
       notify_social: '1',
       notify_groups: '1',
       notify_meetups: '1',
+      notify_underground: '1',
       notify_builds: '1',
       notify_services: '1',
     }));
@@ -2282,6 +2307,7 @@ try {
       const prefs = JSON.parse(row.notify_prefs);
       assert.equal(prefs.messages, true);
       assert.equal(prefs.social, true);
+      assert.equal(prefs.underground, true);
       assert.equal(prefs.services, true);
     });
   }
@@ -3470,6 +3496,14 @@ try {
       assert.equal(row.status, 'requested');
       assert.equal(row.car_model, 'Smoke E36');
     });
+    check('the host is notified about the join request', () => {
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        aId,
+        'underground_request',
+        undergroundId,
+      ));
+    });
   }
   {
     const page = await a.page('/underground/' + undergroundId);
@@ -3481,6 +3515,14 @@ try {
     check('the host approves the driver', () => {
       assert.equal(res.status, 302);
       assert.equal(get('SELECT status FROM underground_requests WHERE event_id = ? AND user_id = ?', undergroundId, bId).status, 'approved');
+    });
+    check('the driver is notified that the request was approved', () => {
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'underground_approved',
+        undergroundId,
+      ));
     });
     const approved = await b.page('/underground/' + undergroundId);
     check('approval unlocks the map and race controls', () => {
@@ -3526,6 +3568,23 @@ try {
       assert.ok(row);
       assert.ok(row.top_speed >= 120);
     });
+    const again = await b.post('/api/underground/' + undergroundId + '/run', {
+      json: { track },
+      headers: b.jsonHeaders(),
+    });
+    check('a driver can record another run at the same night', () => {
+      assert.equal(again.status, 200);
+      assert.ok(get('SELECT COUNT(*) AS n FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId).n >= 2);
+    });
+    const afterRun = await b.page('/underground/' + undergroundId);
+    check('race mode stays available while the night is open', () => {
+      assert.match(afterRun.html, /data-ug-enter/);
+    });
+    check('all runs are grouped in one summary card under the night name', () => {
+      assert.equal((afterRun.html.match(/class="card ug-summary"/g) || []).length, 1);
+      assert.equal((afterRun.html.match(/class="ug-run__item"/g) || []).length, 2);
+      assert.match(afterRun.html, /data-ug-summary-view/);
+    });
   }
   {
     const before = outbox.length;
@@ -3538,6 +3597,46 @@ try {
       assert.ok(outbox.length > before);
       assert.ok(outbox.slice(before).some((mail) => /Underground summary/.test(String(mail.subject || ''))));
     });
+    check('the finish and summary pushes are recorded', () => {
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'underground_finished',
+        undergroundId,
+      ));
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'underground_summary',
+        undergroundId,
+      ));
+    });
+    const finishedView = await b.page('/underground/' + undergroundId);
+    check('the finished screen has a view-summary action', () => {
+      assert.match(finishedView.html, /THIS MEETUP IS FINISHED/);
+      assert.match(finishedView.html, /data-ug-summary-view/);
+    });
+    const lateUsername = `smokec${tag}`;
+    const late = new Client(base);
+    await register(late, { username: lateUsername, email: `${lateUsername}@streeto.test` }, 'Smoke C');
+    const lateView = await late.page('/underground/' + undergroundId);
+    check('a finished night does not offer the join form', () => {
+      assert.match(lateView.html, /THIS MEETUP IS FINISHED/);
+      assert.match(lateView.html, /New join requests are closed/);
+      assert.doesNotMatch(lateView.html, /Ask to join/);
+    });
+    const lateFd = new FormData();
+    lateFd.set('_csrf', late.csrf);
+    lateFd.set('car_model', 'Too Late E36');
+    const lateJoin = await late.post('/underground/' + undergroundId + '/join', { multipart: lateFd });
+    const lateId = get('SELECT id FROM users WHERE username = ?', lateUsername).id;
+    check('the server rejects a late join request', () => {
+      assert.equal(lateJoin.status, 302);
+      assert.equal(
+        get('SELECT 1 AS x FROM underground_requests WHERE event_id = ? AND user_id = ?', undergroundId, lateId),
+        undefined,
+      );
+    });
     const mine = await b.page('/underground?scope=mine');
     check('My Underground keeps the finished run', () => {
       assert.equal(mine.res.status, 200);
@@ -3545,11 +3644,16 @@ try {
       assert.match(mine.html, /data-ug-run-map/);
       assert.match(mine.html, /Top speed/);
     });
+    check('My Underground groups every run under one night card', () => {
+      assert.equal((mine.html.match(/class="ug-run ug-run--group"/g) || []).length, 1);
+      assert.equal((mine.html.match(/class="ug-run__item"/g) || []).length, 2);
+    });
     const summaryId = get('SELECT id FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId)?.id;
     const removedSummary = await b.post('/underground/runs/' + summaryId + '/delete', b.formWithCsrf({}));
     check('a driver deletes their own run summary', () => {
       assert.equal(removedSummary.status, 302);
       assert.equal(get('SELECT 1 AS x FROM underground_runs WHERE id = ?', summaryId), undefined);
+      assert.ok(get('SELECT COUNT(*) AS n FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId).n >= 1);
     });
     const removed = await a.post('/underground/' + undergroundId + '/delete', a.formWithCsrf({}));
     check('the host deletes the night and its runs', () => {
@@ -3557,6 +3661,14 @@ try {
       assert.equal(removed.headers.get('location'), '/underground');
       assert.equal(get('SELECT 1 AS x FROM underground_events WHERE id = ?', undergroundId), undefined);
       assert.equal(get('SELECT 1 AS x FROM underground_runs WHERE event_id = ?', undergroundId), undefined);
+    });
+    check('approved drivers are told when the host cancels the night', () => {
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'underground_cancelled',
+        undergroundId,
+      ));
     });
   }
 

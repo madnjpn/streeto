@@ -2177,10 +2177,43 @@ input[type="datetime-local"] { color-scheme: var(--native-scheme); height: 42px;
 .comments { margin: 10px 0 0 55px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .comments__list { display: flex; flex-direction: column; gap: 9px; }
 .comments__loading { font-size: 12px; padding: 4px 0; }
-.comments__form { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.comments__form { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 /* The field takes the room, the send button keeps its round shape. */
 .comments__form input { flex: 1 1 auto; min-width: 0; border-radius: 99px; padding: 8px 14px; font-size: 13px; }
 .comments__form .btn { flex: 0 0 auto; border-radius: 50%; width: 34px; height: 34px; padding: 0; }
+.comments__form .comment__mediaopts,
+.comment__replyform .comment__mediaopts {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  order: -1;
+  scroll-margin-bottom: calc(var(--ui-tabbar) + 20px);
+}
+.comment__mediaopts[hidden] { display: none; }
+.comment__preview { display: flex; align-items: center; min-width: 0; }
+.comment__preview img,
+.comment__preview video {
+  display: block;
+  width: 76px;
+  height: 54px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.comment__preview .filebox {
+  display: block;
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 7px 10px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  font-size: 11px;
+  color: var(--muted);
+}
 .comments__login { font-size: 12.5px; color: var(--dim); margin-top: 8px; }
 
 .comment { display: flex; gap: 8px; align-items: flex-start; position: relative; }
@@ -5594,6 +5627,7 @@ a.chip.is-active .chip__n { color: var(--neon); }
   align-items: center;
   gap: 6px;
   margin-top: 6px;
+  flex-wrap: wrap;
 }
 .comment__replyform[hidden] { display: none; }
 .comment__replyform input[type="text"] {

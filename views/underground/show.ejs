@@ -1,7 +1,6 @@
 <%
-  const myTrack = myRun && Array.isArray(myRun.track) ? myRun.track : [];
+  const latestTrack = myRuns && myRuns[0] && Array.isArray(myRuns[0].track) ? myRuns[0].track : [];
   const hasRoutePreview = event.type === 'touge' && event.route_start_lat != null && event.route_end_lat != null;
-  const showRunMap = myRun && event.type !== 'drift' && (myTrack.length > 1 || hasRoutePreview);
   const statusLabel = event.status === 'finished' ? t('Finished') : event.status === 'cancelled' ? t('Cancelled') : t('Open');
 %>
 <div class="ug-page">
@@ -28,38 +27,45 @@
 
   <% if (!approved) { %>
     <section class="card ug-gate">
-      <p class="eyebrow"><%= t('Approval needed') %></p>
-      <h2 class="card__title"><%= t('The map is locked') %></h2>
-      <p class="muted"><%= t('This is a closed Underground night. Send the host the car or bike you are bringing; the location and race controls unlock after approval.') %></p>
+      <% if (event.status !== 'open') { %>
+        <p class="eyebrow"><%= event.status === 'finished' ? t('Finished') : t('Cancelled') %></p>
+        <h2 class="card__title"><%= event.status === 'finished' ? t('THIS MEETUP IS FINISHED') : t('This meetup is closed.') %></h2>
+        <p class="muted"><%= event.status === 'finished' ? t('The night is over. New join requests are closed.') : t('This meetup is no longer open.') %></p>
+        <a class="btn btn--ghost" href="/underground"><%= t('Browse nights') %></a>
+      <% } else { %>
+        <p class="eyebrow"><%= t('Approval needed') %></p>
+        <h2 class="card__title"><%= t('The map is locked') %></h2>
+        <p class="muted"><%= t('This is a closed Underground night. Send the host the car or bike you are bringing; the location and race controls unlock after approval.') %></p>
 
-      <% if (myRequest && myRequest.status === 'requested') { %>
-        <div class="alert alert--info"><%- include('../partials/icon', { name: 'clock', size: 18 }) %><span><%= t('Your request is waiting for the host.') %></span></div>
-      <% } else if (myRequest && myRequest.status === 'rejected') { %>
-        <div class="alert alert--error"><%- include('../partials/icon', { name: 'alert', size: 18 }) %><span><%= t('The host declined this request. You can send it again with another car.') %></span></div>
-      <% } %>
+        <% if (myRequest && myRequest.status === 'requested') { %>
+          <div class="alert alert--info"><%- include('../partials/icon', { name: 'clock', size: 18 }) %><span><%= t('Your request is waiting for the host.') %></span></div>
+        <% } else if (myRequest && myRequest.status === 'rejected') { %>
+          <div class="alert alert--error"><%- include('../partials/icon', { name: 'alert', size: 18 }) %><span><%= t('The host declined this request. You can send it again with another car.') %></span></div>
+        <% } %>
 
-      <% if (!myRequest || myRequest.status !== 'requested') { %>
-        <form class="ug-join" action="/underground/<%= event.id %>/join" method="post" enctype="multipart/form-data">
-          <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
-          <% if (myVehicles.length) { %>
+        <% if (!myRequest || myRequest.status !== 'requested') { %>
+          <form class="ug-join" action="/underground/<%= event.id %>/join" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+            <% if (myVehicles.length) { %>
+              <label class="field">
+                <span class="field__label"><%= t('Car from My Ride') %></span>
+                <select name="vehicle_id">
+                  <option value=""><%= t('Choose manually below') %></option>
+                  <% myVehicles.forEach(function (v) { %><option value="<%= v.id %>"><%= v.name %></option><% }); %>
+                </select>
+              </label>
+            <% } %>
             <label class="field">
-              <span class="field__label"><%= t('Car from My Ride') %></span>
-              <select name="vehicle_id">
-                <option value=""><%= t('Choose manually below') %></option>
-                <% myVehicles.forEach(function (v) { %><option value="<%= v.id %>"><%= v.name %></option><% }); %>
-              </select>
+              <span class="field__label"><%= t('Car or bike') %></span>
+              <input type="text" name="car_model" maxlength="120" placeholder="<%= t('e.g. BMW E36 / Yamaha R6') %>">
             </label>
-          <% } %>
-          <label class="field">
-            <span class="field__label"><%= t('Car or bike') %></span>
-            <input type="text" name="car_model" maxlength="120" placeholder="<%= t('e.g. BMW E36 / Yamaha R6') %>">
-          </label>
-          <label class="field">
-            <span class="field__label"><%= t('Car photo') %> <span class="muted">(<%= t('optional') %>)</span></span>
-            <input type="file" name="photo" accept="image/*">
-          </label>
-          <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'lock', size: 16 }) %> <%= t('Ask to join') %></button>
-        </form>
+            <label class="field">
+              <span class="field__label"><%= t('Car photo') %> <span class="muted">(<%= t('optional') %>)</span></span>
+              <input type="file" name="photo" accept="image/*">
+            </label>
+            <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'lock', size: 16 }) %> <%= t('Ask to join') %></button>
+          </form>
+        <% } %>
       <% } %>
     </section>
   <% } else { %>
@@ -76,7 +82,21 @@
          data-upload-url="<%= config.uploadUrl %>"
          data-can-race="<%= canRace ? '1' : '0' %>"
          data-finished="<%= event.status === 'finished' ? '1' : '0' %>"
-         data-track="<%= JSON.stringify(myTrack) %>">
+         data-track="<%= JSON.stringify(latestTrack) %>">
+      <% if (event.status === 'finished') { %>
+        <section class="card ug-finished">
+          <p class="eyebrow"><%= t('Underground') %></p>
+          <h2 class="card__title"><%= t('THIS MEETUP IS FINISHED') %></h2>
+          <p class="muted"><%= t('The night is over. Your runs stay saved in My Underground.') %></p>
+          <div class="btnrow">
+            <% if (myRuns && myRuns.length) { %>
+              <button class="btn btn--primary" type="button" data-ug-summary-view><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('View my summary') %></button>
+            <% } %>
+            <a class="btn btn--ghost" href="/underground?scope=mine"><%= t('My Underground') %></a>
+          </div>
+        </section>
+      <% } %>
+
       <div class="ug-map-wrap">
         <div class="ug-map" data-ug-map></div>
         <div class="ug-map__legend">
@@ -95,7 +115,10 @@
             <button class="btn btn--primary btn--block" type="button" data-ug-enter disabled><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Enter race mode') %></button>
             <p class="muted small" data-ug-arrival><%= t('Race mode unlocks within {n} m of the meeting spot.', { n: arrivalRadiusM }) %></p>
           <% } else { %>
-            <p class="muted"><%= event.status === 'finished' ? t('This night is finished. Your run is in My Underground.') : t('Race mode is closed.') %></p>
+            <p class="muted"><%= event.status === 'finished' ? t('This meetup is finished.') : t('Race mode is closed.') %></p>
+          <% } %>
+          <% if (myRuns && myRuns.length && event.status === 'open') { %>
+            <button class="btn btn--outline btn--block" type="button" data-ug-summary-view><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('View my summary') %></button>
           <% } %>
           <a class="btn btn--ghost btn--block" href="https://www.google.com/maps/dir/?api=1&destination=<%= event.meet_lat %>,<%= event.meet_lng %>&travelmode=driving" target="_blank" rel="noopener noreferrer"><%- include('../partials/icon', { name: 'pin', size: 16 }) %> <%= t('Directions to the spot') %></a>
         </section>
@@ -157,26 +180,37 @@
       <% } %>
     </div>
 
-    <% if (myRun) { %>
-      <section class="card ug-summary" data-ug-summary data-ug-summary-open="<%= event.status === 'finished' ? '1' : '0' %>">
+    <% if (myRuns && myRuns.length) { %>
+      <div class="ug-summary-stack" data-ug-summary data-ug-summary-open="<%= event.status === 'open' ? '1' : '0' %>">
         <button type="button" class="btn btn--ghost btn--sm ug-summary__close" data-ug-summary-close aria-label="<%= t('Close') %>"><%- include('../partials/icon', { name: 'x', size: 16 }) %></button>
-        <p class="eyebrow"><%= t('Your run') %></p>
-        <h2 class="card__title"><%= event.title %></h2>
-        <% if (showRunMap) { %><div class="ug-run__map ug-summary__map" data-ug-run-map data-track="<%= JSON.stringify(myTrack) %>" data-route-start-lat="<%= event.route_start_lat ?? '' %>" data-route-start-lng="<%= event.route_start_lng ?? '' %>" data-route-end-lat="<%= event.route_end_lat ?? '' %>" data-route-end-lng="<%= event.route_end_lng ?? '' %>"></div><% } %>
-        <div class="ug-run__stats">
-          <span><small><%= t('Top speed') %></small><strong><%= Math.round(myRun.top_speed || 0) %> <em>km/h</em></strong></span>
-          <span><small><%= t('Average speed') %></small><strong><%= Math.round(myRun.avg_speed || 0) %> <em>km/h</em></strong></span>
-          <% if (event.type !== 'drift') { %><span><small><%= t('Distance') %></small><strong><%= Number(myRun.distance_km || 0).toFixed(2) %> <em>km</em></strong></span><% } %>
-          <% if (event.type === 'drag') { %><span><small><%= t('Acceleration') %></small><strong><%= Number(myRun.acceleration || 0).toFixed(2) %> <em>m/s²</em></strong></span><% } %>
-          <% if (event.type !== 'drift') { %><span><small><%= t('Duration') %></small><strong><%= Math.round(myRun.duration_s || 0) %> <em>s</em></strong></span><% } %>
-        </div>
-        <div class="ug-summary__foot">
-          <form action="/underground/runs/<%= myRun.id %>/delete" method="post" data-confirm="<%= t('Delete this run summary? This cannot be undone.') %>">
-            <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
-            <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %> <%= t('Delete summary') %></button>
-          </form>
-        </div>
-      </section>
+        <article class="card ug-summary">
+          <p class="eyebrow"><%= t('Your Underground summary') %></p>
+          <h2 class="card__title"><%= event.title %></h2>
+          <% myRuns.forEach(function (run, runIndex) { %>
+            <%
+              const runTrack = Array.isArray(run.track) ? run.track : [];
+              const showRunMap = event.type !== 'drift' && (runTrack.length > 1 || hasRoutePreview);
+            %>
+            <section class="ug-run__item">
+              <header class="ug-run__itemhead">
+                <strong><%= t('Run {n}', { n: runIndex + 1 }) %></strong>
+                <form action="/underground/runs/<%= run.id %>/delete" method="post" data-confirm="<%= t('Delete this run summary? This cannot be undone.') %>">
+                  <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+                  <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %> <%= t('Delete summary') %></button>
+                </form>
+              </header>
+              <% if (showRunMap) { %><div class="ug-run__map ug-summary__map" data-ug-run-map data-track="<%= JSON.stringify(runTrack) %>" data-route-start-lat="<%= event.route_start_lat ?? '' %>" data-route-start-lng="<%= event.route_start_lng ?? '' %>" data-route-end-lat="<%= event.route_end_lat ?? '' %>" data-route-end-lng="<%= event.route_end_lng ?? '' %>"></div><% } %>
+              <div class="ug-run__stats">
+                <span><small><%= t('Top speed') %></small><strong><%= Math.round(run.top_speed || 0) %> <em>km/h</em></strong></span>
+                <span><small><%= t('Average speed') %></small><strong><%= Math.round(run.avg_speed || 0) %> <em>km/h</em></strong></span>
+                <% if (event.type !== 'drift') { %><span><small><%= t('Distance') %></small><strong><%= Number(run.distance_km || 0).toFixed(2) %> <em>km</em></strong></span><% } %>
+                <% if (event.type === 'drag') { %><span><small><%= t('Acceleration') %></small><strong><%= Number(run.acceleration || 0).toFixed(2) %> <em>m/s²</em></strong></span><% } %>
+                <% if (event.type !== 'drift') { %><span><small><%= t('Duration') %></small><strong><%= Math.round(run.duration_s || 0) %> <em>s</em></strong></span><% } %>
+              </div>
+            </section>
+          <% }); %>
+        </article>
+      </div>
     <% } %>
 
     <section class="ug-lock" data-ug-lock hidden aria-modal="true" role="dialog" aria-label="<%= t('Race mode lock screen') %>">

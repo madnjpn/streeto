@@ -6,6 +6,9 @@ const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 const hasMap = typeof window.maplibregl !== 'undefined';
 
 const toNumber = (value) => {
+  // Empty data attributes must stay "not set". Number('') is 0, which used
+  // to move Drag/Drift maps to [0, 0] and hide the meet pin and drivers.
+  if (value == null || (typeof value === 'string' && value.trim() === '')) return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
@@ -229,7 +232,8 @@ function initEvent(root) {
       fallbackMap(mapEl, t('The live map needs the MapLibre library.'));
       return;
     }
-    const center = routeStart.lat != null && routeStart.lng != null
+    const center = routeStart.lat != null && routeStart.lng != null &&
+      routeEnd.lat != null && routeEnd.lng != null
       ? [(routeStart.lng + routeEnd.lng) / 2, (routeStart.lat + routeEnd.lat) / 2]
       : [meet.lng, meet.lat];
     map = buildMap(mapEl, {
@@ -270,6 +274,9 @@ function initEvent(root) {
         if (Array.isArray(track) && track.length > 1) routeLayer(map, track);
         else if (type === 'touge' && routeStart.lat != null && routeEnd.lat != null) roadRoute(map, routeStart, routeEnd);
       } catch { /* no saved route */ }
+      // The first live poll can finish before the style is ready. Draw its
+      // drivers as soon as the map loads instead of waiting for the next poll.
+      drawMarkers(lastRows);
     });
     map.on('dragstart', () => { followId = null; });
   }
@@ -526,6 +533,12 @@ function initEvent(root) {
         body: JSON.stringify({ track: race.points }),
       });
       const payload = await response.json().catch(() => ({}));
+      if (response.status === 409) {
+        releaseWakeLock();
+        setRaceStatus(payload.error || t('Your run is already saved. Delete your summary before running again.'));
+        setTimeout(() => window.location.reload(), 1100);
+        return;
+      }
       if (!response.ok || !payload.ok) throw new Error(payload.error || t('Could not save the run.'));
       releaseWakeLock();
       setRaceStatus(t('Run saved. Opening your summary…'));
@@ -561,27 +574,43 @@ function initEvent(root) {
 }
 
 function initSummaryModal() {
-  const summary = document.querySelector('[data-ug-summary]');
-  if (!summary || summary.dataset.ugSummaryOpen !== '1') return;
-  const close = summary.querySelector('[data-ug-summary-close]');
-  const backdrop = document.createElement('div');
-  backdrop.className = 'ug-summary-backdrop';
-  document.body.appendChild(backdrop);
-  document.body.appendChild(summary);
-  summary.classList.add('is-modal');
-  document.body.style.overflow = 'hidden';
+  const group = document.querySelector('[data-ug-summary]');
+  if (!group) return;
+  const close = group.querySelector('[data-ug-summary-close]');
+  const viewButtons = document.querySelectorAll('[data-ug-summary-view]');
+  let placeholder = null;
+  let backdrop = null;
+
+  const open = () => {
+    if (group.classList.contains('is-modal')) return;
+    placeholder = document.createComment('ug-summary');
+    group.replaceWith(placeholder);
+    backdrop = document.createElement('div');
+    backdrop.className = 'ug-summary-backdrop';
+    backdrop.addEventListener('click', closeModal);
+    document.body.append(backdrop, group);
+    group.classList.add('is-modal');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+      group.querySelectorAll('[data-ug-run-map]').forEach((mapEl) => {
+        if (mapEl.__streetoMap) mapEl.__streetoMap.resize();
+      });
+    }, 100);
+  };
+
   const closeModal = () => {
-    summary.classList.remove('is-modal');
-    summary.remove();
-    backdrop.remove();
+    group.classList.remove('is-modal');
+    if (placeholder && placeholder.parentNode) placeholder.replaceWith(group);
+    else if (group.parentElement === document.body) group.remove();
+    placeholder = null;
+    backdrop?.remove();
+    backdrop = null;
     document.body.style.overflow = '';
   };
+
   close?.addEventListener('click', closeModal);
-  backdrop.addEventListener('click', closeModal);
-  setTimeout(() => {
-    const map = summary.querySelector('[data-ug-run-map]');
-    if (map?.__streetoMap) map.__streetoMap.resize();
-  }, 80);
+  viewButtons.forEach((button) => button.addEventListener('click', open));
+  if (group.dataset.ugSummaryOpen === '1') open();
 }
 
 initRunMaps();

@@ -232,21 +232,11 @@ export function saveRun({
   durationS,
   track,
 }) {
-  run(
+  const info = run(
     `INSERT INTO underground_runs
        (event_id, user_id, mode, started_at, finished_at, top_speed, avg_speed,
         distance_km, acceleration, duration_s, track_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(event_id, user_id) DO UPDATE SET
-       mode = excluded.mode,
-       started_at = excluded.started_at,
-       finished_at = excluded.finished_at,
-       top_speed = excluded.top_speed,
-       avg_speed = excluded.avg_speed,
-       distance_km = excluded.distance_km,
-       acceleration = excluded.acceleration,
-       duration_s = excluded.duration_s,
-       track_json = excluded.track_json`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     eventId,
     userId,
     mode,
@@ -259,12 +249,23 @@ export function saveRun({
     durationS,
     JSON.stringify(track || []),
   );
-  return runFor(eventId, userId);
+  return get('SELECT * FROM underground_runs WHERE id = ?', info.lastInsertRowid);
 }
 
+/** The newest run for compatibility. */
 export const runFor = (eventId, userId) =>
   get(
-    `SELECT * FROM underground_runs WHERE event_id = ? AND user_id = ?`,
+    `SELECT * FROM underground_runs WHERE event_id = ? AND user_id = ?
+      ORDER BY finished_at DESC, id DESC LIMIT 1`,
+    eventId,
+    userId,
+  );
+
+/** Every run one driver recorded at one event, newest first. */
+export const runsForUserEvent = (eventId, userId) =>
+  all(
+    `SELECT * FROM underground_runs WHERE event_id = ? AND user_id = ?
+      ORDER BY finished_at DESC, id DESC`,
     eventId,
     userId,
   );
@@ -285,7 +286,8 @@ export const runsForEvent = (eventId) =>
 
 export const runsForUser = (userId) =>
   all(
-    `SELECT r.*, e.title, e.type, e.starts_at, e.status, e.meet_name
+    `SELECT r.*, e.title, e.type, e.starts_at, e.status, e.meet_name,
+            e.route_start_lat, e.route_start_lng, e.route_end_lat, e.route_end_lng
        FROM underground_runs r
        JOIN underground_events e ON e.id = r.event_id
       WHERE r.user_id = ? AND e.status = 'finished'
@@ -337,6 +339,7 @@ export default {
   savePosition,
   saveRun,
   runFor,
+  runsForUserEvent,
   removeRun,
   runsForEvent,
   runsForUser,

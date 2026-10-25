@@ -1,6 +1,6 @@
 import express from 'express';
 import config from '../config.js';
-import { all } from '../db.js';
+import { all, get } from '../db.js';
 import * as underground from '../models/underground.js';
 import * as vehicles from '../models/vehicles.js';
 import * as notifications from '../models/notifications.js';
@@ -11,6 +11,7 @@ import { routeDistanceKm } from '../lib/route-length.js';
 import { wantsJson, jsonOk, jsonError, backTo } from '../lib/http.js';
 import { vehicleUpload, optimizeAs, mediaKind, removeUpload } from '../lib/uploads.js';
 import { sendMail } from '../lib/mail.js';
+import { pushToUser } from '../lib/push-all.js';
 import { translate } from '../lib/i18n.js';
 import { undergroundSummaryEmail } from '../lib/mail-templates.js';
 
@@ -108,6 +109,29 @@ router.get('/underground', requireAuth, (req, res) => {
   const scope = req.query.scope === 'mine' ? 'mine' : 'events';
   const events = scope === 'events' ? underground.listEvents() : [];
   const runs = scope === 'mine' ? underground.runsForUser(req.user.id) : [];
+  const runGroups = [];
+  if (runs.length) {
+    const byEvent = new Map();
+    for (const run of runs) {
+      if (!byEvent.has(run.event_id)) {
+        byEvent.set(run.event_id, {
+          event_id: run.event_id,
+          title: run.title,
+          type: run.type,
+          starts_at: run.starts_at,
+          status: run.status,
+          meet_name: run.meet_name,
+          route_start_lat: run.route_start_lat,
+          route_start_lng: run.route_start_lng,
+          route_end_lat: run.route_end_lat,
+          route_end_lng: run.route_end_lng,
+          runs: [],
+        });
+        runGroups.push(byEvent.get(run.event_id));
+      }
+      byEvent.get(run.event_id).runs.push({ ...run, track: parseRunTrack(run.track_json) });
+    }
+  }
   return res.page('underground/index', {
     title: `Underground - ${req.app.locals.config.siteName}`,
     active: 'underground',
@@ -118,7 +142,7 @@ router.get('/underground', requireAuth, (req, res) => {
       ...event,
       myRequest: underground.requestFor(event.id, req.user.id),
     })),
-    runs: runs.map((run) => ({ ...run, track: parseRunTrack(run.track_json) })),
+    runGroups,
   });
 });
 
@@ -238,8 +262,16 @@ router.post('/underground/new', requireAuth, verifyCsrf, async (req, res) => {
       entityId: event.id,
       url: `/underground/${event.id}`,
       text: 'A new Underground night is live: {name}|' + title,
-      push: true,
-      category: 'meetups',
+      push: false,
+      category: 'underground',
+    });
+    const lang = get('SELECT language FROM users WHERE id = ?', member.id)?.language || 'en';
+    pushToUser(member.id, {
+      title: 'STREETO Underground',
+      body: translate(lang, 'A new Underground night is live: {name}', { name: title }),
+      url: `/underground/${event.id}`,
+      tag: `underground-event-${event.id}`,
+      category: 'underground',
     });
   }
   req.flash('success', 'Underground night created. Approve your drivers before the map opens.');
@@ -253,7 +285,7 @@ router.get('/underground/:id', requireAuth, (req, res, next) => {
   const isHost = event.host_id === req.user.id;
   const approved = isHost || underground.isApproved(event.id, req.user.id);
   const myRequest = underground.requestFor(event.id, req.user.id);
-  const myRun = underground.runFor(event.id, req.user.id);
+  const myRuns = underground.runsForUserEvent(event.id, req.user.id);
   const canRace = approved && event.status === 'open';
   return res.page('underground/show', {
     title: `${event.title} - Underground`,
@@ -265,7 +297,7 @@ router.get('/underground/:id', requireAuth, (req, res, next) => {
     approved,
     canRace,
     myRequest,
-    myRun: myRun ? { ...myRun, track: parseRunTrack(myRun.track_json) } : null,
+    myRuns: myRuns.map((run) => ({ ...run, track: parseRunTrack(run.track_json) })),
     pending: isHost ? underground.pendingRequests(event.id) : [],
     participants: approved ? underground.participants(event.id) : [],
     myVehicles: approved ? [] : vehicles.listByUser(req.user.id),
@@ -284,6 +316,16 @@ router.post(
     const event = underground.byId(Number(req.params.id));
     if (!event) return next();
     if (event.host_id === req.user.id) return res.redirect(`/underground/${event.id}`);
+    if (event.status !== 'open') {
+      if (req.file) removeUpload(req.file.filename);
+      req.flash(
+        'error',
+        event.status === 'finished'
+          ? 'This meetup is finished. New join requests are closed.'
+          : 'This meetup is no longer open.',
+      );
+      return res.redirect(`/underground/${event.id}`);
+    }
 
     const ownVehicles = vehicles.listByUser(req.user.id);
     const vehicle = ownVehicles.find((row) => row.id === Number(req.body.vehicle_id));
@@ -314,7 +356,16 @@ router.post(
       entityId: event.id,
       url: `/underground/${event.id}#requests`,
       text: 'asked to join your Underground night: {name}|' + event.title,
-      category: 'meetups',
+      push: false,
+      category: 'underground',
+    });
+    const hostLang = get('SELECT language FROM users WHERE id = ?', event.host_id)?.language || 'en';
+    pushToUser(event.host_id, {
+      title: '@' + req.user.username,
+      body: translate(hostLang, 'asked to join your Underground night: {name}', { name: event.title }),
+      url: `/underground/${event.id}#requests`,
+      tag: `underground-request-${event.id}-${req.user.id}`,
+      category: 'underground',
     });
     req.flash('success', 'Request sent. The host has your car details and will decide.');
     return res.redirect(`/underground/${event.id}`);
@@ -336,7 +387,16 @@ router.post('/underground/:id/requests/:userId/approve', requireAuth, verifyCsrf
     entityId: event.id,
     url: `/underground/${event.id}`,
     text: 'Your Underground request was approved: {name}|' + event.title,
-    category: 'meetups',
+    push: false,
+    category: 'underground',
+  });
+  const approvedLang = get('SELECT language FROM users WHERE id = ?', Number(req.params.userId))?.language || 'en';
+  pushToUser(Number(req.params.userId), {
+    title: 'STREETO Underground',
+    body: translate(approvedLang, 'Your Underground request was approved: {name}', { name: event.title }),
+    url: `/underground/${event.id}`,
+    tag: `underground-approved-${event.id}`,
+    category: 'underground',
   });
   req.flash('success', 'Driver approved. The map is now open for them.');
   return res.redirect(`/underground/${event.id}#requests`);
@@ -356,7 +416,16 @@ router.post('/underground/:id/requests/:userId/reject', requireAuth, verifyCsrf,
     entityId: event.id,
     url: `/underground/${event.id}`,
     text: 'Your Underground request was rejected: {name}|' + event.title,
-    category: 'meetups',
+    push: false,
+    category: 'underground',
+  });
+  const rejectedLang = get('SELECT language FROM users WHERE id = ?', Number(req.params.userId))?.language || 'en';
+  pushToUser(Number(req.params.userId), {
+    title: 'STREETO Underground',
+    body: translate(rejectedLang, 'Your Underground request was rejected: {name}', { name: event.title }),
+    url: `/underground/${event.id}`,
+    tag: `underground-rejected-${event.id}`,
+    category: 'underground',
   });
   req.flash('success', 'Request rejected.');
   return res.redirect(`/underground/${event.id}#requests`);
@@ -377,7 +446,27 @@ router.post('/underground/:id/delete', requireAuth, verifyCsrf, (req, res, next)
     req.flash('error', 'Only the host can delete this night.');
     return res.redirect(`/underground/${event.id}`);
   }
+  const people = underground.participants(event.id).filter((person) => person.user_id !== req.user.id);
   underground.removeEvent(event.id);
+  for (const person of people) {
+    const lang = person.language || 'en';
+    notifications.notify({
+      userId: person.user_id,
+      type: 'underground_cancelled',
+      entityId: event.id,
+      url: '/underground',
+      text: 'Underground night cancelled: {name}|' + event.title,
+      push: false,
+      category: 'underground',
+    });
+    pushToUser(person.user_id, {
+      title: 'STREETO Underground',
+      body: translate(lang, 'Underground night cancelled: {name}', { name: event.title }),
+      url: '/underground',
+      tag: `underground-cancelled-${event.id}`,
+      category: 'underground',
+    });
+  }
   req.flash('success', 'Underground night deleted.');
   return res.redirect('/underground');
 });
@@ -394,23 +483,68 @@ router.post('/underground/:id/finish', requireAuth, verifyCsrf, async (req, res,
 
   const people = underground.participants(event.id);
   const runs = underground.runsForEvent(event.id);
-  const byUser = new Map(runs.map((run) => [run.user_id, run]));
+  const byUser = new Map();
+  for (const run of runs) {
+    if (!byUser.has(run.user_id)) byUser.set(run.user_id, []);
+    byUser.get(run.user_id).push(run);
+  }
   const siteUrl = config.publicUrl || '';
   await Promise.allSettled(people.map(async (person) => {
-    if (!person.email) return;
     const lang = person.language || 'en';
     const t = (key, vars) => translate(lang, key, vars);
-    const mail = undergroundSummaryEmail({
-      t,
-      user: person,
-      event,
-      run: byUser.get(person.user_id) || null,
-      siteName: config.siteName,
-      siteUrl,
-      logoUrl: siteUrl ? `${siteUrl}/websitelogo.png` : '/websitelogo.png',
+    if (person.email) {
+      const mail = undergroundSummaryEmail({
+        t,
+        user: person,
+        event,
+        runs: byUser.get(person.user_id) || [],
+        siteName: config.siteName,
+        siteUrl,
+        logoUrl: siteUrl ? `${siteUrl}/websitelogo.png` : '/websitelogo.png',
+      });
+      try {
+        await sendMail({ to: person.email, subject: mail.subject, html: mail.html, text: mail.text });
+        underground.markSummarySent(event.id, person.user_id);
+      } catch {
+        /* The in-app summary and push still work if email delivery fails. */
+      }
+    }
+
+    notifications.notify({
+      userId: person.user_id,
+      type: 'underground_finished',
+      entityId: event.id,
+      url: `/underground/${event.id}`,
+      text: 'Underground night finished: {name}|' + event.title,
+      push: false,
+      category: 'underground',
     });
-    await sendMail({ to: person.email, subject: mail.subject, html: mail.html, text: mail.text });
-    underground.markSummarySent(event.id, person.user_id);
+    pushToUser(person.user_id, {
+      title: 'STREETO Underground',
+      body: translate(lang, 'Underground night finished: {name}', { name: event.title }),
+      url: `/underground/${event.id}`,
+      tag: `underground-finished-${event.id}`,
+      category: 'underground',
+    });
+
+    if ((byUser.get(person.user_id) || []).length) {
+      notifications.notify({
+        userId: person.user_id,
+        type: 'underground_summary',
+        entityId: event.id,
+        url: `/underground/${event.id}`,
+        text: 'Your Underground summary is ready: {name}|' + event.title,
+        push: false,
+        category: 'underground',
+      });
+      pushToUser(person.user_id, {
+        title: 'STREETO Underground',
+        body: translate(lang, 'Your Underground summary is ready: {name}', { name: event.title }),
+        url: `/underground/${event.id}`,
+        tag: `underground-summary-${event.id}`,
+        category: 'underground',
+      });
+    }
   }));
 
   req.flash('success', 'Night finished. Every approved driver gets their summary by email.');

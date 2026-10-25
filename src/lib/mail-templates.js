@@ -446,19 +446,22 @@ export default { resetEmail, digestEmail, ptiReminderEmail };
  * The summary of an Underground night.
  * One letter per approved driver when the host finishes the night.
  */
-export function undergroundSummaryEmail({ t, user, event, run, siteName, siteUrl, logoUrl }) {
+export function undergroundSummaryEmail({ t, user, event, runs, run, siteName, siteUrl, logoUrl }) {
   const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const title = safe(event.title);
   const type = safe(String(event.type || '').toUpperCase());
   const when = safe(new Date(event.starts_at).toLocaleString('en-GB'));
   const link = siteUrl ? siteUrl + '/underground/' + event.id : '/underground/' + event.id;
   const stat = (label, value) => '<tr><td style="padding:7px 0;color:#8b95a7;font-family:' + FONT + ';font-size:13px;">' + safe(label) + '</td><td align="right" style="padding:7px 0;color:#fff;font-family:' + FONT + ';font-size:14px;font-weight:700;">' + safe(value) + '</td></tr>';
-  const stats = run
-    ? stat(t('Top speed'), Math.round(run.top_speed || 0) + ' km/h') +
-      stat(t('Average speed'), Math.round(run.avg_speed || 0) + ' km/h') +
-      stat(t('Distance'), Number(run.distance_km || 0).toFixed(2) + ' km') +
-      (event.type === 'drag' ? stat(t('Acceleration'), Number(run.acceleration || 0).toFixed(2) + ' m/s2') : '') +
-      stat(t('Duration'), Math.round(run.duration_s || 0) + ' s')
+  const list = Array.isArray(runs) ? runs : run ? [run] : [];
+  const runStats = (one, index) => '<tr><td colspan="2" style="padding:16px 0 4px;color:#ff3b4d;font-family:' + MONO + ';font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;">' + safe(t('Run {n}', { n: index + 1 })) + '</td></tr>' +
+    stat(t('Top speed'), Math.round(one.top_speed || 0) + ' km/h') +
+    stat(t('Average speed'), Math.round(one.avg_speed || 0) + ' km/h') +
+    stat(t('Distance'), Number(one.distance_km || 0).toFixed(2) + ' km') +
+    (event.type === 'drag' ? stat(t('Acceleration'), Number(one.acceleration || 0).toFixed(2) + ' m/s2') : '') +
+    stat(t('Duration'), Math.round(one.duration_s || 0) + ' s');
+  const stats = list.length
+    ? list.map(runStats).join('')
     : '<tr><td colspan="2" style="padding:14px 0;color:#8b95a7;font-family:' + FONT + ';font-size:13px;">' + safe(t('No run was recorded.')) + '</td></tr>';
 
   const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="dark"></head>' +
@@ -472,7 +475,7 @@ export function undergroundSummaryEmail({ t, user, event, run, siteName, siteUrl
     '<p style="margin:10px 0 0;font-family:' + FONT + ';font-size:13px;color:#8b95a7;">' + when + '</p></td></tr>' +
     '<tr><td style="border:1px solid #2a1116;border-top:0;border-radius:0 0 16px 16px;background:#0d0d0f;padding:26px 30px;">' +
     '<h2 style="margin:0 0 12px;font-family:' + FONT + ';font-size:20px;color:#fff;">' + safe(t('Your Underground summary')) + '</h2>' +
-    '<p style="margin:0 0 18px;font-family:' + FONT + ';font-size:14px;line-height:23px;color:#a5adba;">' + safe(t('The night is over. Here is your run.')) + '</p>' +
+    '<p style="margin:0 0 18px;font-family:' + FONT + ';font-size:14px;line-height:23px;color:#a5adba;">' + safe(t(list.length > 1 ? 'The night is over. Here are your runs.' : 'The night is over. Here is your run.')) + '</p>' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #242428;border-bottom:1px solid #242428;">' + stats + '</table>' +
     '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;"><tr><td bgcolor="#ff3b4d" style="border-radius:999px;padding:13px 26px;"><a href="' + safe(link) + '" style="font-family:' + FONT + ';font-size:14px;font-weight:800;color:#140609;text-decoration:none;">' + safe(t('Open My Underground')) + '</a></td></tr></table>' +
     '<p style="margin:22px 0 0;font-family:' + FONT + ';font-size:12px;line-height:19px;color:#6f7888;">' + safe(t('Your run is saved in My Underground. The host will finish the night when everyone is done.')) + '</p>' +
@@ -480,7 +483,13 @@ export function undergroundSummaryEmail({ t, user, event, run, siteName, siteUrl
 
   const text = t('Underground summary: {title}', { title: event.title }) + '\n' +
     t('Your Underground summary') + '\n' +
-    (run ? [t('Top speed') + ': ' + Math.round(run.top_speed || 0) + ' km/h', t('Average speed') + ': ' + Math.round(run.avg_speed || 0) + ' km/h', t('Distance') + ': ' + Number(run.distance_km || 0).toFixed(2) + ' km'].join('\n') : t('No run was recorded.')) + '\n' + link;
+    (list.length
+      ? list.map((one, index) => t('Run {n}', { n: index + 1 }) + '\n' + [
+        t('Top speed') + ': ' + Math.round(one.top_speed || 0) + ' km/h',
+        t('Average speed') + ': ' + Math.round(one.avg_speed || 0) + ' km/h',
+        t('Distance') + ': ' + Number(one.distance_km || 0).toFixed(2) + ' km',
+      ].join('\n')).join('\n\n')
+      : t('No run was recorded.')) + '\n' + link;
 
   return { subject: t('Underground summary: {title}', { title: event.title }), html, text };
 }

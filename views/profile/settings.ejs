@@ -98,7 +98,7 @@
 
   <section class="card card--form" id="notifications">
     <h2 class="card__title"><%= t('Notifications') %></h2>
-    <p class="muted small"><%= t('Get notified about messages, friend requests, comments, likes and meetups.') %></p>
+    <p class="muted small"><%= t('Get notified about messages, friend requests, comments, likes, meetups and Underground nights.') %></p>
     <div class="kv">
       <span><%= t('Notification status') %></span><strong data-push-state>—</strong>
     </div>
@@ -129,6 +129,10 @@
         <label class="check">
           <input type="checkbox" name="notify_meetups" value="1" <%= notifyPrefs.meetups ? 'checked' : '' %>>
           <span><%= t('Meetups') %></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" name="notify_underground" value="1" <%= notifyPrefs.underground ? 'checked' : '' %>>
+          <span><%= t('Underground') %></span>
         </label>
         <label class="check">
           <input type="checkbox" name="notify_builds" value="1" <%= notifyPrefs.builds ? 'checked' : '' %>>

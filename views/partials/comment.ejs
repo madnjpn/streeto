@@ -54,15 +54,23 @@ const postId = post ? post.id : '';
       <form class="comment__replyform" action="/posts/<%= postId %>/comments" method="post" enctype="multipart/form-data" data-comment-form="<%= postId %>" data-reply-form hidden>
         <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
         <input type="hidden" name="parent_id" value="<%= c.id %>">
+        <input type="hidden" name="quality" value="sd" data-comment-quality-input>
         <input type="text" name="body" maxlength="1000" placeholder="<%= t('Reply to {name}…', { name: '@' + c.username }) %>" aria-label="<%= t('Reply') %>">
         <label class="comment__attach" title="<%= t('Attach a photo') %>">
           <%- include('icon', { name: 'image', size: 14 }) %>
-          <input type="file" name="media" accept="image/*,video/*" hidden>
+          <input type="file" name="media" accept="image/*,video/*" hidden data-comment-media>
         </label>
         <button class="btn btn--primary btn--sm" type="submit" aria-label="<%= t('Send reply') %>">
           <%- include('icon', { name: 'send', size: 15 }) %>
         </button>
         <button class="btn btn--ghost btn--sm" type="button" data-reply-cancel><%= t('Cancel') %></button>
+        <div class="comment__mediaopts" data-comment-mediaopts hidden>
+          <div class="comment__preview" data-comment-preview></div>
+          <div class="quality quality--tiny" data-comment-quality hidden>
+            <button type="button" class="quality__btn is-on" data-comment-quality-value="sd" title="<%= t('Small and fast - the picture is made for the screen') %>">SD</button>
+            <button type="button" class="quality__btn" data-comment-quality-value="hd" title="<%= t('Full size - a sharp picture, a bigger file') %>">HD</button>
+          </div>
+        </div>
       </form>
     <% } %>
 
