@@ -931,7 +931,9 @@ export default {
   'put {name} up for sale': 'გასაყიდად გამოაცხადა: {name}',
   'updated their build {name}': 'განაახლა მათი ბილდი: {name}',
   'added {n} new photo{plural} to {name}': 'დაამატა {n} ახალი ფოტო{plural} ბილდში: {name}',
-  'mentioned you in {name}': 'გამოგიხმო ჩათში: {name}',
+  'mentioned you in {name}': 'მოგნიშნა {name}',
+  'mentioned you in a chat': 'მოგნიშნა ჩატში',
+  'mentioned you in the global channel': 'მოგნიშნა საერთო ჩატში',
   'asked to join {name}': 'მოითხოვა გაწევრიანება: {name}',
   'invited you to {name}': 'მოგიწვია: {name}',
   'let you into {name}': 'შეგიშვა: {name}',
@@ -1928,7 +1930,7 @@ export default {
   "Send reply": "პასუხის გაგზავნა",
   "Replying to": "პასუხი:",
   "replied to your comment": "პასუხა თქვენს კომენტარს",
-  "mentioned you in a comment": "მოგვახლო თქვენს კომენტარში",
+  "mentioned you in a comment": "მოგნიშნა კომენტარში",
 
   "Remove the file": "ფაილის წაშლა",
   "File attached": "ფაილი მიმაგებულია",
@@ -2848,4 +2850,6 @@ export default {
   'Notification enablement now confirms FCM registration and explains blocked permissions or channels.': 'შეტყობინებების ჩართვა ახლა ადასტურებს FCM რეგისტრაციას და გიხსნით, თუ ნებართვა ან არხი დაბლოკილია.',
   'The Georgian notification settings button wraps inside its card.': 'ქართული შეტყობინებების პარამეტრების ღილაკი ბარათში ეტევა და ტექსტს გადაიტანს.',
   'A new Underground theme brings the red night palette to the whole site.': 'ახალი Underground თემა წითელ ღამის პალიტრას მთელ საიტზე ავრცელებს.',
+  'Switch': 'გადართვა',
+  'Capture': 'გადაღება',
 };

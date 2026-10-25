@@ -65,6 +65,7 @@ const { lookupPlatform, inYears } = await import('../src/lib/chassis.js');
 const { vehicleSlug } = await import('../src/lib/rockauto.js');
 const { twinsOf } = await import('../src/lib/twins.js');
 const { outbox } = await import('../src/lib/mail.js');
+const { translate } = await import('../src/lib/i18n.js');
 
 /* ── tiny test harness ────────────────────────────────────────── */
 let passed = 0;
@@ -1268,6 +1269,22 @@ try {
     check('A posts in the global channel', () => {
       assert.equal(body.ok, true);
       assert.equal(body.message.body, 'Anyone heading to the docks tonight?');
+    });
+  }
+  {
+    const res = await a.post(`/chat/${globalId}/send`, {
+      json: { body: `@${B.username} are you coming?` },
+      headers: a.jsonHeaders(),
+    });
+    check('a global chat mention has Georgian wording', () => {
+      assert.equal(res.status, 200);
+      const mentionedId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+      const row = get(
+        "SELECT text FROM notifications WHERE user_id = ? AND type = 'chat_mention' ORDER BY id DESC LIMIT 1",
+        mentionedId,
+      );
+      assert.equal(row.text, 'mentioned you in the global channel');
+      assert.equal(translate('ka', row.text), 'მოგნიშნა საერთო ჩატში');
     });
   }
   {

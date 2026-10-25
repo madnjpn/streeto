@@ -333,7 +333,9 @@ export function sendMessage({
             type: 'chat_mention',
             entityId: msg.id,
             url: isGlobal ? '/chat/' + conversationId : '/chat/' + conversationId,
-            text: 'mentioned you in {name}|' + (isGlobal ? 'global channel' : 'chat'),
+            text: isGlobal
+              ? 'mentioned you in the global channel'
+              : 'mentioned you in a chat',
             // A direct message already sends its own chat push; for the
             // global channel the mention is the only alert.
             push: isGlobal,

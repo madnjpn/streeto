@@ -61,6 +61,14 @@
            language decides the wording (see the notify() call sites). */
         const parts = String(n.text || '').split('|');
         const notifVars = parts.length > 1 ? { name: parts.slice(1).join('|') } : undefined;
+        // Older chat mentions stored the raw English place name ("chat" /
+        // "global channel") in the variable. Translate those rows too.
+        const legacyMention = parts[0] === 'mentioned you in {name}' && parts[1]
+          ? (parts[1] === 'global channel'
+            ? 'mentioned you in the global channel'
+            : 'mentioned you in a chat')
+          : null;
+        const notifText = legacyMention ? t(legacyMention) : t(parts[0], notifVars);
       %>
       <li class="row row--activity row--stack <%= !n.read_at ? 'is-fresh' : '' %>">
         <% if (!n.read_at) { %><span class="sr-only"><%= t('Unread') %></span><% } %>
@@ -72,7 +80,7 @@
           <% } %>
           <span>
             <% if (n.actor_username) { %><strong>@<%= n.actor_username %></strong> <% } %>
-            <span><%= t(parts[0], notifVars) %></span>
+            <span><%= notifText %></span>
             <span class="muted small">· <%= f.timeAgo(n.created_at) %></span>
           </span>
         </a>

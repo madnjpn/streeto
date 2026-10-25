@@ -17,6 +17,7 @@ export const CLIENT_KEYS = [
   /* polls */
   'Option {n}',
   'Confirm',
+  'Cancel',
   'Delete',
   'Remove',
   'A poll needs a question and at least two options.',
