@@ -1055,7 +1055,7 @@ meetup → build upload/vote/visibility/delete → certificate/PTI → parts/VIN
 negative auth/validation cases. It never touches the production DB or external
 PTI service.
 
-Current suite: **336 checks** (the number grows with features). The final line
+Current suite: **339 checks** (the number grows with features). The final line
 is `N passed, 0 failed`; any failure exits non-zero.
 
 ### 11.2 Production checks

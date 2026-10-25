@@ -2840,4 +2840,5 @@ export default {
   'This meetup is finished. New join requests are closed.': 'ეს შეხვედრა დასრულდა. გაწევრიანების ახალი მოთხოვნები დახურულია.',
   'Attach a photo': 'ფოტოს მიმაგრება',
   'Write something or attach a photo.': 'დაწერე რამე ან მიამაგრე ფოტო.',
+  'Drivers in this night': 'ამ ღამის მძღოლები',
 };

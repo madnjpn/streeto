@@ -62,7 +62,7 @@ async function roadRoute(map, start, end) {
   }
 }
 
-function routeLayer(map, track) {
+function routeLayer(map, track, extraPoint = null) {
   if (!map || !Array.isArray(track) || track.length < 2) return;
   const sourceId = 'ug-route';
   const data = lineFeature(track);
@@ -87,7 +87,20 @@ function routeLayer(map, track) {
   }
   const bounds = new window.maplibregl.LngLatBounds();
   data.geometry.coordinates.forEach((c) => bounds.extend(c));
+  if (extraPoint?.lat != null && extraPoint?.lng != null) {
+    bounds.extend([extraPoint.lng, extraPoint.lat]);
+  }
   map.fitBounds(bounds, { padding: 42, duration: 0, maxZoom: 16 });
+}
+
+/** The meetup spot is the only marker Drag/Drift summaries need. */
+function addMeetPin(map, meet) {
+  if (!map || meet?.lat == null || meet?.lng == null) return;
+  const pin = document.createElement('span');
+  pin.className = 'ug-meetpin';
+  pin.innerHTML = '<span></span>';
+  new window.maplibregl.Marker({ element: pin, anchor: 'bottom' })
+    .setLngLat([meet.lng, meet.lat]).addTo(map);
 }
 
 function buildMap(el, { center, zoom = 14, pitch = 0, bearing = 0 }) {
@@ -131,15 +144,21 @@ function initRunMaps() {
       lat: toNumber(el.dataset.routeEndLat),
       lng: toNumber(el.dataset.routeEndLng),
     };
+    const meet = {
+      lat: toNumber(el.dataset.meetLat),
+      lng: toNumber(el.dataset.meetLng),
+    };
+    const type = el.dataset.eventType || '';
     const hasTrack = track.length > 1;
     const hasRoute = routeStart.lat != null && routeStart.lng != null &&
       routeEnd.lat != null && routeEnd.lng != null;
-    if (!hasTrack && !hasRoute) return;
+    const hasMeet = meet.lat != null && meet.lng != null;
+    if (!hasTrack && !hasRoute && !hasMeet) return;
     if (!hasMap) {
       fallbackMap(el, t('The MapLibre library is not available.'));
       return;
     }
-    const first = hasTrack ? track[0] : routeStart;
+    const first = hasTrack ? track[0] : hasRoute ? routeStart : meet;
     const map = buildMap(el, {
       center: [Number(first.lng), Number(first.lat)],
       zoom: 13,
@@ -147,31 +166,46 @@ function initRunMaps() {
       bearing: -18,
     });
     map.on('load', () => {
-      if (track.length > 2) {
-        routeLayer(map, track);
-      } else if (hasRoute) {
-        // The run sample is too short to show the road; the A-B route
-        // geometry is the same road the regular Touge page draws.
-        routeLayer(map, [
-          { lat: routeStart.lat, lng: routeStart.lng },
-          { lat: routeEnd.lat, lng: routeEnd.lng },
-        ]);
-        roadRoute(map, routeStart, routeEnd);
+      // Touge keeps its A/B markers. Drag and Drift are point-to-point on
+      // a meetup, so they show the meetup pin instead of fake A/B points.
+      const showAb = type === 'touge' || (!hasMeet && hasRoute);
+      if (showAb) {
+        if (hasTrack) {
+          routeLayer(map, track);
+        } else if (hasRoute) {
+          // The run sample is too short to show the road; the A-B route
+          // geometry is the same road the regular Touge page draws.
+          routeLayer(map, [
+            { lat: routeStart.lat, lng: routeStart.lng },
+            { lat: routeEnd.lat, lng: routeEnd.lng },
+          ]);
+          roadRoute(map, routeStart, routeEnd);
+        }
+        const startPoint = hasRoute ? routeStart : track[0];
+        const endPoint = hasRoute ? routeEnd : track[track.length - 1];
+        if (startPoint && endPoint) {
+          const start = document.createElement('span');
+          start.className = 'ug-runpindot ug-runpindot--a';
+          start.textContent = 'A';
+          new window.maplibregl.Marker({ element: start, anchor: 'center' })
+            .setLngLat([Number(startPoint.lng), Number(startPoint.lat)]).addTo(map);
+          const end = document.createElement('span');
+          end.className = 'ug-runpindot ug-runpindot--b';
+          end.textContent = 'B';
+          new window.maplibregl.Marker({ element: end, anchor: 'center' })
+            .setLngLat([Number(endPoint.lng), Number(endPoint.lat)]).addTo(map);
+        }
       } else {
-        routeLayer(map, track);
+        if (hasTrack) routeLayer(map, track, meet);
+        else if (hasRoute) {
+          routeLayer(map, [
+            { lat: routeStart.lat, lng: routeStart.lng },
+            { lat: routeEnd.lat, lng: routeEnd.lng },
+          ], meet);
+          roadRoute(map, routeStart, routeEnd);
+        }
+        addMeetPin(map, meet);
       }
-      const startPoint = hasRoute ? routeStart : track[0];
-      const endPoint = hasRoute ? routeEnd : track[track.length - 1];
-      const start = document.createElement('span');
-      start.className = 'ug-runpindot ug-runpindot--a';
-      start.textContent = 'A';
-      new window.maplibregl.Marker({ element: start, anchor: 'center' })
-        .setLngLat([Number(startPoint.lng), Number(startPoint.lat)]).addTo(map);
-      const end = document.createElement('span');
-      end.className = 'ug-runpindot ug-runpindot--b';
-      end.textContent = 'B';
-      new window.maplibregl.Marker({ element: end, anchor: 'center' })
-        .setLngLat([Number(endPoint.lng), Number(endPoint.lat)]).addTo(map);
     });
   });
 }
@@ -245,11 +279,7 @@ function initEvent(root) {
     map.on('load', () => {
       mapReady = true;
       // The meeting spot.
-      const pin = document.createElement('span');
-      pin.className = 'ug-meetpin';
-      pin.innerHTML = '<span></span>';
-      new window.maplibregl.Marker({ element: pin, anchor: 'bottom' })
-        .setLngLat([meet.lng, meet.lat]).addTo(map);
+      addMeetPin(map, meet);
 
       if (type === 'touge' && routeStart.lat != null && routeEnd.lat != null) {
         routeLayer(map, [

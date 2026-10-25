@@ -3529,6 +3529,13 @@ try {
       assert.match(approved.html, /data-ug-map/);
       assert.match(approved.html, /data-ug-enter/);
     });
+    check('approved drivers see the participant roster with the host as a regular driver', () => {
+      assert.match(approved.html, /Drivers in this night/);
+      assert.match(approved.html, /Smoke E36/);
+      assert.match(approved.html, new RegExp('@' + B.username));
+      assert.match(approved.html, new RegExp('@' + A.username));
+      assert.doesNotMatch(approved.html, /ug-driver__host/);
+    });
   }
   {
     const res = await b.post('/api/underground/' + undergroundId + '/position', {
@@ -3541,11 +3548,22 @@ try {
       assert.ok(row);
       assert.equal(Math.round(row.speed), 91);
     });
+    const hostPosition = await a.post('/api/underground/' + undergroundId + '/position', {
+      json: { lat: 41.7161, lng: 44.8281, speed: 84 },
+      headers: a.jsonHeaders(),
+    });
     const live = await a.request('GET', '/api/underground/' + undergroundId + '/live', { headers: a.jsonHeaders() });
     const payload = await live.json();
     check('the host can see live drivers on the map API', () => {
+      assert.equal(hostPosition.status, 200);
       assert.equal(live.status, 200);
       assert.ok(payload.participants.some((p) => p.user_id === bId && p.speed === 91));
+    });
+    check('the host appears on the live map as a regular driver', () => {
+      const host = payload.participants.find((p) => p.user_id === aId);
+      assert.ok(host);
+      assert.equal(host.username, A.username);
+      assert.equal(host.is_host, undefined);
     });
   }
   {
@@ -3584,6 +3602,10 @@ try {
       assert.equal((afterRun.html.match(/class="card ug-summary"/g) || []).length, 1);
       assert.equal((afterRun.html.match(/class="ug-run__item"/g) || []).length, 2);
       assert.match(afterRun.html, /data-ug-summary-view/);
+    });
+    check('drag summaries render the driven path around the meetup pin', () => {
+      assert.match(afterRun.html, /data-ug-run-map[^>]*data-event-type="drag"/);
+      assert.match(afterRun.html, /data-ug-run-map[^>]*data-meet-lat="41\.7151"/);
     });
   }
   {

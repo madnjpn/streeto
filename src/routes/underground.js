@@ -121,6 +121,8 @@ router.get('/underground', requireAuth, (req, res) => {
           starts_at: run.starts_at,
           status: run.status,
           meet_name: run.meet_name,
+          meet_lat: run.meet_lat,
+          meet_lng: run.meet_lng,
           route_start_lat: run.route_start_lat,
           route_start_lng: run.route_start_lng,
           route_end_lat: run.route_end_lat,
@@ -556,12 +558,7 @@ router.get('/api/underground/:id/live', requireAuth, (req, res, next) => {
   const event = underground.byId(Number(req.params.id));
   if (!event) return next();
   if (!canSeeEvent(event, req.user.id)) return jsonError(res, 'Only approved drivers can see the live map.', 403);
-  const positions = underground.livePositions(event.id).map((row) => {
-    if (row.user_id === event.host_id) {
-      return { ...row, username: null, display_name: 'Underground host', avatar: null, is_host: true };
-    }
-    return row;
-  });
+  const positions = underground.livePositions(event.id);
   return jsonOk(res, {
     participants: positions,
     event: {

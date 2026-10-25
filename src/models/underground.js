@@ -287,6 +287,7 @@ export const runsForEvent = (eventId) =>
 export const runsForUser = (userId) =>
   all(
     `SELECT r.*, e.title, e.type, e.starts_at, e.status, e.meet_name,
+            e.meet_lat, e.meet_lng,
             e.route_start_lat, e.route_start_lng, e.route_end_lat, e.route_end_lng
        FROM underground_runs r
        JOIN underground_events e ON e.id = r.event_id

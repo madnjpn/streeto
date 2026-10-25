@@ -79,7 +79,7 @@
                   </form>
                 </header>
                 <% if (showMap) { %>
-                  <div class="ug-run__map" data-ug-run-map data-track="<%= JSON.stringify(run.track) %>" data-route-start-lat="<%= group.route_start_lat ?? '' %>" data-route-start-lng="<%= group.route_start_lng ?? '' %>" data-route-end-lat="<%= group.route_end_lat ?? '' %>" data-route-end-lng="<%= group.route_end_lng ?? '' %>"></div>
+                  <div class="ug-run__map" data-ug-run-map data-event-type="<%= group.type %>" data-track="<%= JSON.stringify(run.track) %>" data-meet-lat="<%= group.meet_lat %>" data-meet-lng="<%= group.meet_lng %>" data-route-start-lat="<%= group.route_start_lat ?? '' %>" data-route-start-lng="<%= group.route_start_lng ?? '' %>" data-route-end-lat="<%= group.route_end_lat ?? '' %>" data-route-end-lng="<%= group.route_end_lng ?? '' %>"></div>
                 <% } %>
                 <div class="ug-run__stats">
                   <span><small><%= t('Top speed') %></small><strong><%= Math.round(run.top_speed || 0) %> <em>km/h</em></strong></span>

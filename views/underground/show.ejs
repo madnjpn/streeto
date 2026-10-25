@@ -134,6 +134,27 @@
         </section>
       </div>
 
+      <section class="card ug-drivers" id="drivers">
+        <h2 class="card__title"><%= t('Drivers in this night') %> <span class="ug-count"><%= participants.length %></span></h2>
+        <div class="ug-driver-list">
+          <% participants.forEach(function (p) { %>
+            <article class="ug-driver">
+              <div class="ug-driver__avatar">
+                <a href="/u/<%= p.username %>" aria-label="<%= t('Open @{user} profile', { user: p.username }) %>"><%- include('../partials/avatar', { u: p, cls: 'avatar--sm' }) %></a>
+              </div>
+              <div class="ug-driver__body">
+                <a href="/u/<%= p.username %>"><strong>@<%= p.username %></strong></a>
+                <% if (p.display_name && p.display_name !== p.username) { %><span class="muted small"><%= p.display_name %></span><% } %>
+                <span class="ug-driver__car"><%- include('../partials/icon', { name: 'car', size: 14 }) %> <%= p.car_model || t('Car not listed') %></span>
+              </div>
+              <% if (p.car_photo) { %>
+                <img class="ug-driver__carphoto" src="<%= config.uploadUrl %>/<%= p.car_photo %>" alt="<%= p.car_model || t('Car photo') %>" loading="lazy">
+              <% } %>
+            </article>
+          <% }); %>
+        </div>
+      </section>
+
       <% if (isHost && pending.length) { %>
         <section class="card ug-requests" id="requests">
           <h2 class="card__title"><%= t('Requests') %> <span class="ug-count"><%= pending.length %></span></h2>
@@ -199,7 +220,7 @@
                   <button class="btn btn--ghost btn--sm" type="submit"><%- include('../partials/icon', { name: 'trash', size: 14 }) %> <%= t('Delete summary') %></button>
                 </form>
               </header>
-              <% if (showRunMap) { %><div class="ug-run__map ug-summary__map" data-ug-run-map data-track="<%= JSON.stringify(runTrack) %>" data-route-start-lat="<%= event.route_start_lat ?? '' %>" data-route-start-lng="<%= event.route_start_lng ?? '' %>" data-route-end-lat="<%= event.route_end_lat ?? '' %>" data-route-end-lng="<%= event.route_end_lng ?? '' %>"></div><% } %>
+              <% if (showRunMap) { %><div class="ug-run__map ug-summary__map" data-ug-run-map data-event-type="<%= event.type %>" data-track="<%= JSON.stringify(runTrack) %>" data-meet-lat="<%= event.meet_lat %>" data-meet-lng="<%= event.meet_lng %>" data-route-start-lat="<%= event.route_start_lat ?? '' %>" data-route-start-lng="<%= event.route_start_lng ?? '' %>" data-route-end-lat="<%= event.route_end_lat ?? '' %>" data-route-end-lng="<%= event.route_end_lng ?? '' %>"></div><% } %>
               <div class="ug-run__stats">
                 <span><small><%= t('Top speed') %></small><strong><%= Math.round(run.top_speed || 0) %> <em>km/h</em></strong></span>
                 <span><small><%= t('Average speed') %></small><strong><%= Math.round(run.avg_speed || 0) %> <em>km/h</em></strong></span>
