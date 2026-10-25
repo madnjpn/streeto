@@ -11,7 +11,10 @@ export const NOTIFICATION_CATEGORIES = Object.freeze({
   messages: ['chat_mention'],
   social: ['friend_request', 'friend_accept', 'like', 'comment'],
   groups: ['group_request', 'group_invite', 'group_approved'],
-  meetups: ['meetup_request', 'meetup_join', 'meetup_invite', 'meetup_approved'],
+  meetups: [
+    'meetup_request', 'meetup_join', 'meetup_invite', 'meetup_approved',
+    'underground_event', 'underground_request', 'underground_approved', 'underground_rejected',
+  ],
   builds: ['build_sale', 'build_update', 'build_photo', 'build_vote'],
   services: ['service_claim', 'service_claim_approved', 'service_claim_rejected'],
 });

@@ -1,0 +1,90 @@
+<div class="ug-page">
+  <div class="pagehead">
+    <div class="pagehead__main">
+      <p class="eyebrow"><%- include('../partials/icon', { name: 'bolt', size: 14 }) %> <%= t('Underground') %></p>
+      <h1 class="display"><%= t('Under the radar') %></h1>
+      <p class="lede"><%= t('Closed nights, approved drivers, real runs. The host stays anonymous; the road does not.') %></p>
+    </div>
+    <div class="pagehead__actions">
+      <a class="btn btn--primary" href="/underground/new"><%- include('../partials/icon', { name: 'plus', size: 17 }) %> <%= t('Host a night') %></a>
+    </div>
+  </div>
+
+  <nav class="ug-tabs" aria-label="<%= t('Underground sections') %>">
+    <a class="ug-tabs__tab <%= scope === 'events' ? 'is-active' : '' %>" href="/underground"><%= t('Nights') %></a>
+    <a class="ug-tabs__tab <%= scope === 'mine' ? 'is-active' : '' %>" href="/underground?scope=mine"><%= t('My Underground') %></a>
+  </nav>
+
+  <% if (scope === 'events') { %>
+    <% if (!events.length) { %>
+      <%- include('../partials/empty', {
+        icon: 'bolt',
+        title: t('No Underground nights yet'),
+        text: t('Host the first closed night and approve the drivers you want beside you.'),
+        action: '<a class="btn btn--primary" href="/underground/new">' + t('Host a night') + '</a>'
+      }) %>
+    <% } else { %>
+      <div class="ug-events">
+        <% events.forEach(function (event) { %>
+          <a class="ug-event" href="/underground/<%= event.id %>">
+            <div class="ug-event__top">
+              <span class="ug-type ug-type--<%= event.type %>"><%= t(event.type.toUpperCase()) %></span>
+              <span class="ug-event__state"><%= t(event.status === 'finished' ? 'Finished' : 'Closed / invite only') %></span>
+            </div>
+            <h2 class="ug-event__title"><%= event.title %></h2>
+            <p class="ug-event__when"><%= f.fullDate(event.starts_at) %> · <%= f.timeAgo(event.starts_at) %></p>
+            <p class="ug-event__anon"><%- include('../partials/icon', { name: 'lock', size: 14 }) %> <%= t('Hosted anonymously · map unlocks on approval') %></p>
+            <div class="ug-event__foot">
+              <span><%= t('{n} approved', { n: event.approved_count }) %></span>
+              <% if (event.myRequest && event.myRequest.status === 'approved') { %>
+                <span class="ug-event__mine"><%= t('You are in') %></span>
+              <% } else if (event.myRequest && event.myRequest.status === 'requested') { %>
+                <span class="ug-event__mine ug-event__mine--wait"><%= t('Waiting for approval') %></span>
+              <% } else if (event.myRequest && event.myRequest.status === 'rejected') { %>
+                <span class="ug-event__mine ug-event__mine--no"><%= t('Request declined') %></span>
+              <% } else { %>
+                <span class="ug-event__mine"><%= t('Ask to join') %></span>
+              <% } %>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  <% } else { %>
+    <% if (!runs.length) { %>
+      <%- include('../partials/empty', {
+        icon: 'pin',
+        title: t('No Underground runs yet'),
+        text: t('Join a night, unlock race mode on arrival, and your run will live here.'),
+        action: '<a class="btn btn--primary" href="/underground">' + t('Browse nights') + '</a>'
+      }) %>
+    <% } else { %>
+      <div class="ug-runs">
+        <% runs.forEach(function (run) { %>
+          <% const showMap = run.type !== 'drift' && Array.isArray(run.track) && run.track.length > 1; %>
+          <article class="ug-run">
+            <header class="ug-run__head">
+              <span class="ug-type ug-type--<%= run.type %>"><%= t(run.type.toUpperCase()) %></span>
+              <h2><%= run.title %></h2>
+              <span class="ug-run__date"><%= f.fullDate(run.starts_at) %></span>
+            </header>
+            <% if (showMap) { %>
+              <div class="ug-run__map" data-ug-run-map data-track="<%= JSON.stringify(run.track) %>"></div>
+            <% } %>
+            <div class="ug-run__stats">
+              <span><small><%= t('Top speed') %></small><strong><%= Math.round(run.top_speed || 0) %> <em>km/h</em></strong></span>
+              <span><small><%= t('Average speed') %></small><strong><%= Math.round(run.avg_speed || 0) %> <em>km/h</em></strong></span>
+              <% if (run.type !== 'drift') { %><span><small><%= t('Distance') %></small><strong><%= Number(run.distance_km || 0).toFixed(2) %> <em>km</em></strong></span><% } %>
+              <% if (run.type === 'drag') { %><span><small><%= t('Acceleration') %></small><strong><%= Number(run.acceleration || 0).toFixed(2) %> <em>m/s²</em></strong></span><% } %>
+              <% if (run.type !== 'drift') { %><span><small><%= t('Duration') %></small><strong><%= Math.round(run.duration_s || 0) %> <em>s</em></strong></span><% } %>
+            </div>
+            <footer class="ug-run__foot">
+              <a class="link" href="/underground/<%= run.event_id %>"><%= t('Open the night') %></a>
+              <span class="muted small"><%= t('Saved from your run') %></span>
+            </footer>
+          </article>
+        <% }); %>
+      </div>
+    <% } %>
+  <% } %>
+</div>

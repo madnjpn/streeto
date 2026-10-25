@@ -3419,6 +3419,134 @@ try {
     });
   }
 
+  /* 15b. Underground ------------------------------------------------ */
+  console.log('\nunderground');
+  let undergroundId = 0;
+  {
+    const form = await a.page('/underground/new');
+    check('a driver can open the Underground host form', () => {
+      assert.equal(form.res.status, 200);
+      assert.match(form.html, /Open the Underground/);
+    });
+    const startsAt = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 16);
+    const res = await a.post('/underground/new', a.formWithCsrf({
+      title: 'Smoke Underground Night',
+      type: 'drag',
+      starts_at: startsAt,
+      description: 'Closed smoke night',
+      lat: '41.7151',
+      lng: '44.8271',
+      place_name: 'Smoke spot',
+      zoom: '14',
+    }));
+    undergroundId = Number((res.headers.get('location') || '').split('/').pop());
+    check('the host creates a closed Underground night', () => {
+      assert.equal(res.status, 302);
+      assert.ok(undergroundId > 0);
+      const row = get('SELECT * FROM underground_events WHERE id = ?', undergroundId);
+      assert.equal(row.type, 'drag');
+      assert.equal(row.status, 'open');
+      assert.ok(get('SELECT 1 AS x FROM underground_requests WHERE event_id = ? AND user_id = ? AND status = ?', undergroundId, aId, 'approved'));
+    });
+    check('the network gets an Underground notification', () => {
+      assert.ok(get('SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?', bId, 'underground_event', undergroundId));
+    });
+  }
+  {
+    const page = await b.page('/underground/' + undergroundId);
+    check('an unapproved driver sees the locked map, not the host', () => {
+      assert.equal(page.res.status, 200);
+      assert.match(page.html, /The map is locked/);
+      assert.doesNotMatch(page.html, new RegExp(A.username));
+      assert.doesNotMatch(page.html, /data-ug-map/);
+    });
+    const fd = new FormData();
+    fd.set('_csrf', b.csrf);
+    fd.set('car_model', 'Smoke E36');
+    const res = await b.post('/underground/' + undergroundId + '/join', { multipart: fd });
+    check('a driver asks to join with a car', () => {
+      assert.equal(res.status, 302);
+      const row = get('SELECT * FROM underground_requests WHERE event_id = ? AND user_id = ?', undergroundId, bId);
+      assert.equal(row.status, 'requested');
+      assert.equal(row.car_model, 'Smoke E36');
+    });
+  }
+  {
+    const page = await a.page('/underground/' + undergroundId);
+    check('the host sees the car and username for approval', () => {
+      assert.match(page.html, /Smoke E36/);
+      assert.match(page.html, new RegExp('@' + B.username));
+    });
+    const res = await a.post('/underground/' + undergroundId + '/requests/' + bId + '/approve', a.formWithCsrf({}));
+    check('the host approves the driver', () => {
+      assert.equal(res.status, 302);
+      assert.equal(get('SELECT status FROM underground_requests WHERE event_id = ? AND user_id = ?', undergroundId, bId).status, 'approved');
+    });
+    const approved = await b.page('/underground/' + undergroundId);
+    check('approval unlocks the map and race controls', () => {
+      assert.match(approved.html, /data-ug-map/);
+      assert.match(approved.html, /data-ug-enter/);
+    });
+  }
+  {
+    const res = await b.post('/api/underground/' + undergroundId + '/position', {
+      json: { lat: 41.7151, lng: 44.8271, speed: 91 },
+      headers: b.jsonHeaders(),
+    });
+    check('approved drivers can publish live speed and position', () => {
+      assert.equal(res.status, 200);
+      const row = get('SELECT * FROM underground_positions WHERE event_id = ? AND user_id = ?', undergroundId, bId);
+      assert.ok(row);
+      assert.equal(Math.round(row.speed), 91);
+    });
+    const live = await a.request('GET', '/api/underground/' + undergroundId + '/live', { headers: a.jsonHeaders() });
+    const payload = await live.json();
+    check('the host can see live drivers on the map API', () => {
+      assert.equal(live.status, 200);
+      assert.ok(payload.participants.some((p) => p.user_id === bId && p.speed === 91));
+    });
+  }
+  {
+    const track = [
+      { lat: 41.7151, lng: 44.8271, t: Date.now() - 12000, speed: 0 },
+      { lat: 41.7161, lng: 44.8281, t: Date.now() - 6000, speed: 70 },
+      { lat: 41.7171, lng: 44.8291, t: Date.now(), speed: 120 },
+    ];
+    const res = await b.post('/api/underground/' + undergroundId + '/run', {
+      json: { track },
+      headers: b.jsonHeaders(),
+    });
+    const payload = await res.json().catch(() => ({}));
+    check('a finished run is saved with server-calculated metrics', () => {
+      assert.equal(res.status, 200);
+      assert.ok(payload.run);
+      assert.ok(payload.run.top_speed >= 120);
+      assert.ok(payload.run.distance_km > 0);
+      const row = get('SELECT * FROM underground_runs WHERE event_id = ? AND user_id = ?', undergroundId, bId);
+      assert.ok(row);
+      assert.ok(row.top_speed >= 120);
+    });
+  }
+  {
+    const before = outbox.length;
+    const res = await a.post('/underground/' + undergroundId + '/finish', a.formWithCsrf({}));
+    check('the host finishes the night', () => {
+      assert.equal(res.status, 302);
+      assert.equal(get('SELECT status FROM underground_events WHERE id = ?', undergroundId).status, 'finished');
+    });
+    check('every approved driver gets an Underground summary email', () => {
+      assert.ok(outbox.length > before);
+      assert.ok(outbox.slice(before).some((mail) => /Underground summary/.test(String(mail.subject || ''))));
+    });
+    const mine = await b.page('/underground?scope=mine');
+    check('My Underground keeps the finished run', () => {
+      assert.equal(mine.res.status, 200);
+      assert.match(mine.html, /Smoke Underground Night/);
+      assert.match(mine.html, /data-ug-run-map/);
+      assert.match(mine.html, /Top speed/);
+    });
+  }
+
   /* 16. logout ------------------------------------------------------ */
   console.log('\nsession');
   {

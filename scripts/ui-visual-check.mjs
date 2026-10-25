@@ -195,6 +195,8 @@ const authRoutes = [
   '/builds',
   '/groups',
   '/meetups',
+  '/underground',
+  '/underground/new',
   '/services',
   '/garage/ride',
   '/garage/fines',

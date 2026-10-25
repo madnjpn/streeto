@@ -1,0 +1,106 @@
+<div class="ug-page">
+  <a class="backlink" href="/underground"><%- include('../partials/icon', { name: 'back', size: 15 }) %> <%= t('Underground') %></a>
+
+  <div class="pagehead">
+    <div class="pagehead__main">
+      <p class="eyebrow"><%- include('../partials/icon', { name: 'bolt', size: 14 }) %> <%= t('Host a night') %></p>
+      <h1 class="display"><%= t('Open the Underground') %></h1>
+      <p class="lede"><%= t('Every Underground night is closed. You approve each driver, then the map and race mode unlock for them.') %></p>
+    </div>
+  </div>
+
+  <form class="card card--form ug-form" action="/underground/new" method="post" novalidate>
+    <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
+    <input type="hidden" name="lat" value="<%= values.lat %>">
+    <input type="hidden" name="lng" value="<%= values.lng %>">
+    <input type="hidden" name="zoom" value="<%= values.zoom %>">
+    <input type="hidden" name="place_name" value="<%= values.place_name %>">
+    <input type="hidden" name="route_start_lat" value="<%= values.route_start_lat %>">
+    <input type="hidden" name="route_start_lng" value="<%= values.route_start_lng %>">
+    <input type="hidden" name="route_start_name" value="<%= values.route_start_name %>">
+    <input type="hidden" name="route_end_lat" value="<%= values.route_end_lat %>">
+    <input type="hidden" name="route_end_lng" value="<%= values.route_end_lng %>">
+    <input type="hidden" name="route_end_name" value="<%= values.route_end_name %>">
+
+    <div class="ug-form__grid">
+      <label class="field">
+        <span class="field__label"><%= t('Night title') %></span>
+        <input type="text" name="title" maxlength="100" value="<%= values.title %>" required>
+        <% if (errors.title) { %><span class="field__error"><%= t(errors.title) %></span><% } %>
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Discipline') %></span>
+        <select name="type" data-ug-type>
+          <% types.forEach(function (type) { %><option value="<%= type %>" <%= values.type === type ? 'selected' : '' %>><%= t(type.toUpperCase()) %></option><% }); %>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field__label"><%= t('Date and time') %></span>
+        <input type="datetime-local" name="starts_at" value="<%= values.starts_at %>" required>
+        <% if (errors.starts_at) { %><span class="field__error"><%= t(errors.starts_at) %></span><% } %>
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field__label"><%= t('The brief') %></span>
+      <textarea name="description" rows="4" maxlength="2000" placeholder="<%= t('Rules, meeting point details, what to bring.') %>"><%= values.description %></textarea>
+    </label>
+
+    <fieldset class="field ug-form__location">
+      <legend class="field__label"><%= t('Meeting spot') %></legend>
+      <% if (errors.place_name) { %><span class="field__error"><%= t(errors.place_name) %></span><% } %>
+      <%- include('../partials/map-picker', { id: 'ug-meet-map', lat: values.lat, lng: values.lng }) %>
+    </fieldset>
+
+    <fieldset class="field" data-ug-touge <%= values.type === 'touge' ? '' : 'hidden' %>>
+      <legend class="field__label"><%= t('Touge A → B') %></legend>
+      <% if (errors.route) { %><span class="field__error"><%= t(errors.route) %></span><% } %>
+      <p class="muted"><%= t('Tap once for Start (A), then tap for Finish (B). The live run will follow this route.') %></p>
+      <div class="mapbox" data-touge-picker data-map-id="ug-touge-route">
+        <div class="mapbox__actions">
+          <button type="button" class="btn btn--ghost btn--sm" data-gps><%- include('../partials/icon', { name: 'gps', size: 16 }) %> <%= t('Use my GPS') %></button>
+          <button type="button" class="btn btn--ghost btn--sm" data-pin-clear><%- include('../partials/icon', { name: 'x', size: 16 }) %> <%= t('Clear route') %></button>
+          <span class="mapbox__chosen" data-pin-status><%= t('Tap the map to set Start (A), then tap for Finish (B).') %></span>
+        </div>
+        <div class="touge-map"><div class="mapbox__map" id="ug-touge-route" data-touge-map role="application" aria-label="<%= t('Touge route picker') %>"></div></div>
+        <div class="touge-widgets">
+          <div class="touge-banner" data-route-length hidden></div>
+          <div class="touge-names" data-route-names hidden>
+            <span class="touge-names__chip touge-names__chip--a"><strong>A</strong><span data-route-name-a></span></span>
+            <span class="touge-names__chip touge-names__chip--b"><strong>B</strong><span data-route-name-b></span></span>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="alert alert--info">
+      <%- include('../partials/icon', { name: 'lock', size: 18 }) %>
+      <span><%= t('Closed night: nobody sees the map or race controls until you approve their car and username.') %></span>
+    </div>
+
+    <div class="btnrow">
+      <a class="btn btn--ghost" href="/underground"><%= t('Cancel') %></a>
+      <button class="btn btn--primary" type="submit"><%- include('../partials/icon', { name: 'bolt', size: 17 }) %> <%= t('Create Underground night') %></button>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var select = document.querySelector('[data-ug-type]');
+    var route = document.querySelector('[data-ug-touge]');
+    if (!select || !route) return;
+    var update = function () {
+      var touge = select.value === 'touge';
+      route.hidden = !touge;
+      if (touge) {
+        setTimeout(function () {
+          var map = document.querySelector('#ug-touge-route');
+          if (map && map.__streetoMap) map.__streetoMap.resize();
+        }, 80);
+      }
+    };
+    select.addEventListener('change', update);
+    update();
+  })();
+</script>

@@ -14,7 +14,7 @@ Repository: **https://github.com/madnjpn/streeto** (public, branch `main`)
 > *Release process* sections are the shortest path to a working site and a
 > safe release.
 
-**Current in this tree:** web `1.5.2` (`package.json`), Android `1.3.1`
+**Current in this tree:** web `1.6.0` (`package.json`), Android `1.3.1`
 (`versionCode 10`, `android/app/build.gradle.kts`). These are the sources of
 truth; `GET /api/app/version` reports what the live server is serving.
 
@@ -54,6 +54,7 @@ truth; `GET /api/app/version` reports what the live server is serving.
 | **Chat** | One global channel plus 1:1 threads, attachments, edits, reactions, replies, search, delete-for-me, and per-chat mute (swipe right; delete is swipe left, mouse drag works). Polling every 3 s; Socket.IO for typing/presence. |
 | **Notifications** | In-app activity feed + badges, browser Web Push, and near-realtime Android FCM. Messages, friend requests, comments, likes, invites and meetups; muted chats stay quiet. |
 | **Crews** | Open/private/invite-only groups, roles, join requests, invites, crew wall, crew meetups, shared items. |
+| **Underground** | Closed invite-only drag, drift and touge nights; host approves each car, live map with speed badges, virtual race lock screen, 3D GPS runs and emailed summaries. |
 | **Meetups** | Open/private/invite-only events, capacity/maybe, invites, GPS or street search, directions, Touge route A/B, elevation, 3D preview, saved camera view, weather forecast. |
 | **Services** | Parts marketplace, maintenance/service listings, reviews, claims, provider badges. |
 | **Garage** | My Ride vehicles, registration certificate photos/OCR, technical-inspection status, odometer, fines lookup, photo upload. |
@@ -517,6 +518,7 @@ by `src/migrations/*.sql` and recorded in `_migrations`.
 | Chat | `conversations`, `conversation_members`, `messages`, `message_reactions` |
 | Builds | `builds`, `build_media`, `build_votes`, `build_awards`, `build_watchers`, `build_timeline` |
 | Meetups | `meetups`, `meetup_attendees` |
+| Underground | `underground_events`, `underground_requests`, `underground_runs`, `underground_positions` |
 | Garage | `vehicles`, `vehicle_maintenance` |
 | Services/parts | `parts`, `part_photos`, `services`, `service_reviews`, `service_claims`, `partners` |
 | Activity | `notifications`, `push_subscriptions`, `device_tokens`, `mail_log` |
@@ -615,6 +617,7 @@ downloading the whole clip until playback.
 | `/builds` | Builds garage, voting, awards |
 | `/groups` | Crews, membership, crew wall |
 | `/meetups` | Meetups, Touge routes, weather |
+| `/underground` | Closed host-approved drag/drift/touge nights, live map, race mode and My Underground |
 | `/services` | Parts marketplace + maintenance |
 | `/chat` | Global channel and DMs |
 | `/garage`, `/garage/ride`, `/garage/fines` | My Ride and Fines (`/garage` redirects to My Ride) |
@@ -1517,7 +1520,7 @@ cookie jars, logs with personal data.
 
 ### Current release reminder
 
-- Web version: `package.json` → `1.5.2`
+- Web version: `package.json` → `1.6.0`
 - Android version: `android/app/build.gradle.kts` → `1.3.1` (versionCode `10`)
 - Release notes: `src/lib/changelog.js`
 - Live version check: `https://streeto.net/api/app/version`

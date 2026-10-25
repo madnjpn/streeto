@@ -80,6 +80,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Georgian:wght@400;500;600;700&family=Noto+Serif+Georgian:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&family=Fira+Sans+Condensed:wght@400;500;600;700&family=Roboto+Serif:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Nunito:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/<%= assetStamp %>/css/style.css">
 <link rel="stylesheet" href="/assets/<%= assetStamp %>/css/ui-system.css">
+<% if (typeof bodyClass !== 'undefined' && bodyClass.includes('page-underground')) { %>
+<link rel="stylesheet" href="/assets/<%= assetStamp %>/css/underground.css">
+<% } %>
 <% if (typeof maplibreAvailable !== 'undefined' && maplibreAvailable) { %>
 <link rel="stylesheet" href="/vendor/maplibre/maplibre-gl.css">
 <% } %>
@@ -130,6 +133,7 @@
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'builds' ? 'is-active' : '' %>" href="/builds"><%- include('partials/icon', { name: 'garage', size: 19 }) %> <span><%= t('Builds') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'groups' ? 'is-active' : '' %>" href="/groups"><%- include('partials/icon', { name: 'shield', size: 19 }) %> <span><%= t('Groups') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'meetups' ? 'is-active' : '' %>" href="/meetups"><%- include('partials/icon', { name: 'pin', size: 19 }) %> <span><%= t('Meetups') %></span></a>
+        <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'underground' ? 'is-active' : '' %>" href="/underground"><%- include('partials/icon', { name: 'bolt', size: 19 }) %> <span><%= t('Underground') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'services' ? 'is-active' : '' %>" href="/services"><%- include('partials/icon', { name: 'wrench', size: 19 }) %> <span><%= t('Services') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'chat' ? 'is-active' : '' %>" href="/chat"><%- include('partials/icon', { name: 'chat', size: 19 }) %> <span><%= t('Chat') %></span></a>
         <a class="sidenav__link <%= typeof active !== 'undefined' && active === 'garage' ? 'is-active' : '' %>" href="/garage/ride"><%- include('partials/icon', { name: 'key', size: 19 }) %> <span><%= t('My Garage') %></span></a>

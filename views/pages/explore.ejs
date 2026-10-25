@@ -27,6 +27,10 @@
       <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'pin', size: 19 }) %></span>
       <span class="explore-hub__label"><%= t('Near me') %></span>
     </a>
+    <a class="explore-hub__item explore-hub__item--underground" href="/underground">
+      <span class="explore-hub__icon"><%- include('../partials/icon', { name: 'bolt', size: 19 }) %></span>
+      <span class="explore-hub__label"><%= t('Underground') %></span>
+    </a>
   </nav>
 
   <% if (trending && trending.length) { %>

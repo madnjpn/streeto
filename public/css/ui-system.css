@@ -298,6 +298,19 @@ body {
   white-space: nowrap;
 }
 
+/* Underground keeps its red night identity even inside the normal hub. */
+.explore-hub__item--underground {
+  border-color: rgba(255, 59, 77, 0.3);
+  background:
+    linear-gradient(135deg, rgba(255, 59, 77, 0.1), transparent 60%),
+    rgba(var(--veil), 0.025);
+}
+.explore-hub__item--underground .explore-hub__icon {
+  border-color: rgba(255, 59, 77, 0.35);
+  background: rgba(255, 59, 77, 0.1);
+  color: #ff3b4d;
+}
+
 @media (max-width: 860px) {
   .explore-hub {
     grid-template-columns: repeat(2, minmax(0, 1fr));
