@@ -21,6 +21,11 @@ export const THEMES = [
     desc: 'Dark asphalt with neon accents - the original look.',
   },
   {
+    code: 'underground',
+    label: 'Underground',
+    desc: 'Red night accents from the Underground pages.',
+  },
+  {
     code: 'gold',
     label: 'Black & Gold',
     desc: 'Midnight black with warm gold trim.',

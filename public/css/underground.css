@@ -7,7 +7,10 @@ body.page-underground {
   --panel-2: #171013;
   --panel-3: #1d1418;
   --overlay: #120c0f;
+  --scrim: rgba(6, 5, 6, 0.88);
+  --native-scheme: dark;
   --inset: #0b0809;
+  --inset-2: #160b0e;
   --line: #351923;
   --line-soft: #27141a;
   --line-strong: #51212e;
@@ -21,10 +24,25 @@ body.page-underground {
   --neon-2: #b3122a;
   --neon-2-rgb: 179, 18, 42;
   --neon-3: #d7a14d;
+  --neon-3-rgb: 215, 161, 77;
+  --amber: #d7a14d;
+  --amber-rgb: 215, 161, 77;
+  --danger: #ff4d5e;
+  --danger-rgb: 255, 77, 94;
+  --ok-rgb: 120, 230, 130;
   --on-accent: #190407;
   --panel-scrim: 13, 9, 11;
   --veil: 255, 220, 226;
+  --accent-a: #ff5b69;
+  --accent-b: #ff3b4d;
+  --accent-c: #a30e22;
+  --accent-soft: #ffd6da;
   --danger-soft: #ff8d97;
+  --amber-soft: #f0c98e;
+  --ok-soft: #9fe8a0;
+  --neon-3-soft: #f0c98e;
+  --glow: 0 0 0 1px rgba(255, 59, 77, 0.28), 0 0 26px -6px rgba(255, 59, 77, 0.45);
+  --glow-pink: 0 0 0 1px rgba(179, 18, 42, 0.3), 0 0 26px -6px rgba(179, 18, 42, 0.45);
   background:
     radial-gradient(900px 560px at 82% -8%, rgba(179, 18, 42, 0.18), transparent 62%),
     radial-gradient(700px 480px at 4% 18%, rgba(255, 59, 77, 0.08), transparent 58%),

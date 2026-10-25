@@ -32,6 +32,7 @@ export const CHANGELOG = [
     date: '2026-10-25',
     scope: 'web',
     items: [
+      'A new Underground theme brings the red night palette to the whole site.',
       'Underground nights are live: closed drag, drift and touge meetups with host approval.',
       'Approved drivers get live positions, speed badges, map following and a virtual race lock screen.',
       'Runs save top and average speed, distance, acceleration and the 3D route in My Underground.',

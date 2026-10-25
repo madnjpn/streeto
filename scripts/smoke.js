@@ -3195,6 +3195,7 @@ try {
     const { html } = await a.page('/settings');
     check('the settings page offers the theme picker', () => {
       assert.match(html, /data-theme="street"/);
+      assert.match(html, /href="\/theme\/underground"/);
       assert.match(html, /href="\/theme\/gold"/);
       assert.match(html, /href="\/theme\/light"/);
     });
@@ -3225,6 +3226,18 @@ try {
       assert.match(html, /data-theme="light"/);
       assert.match(html, /class="themecard is-active"\s+href="\/theme\/light"/);
     });
+  }
+  {
+    const res = await a.request('GET', '/theme/underground');
+    const { html } = await a.page('/settings');
+    check('the Underground theme is available and applies', () => {
+      assert.equal(res.status, 302);
+      assert.equal(get('SELECT theme FROM users WHERE username = ?', A.username).theme, 'underground');
+      assert.match(html, /data-theme="underground"/);
+      assert.match(html, /class="themecard is-active"\s+href="\/theme\/underground"/);
+    });
+    // Leave the account back on the neutral light palette for later checks.
+    await a.request('GET', '/theme/light');
   }
 
   /* 13c. currencies ----------------------------------------------- */

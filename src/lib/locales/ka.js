@@ -669,6 +669,8 @@ export default {
   'Street': 'ქუჩა',
   'Dark asphalt with neon accents - the original look.':
     'მუქი ასფალტი ნეონის აქცენტებით - ორიგინალური იერი.',
+  'Red night accents from the Underground pages.':
+    'წითელი ღამის აქცენტები Underground გვერდებიდან.',
   'Black & Gold': 'შავი და ოქროსფერი',
   'Midnight black with warm gold trim.':
     'შუაღამის შავი თბილი ოქროსფერი მორთულობით.',
@@ -2845,4 +2847,5 @@ export default {
   'Chat conversations scroll normally on Android and pull-to-refresh no longer interrupts them.': 'Android-ზე ჩატები ჩვეულებრივად სქროლდება და გვერდის განახლება ხელს აღარ უშლის.',
   'Notification enablement now confirms FCM registration and explains blocked permissions or channels.': 'შეტყობინებების ჩართვა ახლა ადასტურებს FCM რეგისტრაციას და გიხსნით, თუ ნებართვა ან არხი დაბლოკილია.',
   'The Georgian notification settings button wraps inside its card.': 'ქართული შეტყობინებების პარამეტრების ღილაკი ბარათში ეტევა და ტექსტს გადაიტანს.',
+  'A new Underground theme brings the red night palette to the whole site.': 'ახალი Underground თემა წითელ ღამის პალიტრას მთელ საიტზე ავრცელებს.',
 };

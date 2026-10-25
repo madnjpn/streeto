@@ -141,6 +141,67 @@
   --neon-3-soft: #f5e4a4;
 }
 
+/* ── Underground ───────────────────────────────────────────────── */
+[data-theme="underground"] {
+  color-scheme: dark;
+
+  --bg: #060506;
+  --bg-2: #0b0709;
+  --panel: #100b0d;
+  --panel-2: #171013;
+  --panel-3: #1d1418;
+  --line: #351923;
+  --line-soft: #27141a;
+  --line-strong: #51212e;
+  --overlay: #120c0f;
+  --scrim: rgba(6, 5, 6, 0.88);
+  --native-scheme: dark;
+  --inset: #0b0809;
+  --inset-2: #160b0e;
+
+  --text: #f7eef0;
+  --text-dim: #cfc0c4;
+  --muted: #9c888e;
+  --dim: #715f65;
+
+  --veil: 255, 220, 226;
+  --panel-scrim: 13, 9, 11;
+
+  --neon: #ff3b4d;
+  --neon-deep: #a30e22;
+  --neon-rgb: 255, 59, 77;
+  --neon-2: #b3122a;
+  --neon-2-rgb: 179, 18, 42;
+  --neon-3: #d7a14d;
+  --neon-3-rgb: 215, 161, 77;
+  --amber: #d7a14d;
+  --amber-rgb: 215, 161, 77;
+  --danger: #ff4d5e;
+  --danger-rgb: 255, 77, 94;
+  --ok-rgb: 120, 230, 130;
+
+  --accent-a: #ff5b69;
+  --accent-b: #ff3b4d;
+  --accent-c: #a30e22;
+  --accent-soft: #ffd6da;
+  --on-accent: #190407;
+  --danger-soft: #ff8d97;
+  --amber-soft: #f0c98e;
+  --ok-soft: #9fe8a0;
+  --neon-3-soft: #f0c98e;
+
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.95);
+  --shadow-sm: 0 10px 30px -18px rgba(0, 0, 0, 0.9);
+  --glow: 0 0 0 1px rgba(255, 59, 77, 0.28), 0 0 26px -6px rgba(255, 59, 77, 0.45);
+  --glow-pink: 0 0 0 1px rgba(179, 18, 42, 0.3), 0 0 26px -6px rgba(179, 18, 42, 0.45);
+}
+[data-theme="underground"] .topbar {
+  background: rgba(10, 7, 9, 0.88);
+}
+[data-theme="underground"] .footer {
+  background: linear-gradient(180deg, transparent, rgba(30, 4, 9, 0.35));
+}
+
 /* ── White & Gold ──────────────────────────────────────────────── */
 [data-theme="light"] {
   color-scheme: light;
@@ -4281,6 +4342,22 @@ label.cert-scan-btn {
   background: linear-gradient(180deg, var(--accent-a), var(--neon));
   box-shadow: 0 0 14px -3px rgba(var(--neon-rgb), 0.75);
 }
+/* The Underground page and theme use one solid red pill for the active
+   language and currency choices, instead of the global gradient. */
+[data-theme="underground"] .langswitch,
+body.page-underground .langswitch {
+  border-color: rgba(255, 59, 77, 0.35);
+  background: rgba(255, 59, 77, 0.06);
+}
+[data-theme="underground"] .langswitch__opt.is-active,
+[data-theme="underground"] .langswitch__opt.is-active:hover,
+body.page-underground .langswitch__opt.is-active,
+body.page-underground .langswitch__opt.is-active:hover {
+  color: var(--on-accent);
+  background: #ff3b4d;
+  background-image: none;
+  box-shadow: 0 0 14px -3px rgba(255, 59, 77, 0.75);
+}
 
 /* ── checkbox row (auth forms) ──────────────────────────────────── */
 .check {
@@ -5293,6 +5370,10 @@ a.chip.is-active .chip__n { color: var(--neon); }
 .themecard__swatch--gold {
   --sw-bg: linear-gradient(150deg, #1c160c, #0a0806 72%);
   --sw-accent: #f2c14e;
+}
+.themecard__swatch--underground {
+  --sw-bg: linear-gradient(150deg, #2a0b12, #060506 72%);
+  --sw-accent: #ff3b4d;
 }
 .themecard__swatch--light {
   --sw-bg: linear-gradient(150deg, #ffffff, #ece5d3 72%);
