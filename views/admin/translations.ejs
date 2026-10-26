@@ -9,7 +9,11 @@
     </div>
   </div>
   <div class="btnrow">
-    <button class="btn btn--primary" type="button" data-tr-auto <%= missing ? '' : 'disabled' %>>
+    <label class="tr__auto-option">
+      <input type="checkbox" data-tr-auto-all>
+      <span><%= t('Re-translate existing too') %></span>
+    </label>
+    <button class="btn btn--primary" type="button" data-tr-auto>
       <%- include('../partials/icon', { name: 'bolt', size: 16 }) %> <span data-tr-auto-label><%= t('Auto-translate missing') %></span>
     </button>
     <span class="muted small" data-tr-auto-status role="status" aria-live="polite"></span>

@@ -1,73 +1,180 @@
-import { translate } from '@vitalets/google-translate-api';
+import config from '../config.js';
 
 /**
- * Machine-translate one English interface key into Georgian.
+ * Machine-translate English interface strings into Georgian with Gemini.
  *
- * Google blocks the server's own IP after a burst of requests, so a
- * TooManyRequests response falls back to Google Translate through the
- * Jina reader that the parts catalogue already uses. Placeholders and
- * HTML tags are preserved by Google and the normal translation validator
- * still checks every result before it is saved.
+ * Gemini is already configured for certificate OCR and produces much more
+ * natural Georgian than the free Google endpoint. Strings are sent in
+ * batches so a whole dictionary does not burn one API request per key.
+ * The normal translation validator still checks every result before it is
+ * saved - a dropped {placeholder} or broken tag is never accepted.
  */
 
-const READER = String(process.env.ROCKAUTO_READER || 'https://r.jina.ai/').replace(/\/?$/, '/');
-const READER_KEY = String(process.env.JINA_API_KEY || '').trim();
-let directBlockedUntil = 0;
+const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-function parseGoogleJson(body) {
-  const start = body.indexOf('[[[');
-  if (start < 0) throw new Error('The translation response was not JSON.');
-  const raw = JSON.parse(body.slice(start).trim());
-  const parts = Array.isArray(raw?.[0]) ? raw[0] : [];
-  const text = parts
-    .filter((part) => Array.isArray(part) && typeof part[0] === 'string')
-    .map((part) => part[0])
-    .join('');
-  if (!text) throw new Error('The translation was empty.');
-  return text;
+/** Models tried in order. Quota is counted per model. */
+function modelChain() {
+  const list = [
+    config.geminiModel,
+    'gemini-2.5-flash',
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash-lite',
+    'gemini-flash-latest',
+  ];
+  return [...new Set(list.filter(Boolean))];
 }
 
-async function translateThroughReader(source) {
-  const target =
-    'http://translate.googleapis.com/translate_a/single' +
-    '?client=gtx&sl=en&tl=ka&dt=t&q=' + encodeURIComponent(source);
-  const headers = { accept: 'text/plain' };
-  if (READER_KEY) headers.authorization = `Bearer ${READER_KEY}`;
+function apiKey() {
+  return config.geminiApiKey || process.env.GEMINI_API_KEY || '';
+}
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const response = await fetch(READER + target, {
-      headers,
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (response.ok) return parseGoogleJson(await response.text()).trim();
-    if (response.status !== 429 || attempt === 2) {
-      throw new Error(`Translation reader answered ${response.status}.`);
+function extractJson(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  const attempts = [raw];
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenced) attempts.unshift(fenced[1]);
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start >= 0 && end > start) attempts.push(raw.slice(start, end + 1));
+  for (const candidate of attempts) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    } catch {
+      /* try the next shape */
     }
-    // The free reader has a short burst limit; let it breathe and retry.
-    await new Promise((resolve) => setTimeout(resolve, 1200 * (attempt + 1)));
   }
-  throw new Error('Translation reader is busy.');
+  return null;
 }
 
+const PROMPT = [
+  'You are a professional English-to-Georgian translator for STREETO, a Georgian car community website.',
+  'Translate every string in the input JSON array into natural, concise Georgian (ka) that a Georgian driver would actually use in a car app.',
+  'Keep the meaning. Do not translate word-for-word when the result sounds unnatural.',
+  'Return ONLY a JSON object whose keys are exactly the input strings and whose values are the Georgian translations.',
+  'Do not add comments, explanations or extra keys.',
+  'Preserve {placeholders}, HTML tags, punctuation, numbers and units exactly.',
+  'Keep brand names and model names in Latin where that is how Georgians write them.',
+  'Input:',
+].join('\n');
+
+async function callGemini(model, texts, key, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(
+      `${API_BASE}/${model}:generateContent?key=${encodeURIComponent(key)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            role: 'user',
+            parts: [{ text: `${PROMPT}\n${JSON.stringify(texts)}` }],
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+        signal: controller.signal,
+      },
+    );
+    if (!response.ok) {
+      const body = await response.text();
+      const error = new Error(`Gemini answered ${response.status}: ${body.slice(0, 400)}`);
+      error.status = response.status;
+      throw error;
+    }
+    const data = await response.json();
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const text = parts.map((part) => part.text || '').join('').trim();
+    if (!text) {
+      const reason = data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason || 'empty response';
+      throw new Error(`No text in Gemini reply (${reason})`);
+    }
+    return extractJson(text);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Translate a list of English strings in one Gemini request.
+ * Returns an object keyed by the exact English source strings.
+ */
+export async function autoTranslateBatchToGeorgian(texts) {
+  const source = [...new Set(
+    (Array.isArray(texts) ? texts : [])
+      .map((text) => String(text ?? '').trim())
+      .filter(Boolean),
+  )].slice(0, 40);
+  if (!source.length) throw new Error('Nothing to translate.');
+
+  // Long manual paragraphs can fill the JSON reply on their own. Keep each
+  // request comfortably below the output limit, then merge the answers.
+  const CHUNK_CHARS = 6000;
+  if (source.length > 1 && source.reduce((sum, text) => sum + text.length, 0) > CHUNK_CHARS) {
+    const chunks = [];
+    let current = [];
+    let size = 0;
+    for (const text of source) {
+      if (current.length && size + text.length > CHUNK_CHARS) {
+        chunks.push(current);
+        current = [];
+        size = 0;
+      }
+      current.push(text);
+      size += text.length;
+    }
+    if (current.length) chunks.push(current);
+    if (chunks.length > 1) {
+      const merged = {};
+      for (const chunk of chunks) Object.assign(merged, await autoTranslateBatchToGeorgian(chunk));
+      return merged;
+    }
+  }
+
+  const key = apiKey();
+  if (!key) {
+    const error = new Error('GEMINI_API_KEY is not configured.');
+    error.status = 503;
+    throw error;
+  }
+
+  const timeoutMs = Number(config.geminiTimeoutMs) || 60_000;
+  let lastError = null;
+  for (const model of modelChain()) {
+    try {
+      const parsed = await callGemini(model, source, key, timeoutMs);
+      if (!parsed) throw new Error('Gemini reply was not valid JSON');
+      const out = {};
+      for (const text of source) {
+        const value = parsed[text];
+        if (typeof value === 'string' && value.trim()) out[text] = value.trim();
+      }
+      if (!Object.keys(out).length) throw new Error('Gemini returned no translations');
+      return out;
+    } catch (error) {
+      lastError = error;
+      console.warn(`[translate] gemini ${model} failed: ${error.message}`);
+    }
+  }
+  throw lastError || new Error('Gemini translation failed.');
+}
+
+/** Translate one string; used by the single-key admin endpoint. */
 export async function autoTranslateToGeorgian(text) {
   const source = String(text ?? '').trim();
   if (!source) throw new Error('Nothing to translate.');
-
-  if (Date.now() >= directBlockedUntil) {
-    try {
-      const result = await translate(source, { from: 'en', to: 'ka' });
-      const value = String(result?.text ?? '').trim();
-      if (value) return value;
-    } catch (error) {
-      if (error?.name === 'TooManyRequestsError' || error?.statusCode === 429) {
-        // Skip the direct endpoint for a while instead of waiting for a
-        // guaranteed 429 on every one of the remaining keys.
-        directBlockedUntil = Date.now() + 10 * 60 * 1000;
-      }
-    }
-  }
-
-  return translateThroughReader(source);
+  const result = await autoTranslateBatchToGeorgian([source]);
+  const value = result[source];
+  if (!value) throw new Error('Gemini returned no translation.');
+  return value;
 }
 
-export default { autoTranslateToGeorgian };
+export default { autoTranslateToGeorgian, autoTranslateBatchToGeorgian };

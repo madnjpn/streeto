@@ -25,7 +25,7 @@ import { verifyCsrf } from '../middleware/csrf.js';
 import { wantsJson, jsonOk, jsonError, fail } from '../lib/http.js';
 import { latinFonts, georgianFonts } from './pages.js';
 import { DEFAULT_LATIN, DEFAULT_GEORGIAN, getFont, setFontSlot, listCustomFonts, addCustomFont, removeCustomFont } from '../models/appearance.js';
-import { autoTranslateToGeorgian } from '../lib/auto-translate.js';
+import { autoTranslateToGeorgian, autoTranslateBatchToGeorgian } from '../lib/auto-translate.js';
 
 const router = express.Router();
 
@@ -553,16 +553,17 @@ router.post('/admin/translations/sync', requireAdmin, verifyCsrf, (req, res) => 
 router.post('/admin/translations/auto', requireAdmin, verifyCsrf, async (req, res) => {
   const key = String(req.body.key ?? '').trim();
   if (!key) return jsonError(res, 'No key given.', 400);
+  const force = req.body.force === true;
 
   const row = translations.one('ka', key);
   if (!row) return jsonError(res, 'That string is gone.', 404);
-  if (row.value && !row.deleted) return jsonOk(res, { key, value: row.value, skipped: true });
+  if (row.value && !row.deleted && !force) return jsonOk(res, { key, value: row.value, skipped: true });
 
   let value;
   try {
     value = await autoTranslateToGeorgian(key);
   } catch (error) {
-    const status = /too many|429|rate/i.test(String(error?.message || '')) ? 429 : 502;
+    const status = error?.status === 429 ? 429 : 502;
     return jsonError(res, req.t('Auto-translation failed. Try again later.'), status);
   }
 
@@ -576,6 +577,64 @@ router.post('/admin/translations/auto', requireAdmin, verifyCsrf, async (req, re
 
   translations.set('ka', key, value);
   return jsonOk(res, { key, value, warnings: check.warnings });
+});
+
+/**
+ * Machine-translate a batch of strings. Gemini handles a batch in one
+ * request, which keeps the free quota and the dictionary consistent;
+ * every answer is validated separately before it is saved. Existing rows
+ * are skipped unless `force` is set by the explicit retranslate option.
+ */
+router.post('/admin/translations/auto-batch', requireAdmin, verifyCsrf, async (req, res) => {
+  const keys = [...new Set(
+    (Array.isArray(req.body.keys) ? req.body.keys : [])
+      .map((key) => String(key ?? '').trim())
+      .filter(Boolean),
+  )].slice(0, 40);
+  if (!keys.length) return jsonError(res, 'No keys given.', 400);
+  const force = req.body.force === true;
+
+  const targets = [];
+  for (const key of keys) {
+    const row = translations.one('ka', key);
+    if (!row) continue;
+    if (!force && row.value && !row.deleted) continue;
+    targets.push(key);
+  }
+  if (!targets.length) return jsonOk(res, { results: [] });
+
+  let values;
+  try {
+    values = await autoTranslateBatchToGeorgian(targets);
+  } catch (error) {
+    const status = error?.status === 429 ? 429 : error?.status === 503 ? 503 : 502;
+    return jsonError(res, req.t('Auto-translation failed. Try again later.'), status);
+  }
+
+  const results = [];
+  for (const key of targets) {
+    const value = String(values[key] ?? '').trim();
+    if (!value) {
+      results.push({ key, error: req.t('Auto-translation failed. Try again later.') });
+      continue;
+    }
+
+    const check = translations.checkValue(key, value);
+    if (check.errors.length) {
+      results.push({
+        key,
+        error: translations.fillProblem(check.errors[0]),
+        errors: check.errors,
+        warnings: check.warnings,
+      });
+      continue;
+    }
+
+    translations.set('ka', key, value);
+    results.push({ key, value, warnings: check.warnings });
+  }
+
+  return jsonOk(res, { results });
 });
 
 router.post('/admin/translations', requireAdmin, verifyCsrf, (req, res) => {

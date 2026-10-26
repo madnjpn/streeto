@@ -4487,6 +4487,16 @@ body.page-underground .langswitch__opt.is-active:hover {
 .tr__summary .tr__missing strong { color: inherit; }
 .tr__missing { color: var(--amber); font-weight: 700; }
 .tr__switch { margin: 0 0 12px; }
+.tr__auto-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.tr__auto-option input { width: 16px; height: 16px; accent-color: var(--neon); }
 
 /* The three views of the dictionary: the site, the manual, the leftovers. */
 .tr__scopes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
