@@ -3914,6 +3914,21 @@ try {
     });
   }
 
+  /* 15c. leftovers -------------------------------------------------- */
+  console.log('\nleftovers');
+  {
+    const { usedKeys } = await import('../src/lib/used-keys.js');
+    const translations = await import('../src/models/translations.js');
+    db.prepare(
+      "INSERT OR REPLACE INTO translations (lang, key, value, deleted) VALUES ('ka', ?, ?, 0)",
+    ).run('Smoke translated leftover key', 'დარჩენილი თარგმანი');
+    const removed = translations.removeUnused(usedKeys());
+    check('a translated leftover is removed by the explicit cleanup', () => {
+      assert.ok(removed >= 1);
+      assert.equal(get("SELECT 1 AS x FROM translations WHERE lang = 'ka' AND key = ?", 'Smoke translated leftover key'), undefined);
+    });
+  }
+
   /* 16. logout ------------------------------------------------------ */
   console.log('\nsession');
   {

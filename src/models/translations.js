@@ -317,17 +317,16 @@ export function missingCount(lang) {
 /**
  * Drop the rows the site does not use any more - usually a message
  * that was copied out of the running site and pasted into the wrong
- * field by mistake. Only the keys that are not in the code, not in the
- * shipped dictionary and not in the manual are removed.
+ * field by mistake, or wording from a feature that has been removed.
+ * A key is kept only when it is in the code, the shipped dictionary,
+ * the manual or the runtime catalogue list. The admin presses this
+ * deliberately, so a translated leftover is removed too.
  */
 export function removeUnused(used) {
   const rows = all("SELECT key, value FROM translations WHERE lang = 'ka'");
   let removed = 0;
   for (const row of rows) {
     if (used.has(row.key)) continue;
-    // A key the admin has translated is kept even when the scanner
-    // cannot see it (catalogue terms are used at runtime).
-    if (row.value) continue;
     run('DELETE FROM translations WHERE lang = ? AND key = ?', 'ka', row.key);
     removed += 1;
   }
