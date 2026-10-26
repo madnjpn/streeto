@@ -152,6 +152,7 @@ async function enable() {
         // has had time to close so the prompt disappears after a grant.
         setTimeout(refresh, 1400);
         setTimeout(refresh, 3200);
+        setTimeout(refresh, 6000);
       } else if (result === 'enabling') {
         paint(t('Disabled'), t('Turning on notifications…'));
         // The token is registered in the background; keep checking until
@@ -159,6 +160,7 @@ async function enable() {
         setTimeout(refresh, 1800);
         setTimeout(refresh, 4000);
         setTimeout(refresh, 8000);
+        setTimeout(refresh, 12000);
       } else if (result === 'denied') {
         paint(t('Blocked'), t('Notifications are blocked. Allow them in your phone settings.'));
       } else {
@@ -198,11 +200,13 @@ async function disable() {
     } catch {
       /* private mode */
     }
-    await refresh();
   } finally {
     busy = false;
     if (disableBtn) disableBtn.disabled = false;
   }
+  // Refresh after clearing busy; refresh() deliberately ignores calls made
+  // while another enable/disable operation is running.
+  await refresh();
 }
 
 if (native) {

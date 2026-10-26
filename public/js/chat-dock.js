@@ -10,6 +10,7 @@
 
 import { t } from './i18n.js';
 import { attachMentions } from './mentions.js';
+import { confirmDialog } from './app.js';
 
 /** The emojis a driver can press on a message. */
 const REACTIONS = ['👍', '❤️', '😂', '🔥', '🎉', '😮', '😢', '🙏'];
@@ -237,14 +238,19 @@ if (root) {
       row.append(pip);
     }
 
-    // Delete button (revealed by swipe)
+    // Delete button (revealed by swipe). The shared global channel is not
+    // owned by one member, so its delete action is not offered at all.
+    const canDelete = c.kind !== 'global';
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'chatdock__rowdelete';
     del.textContent = t('Delete');
     del.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm(t('Remove this conversation from your inbox?'))) return;
+      if (!(await confirmDialog(
+        t('Remove this conversation from your inbox?'),
+        { confirmLabel: t('Delete'), cancelLabel: t('Cancel'), danger: true },
+      ))) return;
       try {
         const res = await fetch(`/chat/${c.id}/delete`, {
           method: 'POST',
@@ -280,7 +286,8 @@ if (root) {
       } catch {}
     });
 
-    wrap.append(mute, row, del);
+    wrap.append(mute, row);
+    if (canDelete) wrap.append(del);
 
     // Swipe left for Delete, right for Mute. Pointer events cover touch,
     // pen and desktop mouse drags; touch-action: pan-y keeps scrolling.
@@ -294,7 +301,7 @@ if (root) {
     let axis = null;
     let openSide = null;
 
-    const clamp = (dx) => Math.max(-MAX, Math.min(MAX, dx));
+    const clamp = (dx) => Math.max(canDelete ? -MAX : 0, Math.min(MAX, dx));
     const setOpen = (side) => {
       if (side && closeOpenRow && closeOpenRow !== closeSwipe) closeOpenRow();
       openSide = side;
@@ -314,7 +321,7 @@ if (root) {
       if (!dragging) return;
       dragging = false;
       row.style.userSelect = '';
-      if (current <= -40) setOpen('delete');
+      if (canDelete && current <= -40) setOpen('delete');
       else if (current >= 40) setOpen('mute');
       else setOpen(null);
       if (moved) {
