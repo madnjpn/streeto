@@ -19,6 +19,62 @@ export const listWithPlate = () =>
   all(`SELECT * FROM vehicles
         WHERE number_plate IS NOT NULL AND TRIM(number_plate) <> ''`);
 
+/** Vehicles with a plate or a stored inspection result, for garage alerts. */
+export const listPtiAlerts = () =>
+  all(`SELECT id, user_id, name, number_plate, pti_status, pti_plate,
+              pti_expires_at, pti_alert_key, pti_reminded_at
+         FROM vehicles
+        WHERE (number_plate IS NOT NULL AND TRIM(number_plate) <> '')
+           OR pti_expires_at IS NOT NULL
+           OR pti_status IS NOT NULL`);
+
+/** Vehicles the 12-hour fines sweep should check. */
+export const listForFines = () =>
+  all(`SELECT id, user_id, name, number_plate, technical_passport,
+              fines_checked_at, fines_reminded_at
+         FROM vehicles
+        WHERE number_plate IS NOT NULL AND TRIM(number_plate) <> ''`);
+
+/** Which fines this vehicle has already shown the owner. */
+export const fineKeys = (vehicleId) =>
+  all('SELECT fine_key FROM vehicle_fines WHERE vehicle_id = ?', vehicleId)
+    .map((row) => row.fine_key);
+
+/** Remember one fine so the next sweep does not announce it again. */
+export const rememberFine = (vehicleId, fine) =>
+  run(
+    `INSERT OR IGNORE INTO vehicle_fines (vehicle_id, fine_key, protocol_no, amount)
+     VALUES (?, ?, ?, ?)`,
+    vehicleId,
+    fine.key,
+    fine.protocolNo || null,
+    Number.isFinite(Number(fine.amount)) ? Number(fine.amount) : null,
+  );
+
+/** Store the summary of the latest fines check. */
+export const setFinesSnapshot = (vehicleId, { checkedAt, count, amount }) =>
+  run(
+    `UPDATE vehicles
+        SET fines_checked_at = ?, fines_count = ?, fines_amount = ?, updated_at = datetime('now')
+      WHERE id = ?`,
+    checkedAt || null,
+    Number.isFinite(Number(count)) ? Number(count) : null,
+    Number.isFinite(Number(amount)) ? Number(amount) : null,
+    vehicleId,
+  );
+
+/** Remember when the owner was last reminded about unpaid fines. */
+export const setFinesRemindedAt = (vehicleId, at) =>
+  run('UPDATE vehicles SET fines_reminded_at = ? WHERE id = ?', at || null, vehicleId);
+
+/** Remember which inspection alert has already been sent for a vehicle. */
+export const setPtiAlertKey = (vehicleId, key) =>
+  run('UPDATE vehicles SET pti_alert_key = ? WHERE id = ?', key || null, vehicleId);
+
+/** Remember when the owner was last reminded about an expired inspection. */
+export const setPtiRemindedAt = (vehicleId, at) =>
+  run('UPDATE vehicles SET pti_reminded_at = ? WHERE id = ?', at || null, vehicleId);
+
 export const update = (id, fields) => {
   const sets = [];
   const params = [];

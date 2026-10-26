@@ -374,13 +374,35 @@ router.post('/comments/:id/react', requireAuth, verifyCsrf, (req, res) => {
   const emoji = String(req.body.emoji ?? '').trim().slice(0, 8);
   if (!emoji) return jsonError(res, 'Pick an emoji.', 400);
 
-  const reactions = posts.toggleCommentReaction({
+  const result = posts.toggleCommentReaction({
     commentId: comment.id,
     userId: req.user.id,
     emoji,
   });
-  if (!reactions) return jsonError(res, 'That comment is gone.', 404);
-  return jsonOk(res, { reactions });
+  if (!result) return jsonError(res, 'That comment is gone.', 404);
+
+  if (result.added && comment.user_id !== req.user.id
+    && !notifications.alreadyNotified({
+      userId: comment.user_id,
+      actorId: req.user.id,
+      type: 'comment_reaction',
+      entityId: comment.id,
+    })) {
+    const post = posts.byId(comment.post_id, req.user.id);
+    const url = post?.group_id
+      ? `/groups/${post.group_slug}#post-${post.id}`
+      : `/posts/${comment.post_id}`;
+    notifications.notify({
+      userId: comment.user_id,
+      actorId: req.user.id,
+      type: 'comment_reaction',
+      entityId: comment.id,
+      url,
+      text: 'reacted to your comment',
+    });
+  }
+
+  return jsonOk(res, { reactions: result.reactions });
 });
 
 /* ── edit a comment ─────────────────────────────────────────────── */

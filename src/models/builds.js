@@ -247,6 +247,24 @@ export const listLinked = () =>
          FROM builds
         WHERE linked_vehicle_id IS NOT NULL`);
 
+/** Standalone builds with a plate or a stored inspection result. */
+export const listPtiAlerts = () =>
+  all(`SELECT id, user_id, title AS name, number_plate, linked_vehicle_id,
+              pti_status, pti_plate, pti_expires_at, pti_alert_key, pti_reminded_at
+         FROM builds
+        WHERE linked_vehicle_id IS NULL
+          AND ((number_plate IS NOT NULL AND TRIM(number_plate) <> '')
+            OR pti_expires_at IS NOT NULL
+            OR pti_status IS NOT NULL)`);
+
+/** Remember which inspection alert has already been sent for a build. */
+export const setPtiAlertKey = (buildId, key) =>
+  run('UPDATE builds SET pti_alert_key = ? WHERE id = ?', key || null, buildId);
+
+/** Remember when the owner was last reminded about an expired inspection. */
+export const setPtiRemindedAt = (buildId, at) =>
+  run('UPDATE builds SET pti_reminded_at = ? WHERE id = ?', at || null, buildId);
+
 /** Store the latest pti.ge snapshot for a build. */
 export function setPti(buildId, result) {
   const status = ['valid', 'expired', 'unknown'].includes(result?.status) ? result.status : null;
@@ -499,6 +517,7 @@ export default {
   BUILD_SELECT, feed, countFor, byId, media, mediaById, createBuild, updateBuild,
   certificateToBuild, applyCertificate, setLinkedVehicle, setOdometer,
   listWithPlate, listLinked,
+  listPtiAlerts, setPtiAlertKey, setPtiRemindedAt,
   removeBuild, addMedia, removeMedia, vote, myVote, toggleWatch, isWatching, watchers,
   leaderboard, awardsFor,
   recentAwards, awardFor, recomputeAwards, hallOfFame, countByUser,

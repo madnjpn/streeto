@@ -13,6 +13,7 @@ import { removeUploadIfUnused } from '../lib/media-refs.js';
 import { certificateFields, certificateSpecs } from '../lib/certificate.js';
 import { lookupPti, normalizePlate as normalizePtiPlate, ptiNeedsCheck } from '../lib/pti.js';
 import { lookupFines, isFinesAvailable, normalizePlate, describeError, paymentUrl, libertyPaymentUrl, describePaymentError } from '../lib/fines.js';
+import * as garageAlerts from '../lib/garage-alerts.js';
 
 const router = express.Router();
 
@@ -386,6 +387,10 @@ router.post('/garage/fines/check', requireAuth, verifyCsrf, async (req, res) => 
   const check = { vehicleId: vehicle.id, checkedAt: new Date().toISOString() };
   try {
     check.result = await lookupFines({ plate, passport: vehicle.technical_passport });
+    // The owner has just seen these fines, so the automatic sweep must not
+    // announce them again a few minutes later.
+    garageAlerts.rememberFines(vehicle.id, check.result, { now: new Date() });
+    vehicles.setFinesRemindedAt(vehicle.id, new Date().toISOString());
   } catch (error) {
     check.error = describeError(error.message);
   }

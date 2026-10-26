@@ -79,6 +79,17 @@ export const config = {
   ptiRefreshHours: toNum(process.env.PTI_REFRESH_HOURS, 24),
   /** Background sweep that refreshes every member's stale plates. */
   ptiScanHours: toNum(process.env.PTI_SCAN_HOURS, 24),
+  /** How many days before the inspection the in-app/push reminder starts. */
+  ptiAlertDays: toNum(process.env.PTI_ALERT_DAYS, 30),
+
+  /** Garage alerts: automatic fines checks and inspection notifications. */
+  garageAlerts: toBool(process.env.GARAGE_ALERTS, true),
+  /** How often the fines sweep runs. The user-facing default is 12 hours. */
+  finesScanHours: toNum(process.env.FINES_SCAN_HOURS, 12),
+  /** How often an unpaid fine is reminded. Default: once a day. */
+  finesReminderHours: toNum(process.env.FINES_REMINDER_HOURS, 24),
+  /** How often an expired inspection is reminded. Default: once a day. */
+  ptiReminderHours: toNum(process.env.PTI_REMINDER_HOURS, 24),
 
   /** Google Gemini API key for certificate OCR. Get from https://aistudio.google.com/apikey */
   geminiApiKey: process.env.GEMINI_API_KEY || '',

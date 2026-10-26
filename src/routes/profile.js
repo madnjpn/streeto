@@ -123,7 +123,7 @@ router.post('/settings/letters', requireAuth, verifyCsrf, (req, res) => {
 /** Push categories are independent switches; the activity feed is not filtered. */
 router.post('/settings/notifications', requireAuth, verifyCsrf, (req, res) => {
   const prefs = {};
-  for (const key of ['messages', 'social', 'groups', 'meetups', 'underground', 'builds', 'services']) {
+  for (const key of ['messages', 'social', 'groups', 'meetups', 'underground', 'builds', 'services', 'garage']) {
     const value = req.body[`notify_${key}`];
     prefs[key] = value === '1' || value === 'on';
   }

@@ -142,6 +142,10 @@
           <input type="checkbox" name="notify_services" value="1" <%= notifyPrefs.services ? 'checked' : '' %>>
           <span><%= t('Services') %></span>
         </label>
+        <label class="check">
+          <input type="checkbox" name="notify_garage" value="1" <%= notifyPrefs.garage ? 'checked' : '' %>>
+          <span><%= t('Fines and inspection') %></span>
+        </label>
       </fieldset>
       <button class="btn btn--ghost" type="submit"><%= t('Save notification settings') %></button>
     </form>

@@ -674,7 +674,7 @@ router.post('/builds/:id/vote', requireAuth, verifyCsrf, (req, res, next) => {
       type: 'build_vote',
       entityId: id,
       url: `/builds/${id}`,
-      text: 'voted for your build',
+      text: 'voted for your build {name}|' + build.title,
     });
   }
 

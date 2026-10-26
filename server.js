@@ -4,6 +4,7 @@ import { migrate } from './src/db.js';
 import { validateConfig } from './src/config.js';
 import { startAutoBackup } from './src/lib/backup.js';
 import { startPtiRefresh } from './src/lib/pti-refresh.js';
+import { startGarageAlerts } from './src/lib/garage-alerts.js';
 import { startMailJobs } from './src/lib/mail-jobs.js';
 import * as presence from './src/lib/presence.js';import { createServer } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
@@ -32,6 +33,12 @@ if (config.backupIntervalMs > 0 && !config.isTest) {
 // covers plates whose result has gone stale since (and lapsed inspections).
 if (config.ptiLookup && !config.isTest) {
   startPtiRefresh();
+}
+
+// Fines and inspection alerts run every 12 hours. The fines lookup is a
+// headless browser, so it starts a little later than the web server.
+if (!config.isTest) {
+  startGarageAlerts();
 }
 
 // The letters the site sends on its own: the inspection reminder and the

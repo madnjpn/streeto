@@ -385,6 +385,7 @@ export function toggleCommentReaction({ commentId, userId, emoji }) {
     userId,
     clean,
   );
+  const added = !existing;
   if (existing) {
     run('DELETE FROM comment_reactions WHERE id = ?', existing.id);
   } else {
@@ -409,7 +410,7 @@ export function toggleCommentReaction({ commentId, userId, emoji }) {
     if (row.user_id === userId) group.mine = true;
     group.who.push({ username: row.username, display_name: row.display_name, avatar: row.avatar });
   }
-  return [...groups.values()];
+  return { reactions: [...groups.values()], added };
 }
 
 export const tagsForPost = (postId) =>

@@ -9,7 +9,7 @@ import { get } from '../db.js';
 
 export const NOTIFICATION_CATEGORIES = Object.freeze({
   messages: ['chat_mention'],
-  social: ['friend_request', 'friend_accept', 'like', 'comment'],
+  social: ['friend_request', 'friend_accept', 'like', 'comment', 'comment_reaction'],
   groups: ['group_request', 'group_invite', 'group_approved'],
   meetups: ['meetup_request', 'meetup_join', 'meetup_invite', 'meetup_approved'],
   underground: [
@@ -19,6 +19,7 @@ export const NOTIFICATION_CATEGORIES = Object.freeze({
   ],
   builds: ['build_sale', 'build_update', 'build_photo', 'build_vote'],
   services: ['service_claim', 'service_claim_approved', 'service_claim_rejected'],
+  garage: ['fine', 'pti_expiring', 'pti_expired'],
 });
 
 export const NOTIFICATION_CATEGORY_KEYS = Object.keys(NOTIFICATION_CATEGORIES);

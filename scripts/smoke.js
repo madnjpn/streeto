@@ -66,6 +66,7 @@ const { vehicleSlug } = await import('../src/lib/rockauto.js');
 const { twinsOf } = await import('../src/lib/twins.js');
 const { outbox } = await import('../src/lib/mail.js');
 const { translate } = await import('../src/lib/i18n.js');
+const { notifyPtiAlerts, checkFinesForAllVehicles } = await import('../src/lib/garage-alerts.js');
 
 /* ── tiny test harness ────────────────────────────────────────── */
 let passed = 0;
@@ -677,6 +678,42 @@ try {
       assert.equal(body.ok, true);
       assert.equal(body.count, 1);
       assert.match(body.html, /See you there\./);
+    });
+  }
+  {
+    const comment = get('SELECT id FROM comments WHERE post_id = ? AND body = ?', postId, 'See you there.');
+    const res = await a.post(`/comments/${comment.id}/react`, {
+      json: { emoji: '🔥' },
+      headers: a.jsonHeaders(),
+    });
+    const body = await res.json();
+    check('a reaction on a comment notifies its author', () => {
+      assert.equal(body.ok, true);
+      const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+      const row = get(
+        "SELECT text FROM notifications WHERE user_id = ? AND type = 'comment_reaction' ORDER BY id DESC LIMIT 1",
+        bId,
+      );
+      assert.equal(row.text, 'reacted to your comment');
+    });
+  }
+  {
+    const comment = get('SELECT id FROM comments WHERE post_id = ? AND body = ?', postId, 'See you there.');
+    const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+    const before = get(
+      "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND type = 'comment_reaction'",
+      bId,
+    ).n;
+    await a.post(`/comments/${comment.id}/react`, {
+      json: { emoji: '🔥' },
+      headers: a.jsonHeaders(),
+    });
+    const after = get(
+      "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND type = 'comment_reaction'",
+      bId,
+    ).n;
+    check('taking a comment reaction back does not spam a second alert', () => {
+      assert.equal(after, before);
     });
   }
   {
@@ -1888,6 +1925,75 @@ try {
     db.prepare('DELETE FROM vehicles WHERE id = ?').run(vehicleId);
   }
   {
+    const aId = get('SELECT id FROM users WHERE username = ?', A.username).id;
+    const now = new Date('2026-10-26T12:00:00Z');
+    const v = db.prepare(
+      `INSERT INTO vehicles (user_id, name, number_plate, pti_status, pti_plate, pti_expires_at, pti_checked_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(aId, 'Smoke Alert Car', 'ALERT1', 'expired', 'ALERT1', '2020-01-01', now.toISOString());
+    const vehicleId = Number(v.lastInsertRowid);
+    const ptiAlerts = () => get(
+      "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND type = 'pti_expired' AND entity_id = ?",
+      aId,
+      vehicleId,
+    ).n;
+    notifyPtiAlerts({ now });
+    check('an expired inspection sends an in-app and push alert', () => {
+      assert.equal(ptiAlerts(), 1);
+    });
+    notifyPtiAlerts({ now });
+    check('the same expired inspection does not alert twice immediately', () => {
+      assert.equal(ptiAlerts(), 1);
+    });
+    notifyPtiAlerts({ now: new Date(now.getTime() + 25 * 3600 * 1000) });
+    check('an expired inspection is reminded the next day', () => {
+      assert.equal(ptiAlerts(), 2);
+    });
+    db.prepare('DELETE FROM vehicles WHERE id = ?').run(vehicleId);
+  }
+  {
+    const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+    const now = new Date('2026-10-26T12:00:00Z');
+    const v = db.prepare(
+      'INSERT INTO vehicles (user_id, name, number_plate, technical_passport) VALUES (?, ?, ?, ?)',
+    ).run(bId, 'Smoke Fine Car', 'FINE001', 'TP123');
+    const vehicleId = Number(v.lastInsertRowid);
+    const lookup = async ({ plate }) => ({
+      fines: plate === 'FINE001'
+        ? [
+            { protocolId: 9001, protocolNo: 'F-9001', amount: 5000, amountToPay: 2500, automobileNo: plate },
+            { protocolId: 9002, protocolNo: 'F-9002', amount: 3000, amountToPay: 3000, automobileNo: plate },
+          ]
+        : [],
+    });
+    const fineAlerts = () => get(
+      "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND type = 'fine' AND entity_id = ?",
+      bId,
+      vehicleId,
+    ).n;
+    const first = await checkFinesForAllVehicles({ lookup, now });
+    check('the fines sweep announces new unpaid fines once', () => {
+      assert.ok(first.newFines >= 2);
+      assert.equal(fineAlerts(), 1);
+      const text = get(
+        "SELECT text FROM notifications WHERE user_id = ? AND type = 'fine' AND entity_id = ? ORDER BY id DESC LIMIT 1",
+        bId,
+        vehicleId,
+      ).text;
+      assert.match(text, /Smoke Fine Car/);
+      assert.equal(get('SELECT COUNT(*) AS n FROM vehicle_fines WHERE vehicle_id = ?', vehicleId).n, 2);
+    });
+    await checkFinesForAllVehicles({ lookup, now: new Date(now.getTime() + 3600 * 1000) });
+    check('the next fines sweep does not repeat the same new-fine alert', () => {
+      assert.equal(fineAlerts(), 1);
+    });
+    await checkFinesForAllVehicles({ lookup, now: new Date(now.getTime() + 25 * 3600 * 1000) });
+    check('unpaid fines are reminded the next day', () => {
+      assert.equal(fineAlerts(), 2);
+    });
+    db.prepare('DELETE FROM vehicles WHERE id = ?').run(vehicleId);
+  }
+  {
     const res = await b.post(`/builds/${buildId}/vote`, { headers: b.jsonHeaders() });
     const body = await res.json();
     check('B votes for build of the week', () => {
@@ -1895,6 +2001,19 @@ try {
       assert.equal(body.voted, true);
       assert.equal(body.weekVotes, 1);
       assert.equal(body.votes, 1);
+    });
+  }
+  {
+    const aId = get('SELECT id FROM users WHERE username = ?', A.username).id;
+    const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+    const row = get(
+      "SELECT text, actor_id FROM notifications WHERE user_id = ? AND type = 'build_vote' AND entity_id = ? ORDER BY id DESC LIMIT 1",
+      aId,
+      buildId,
+    );
+    check('a build vote tells the owner the build name and the voter', () => {
+      assert.equal(row.text, 'voted for your build {name}|Smoke Skyline');
+      assert.equal(row.actor_id, bId);
     });
   }
   {
