@@ -226,7 +226,7 @@ export function joinability(meetup, viewerId) {
   const status = attendeeStatus(meetup.id, viewerId);
   const full = meetup.capacity != null && meetup.going_count >= meetup.capacity;
 
-  if (status === 'going') return { action: 'leave', label: 'Cancel my spot', status };
+  if (status === 'going') return { action: 'leave', label: 'Leave meetup', status };
   if (status === 'maybe') return { action: 'leave', label: 'Remove my maybe', status };
   if (status === 'requested') return { action: 'none', label: 'Request pending', status };
   if (status === 'invited') return { action: 'join', label: 'Accept invite', status };

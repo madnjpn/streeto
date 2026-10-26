@@ -1406,6 +1406,11 @@ try {
       assert.equal(body.ok, true);
       assert.equal(body.status, 'going');
     });
+    const goingView = await b.page(`/meetups/${meetupId}`);
+    check('a going driver sees Leave meetup instead of Cancel my spot', () => {
+      assert.match(goingView.html, /Leave meetup/);
+      assert.doesNotMatch(goingView.html, /Cancel my spot/);
+    });
   }
   {
     const res = await b.post(`/meetups/${meetupId}/maybe`, { headers: b.jsonHeaders() });
