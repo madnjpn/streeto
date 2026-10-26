@@ -15,11 +15,16 @@ const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 /** Models tried in order. Quota is counted per model. */
 function modelChain() {
   const list = [
-    config.geminiModel,
+    config.translateGeminiModel,
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
     'gemini-2.5-flash',
-    'gemini-flash-lite-latest',
     'gemini-2.5-flash-lite',
+    'gemini-3.1-flash-lite-preview',
     'gemini-flash-latest',
+    'gemini-flash-lite-latest',
   ];
   return [...new Set(list.filter(Boolean))];
 }
@@ -63,34 +68,47 @@ async function callGemini(model, texts, key, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(
-      `${API_BASE}/${model}:generateContent?key=${encodeURIComponent(key)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [{ text: `${PROMPT}\n${JSON.stringify(texts)}` }],
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            topP: 0.95,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
-        signal: controller.signal,
-      },
-    );
-    if (!response.ok) {
-      const body = await response.text();
-      const error = new Error(`Gemini answered ${response.status}: ${body.slice(0, 400)}`);
-      error.status = response.status;
-      throw error;
+    const send = async (generationConfig) => {
+      const response = await fetch(
+        `${API_BASE}/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              role: 'user',
+              parts: [{ text: `${PROMPT}\n${JSON.stringify(texts)}` }],
+            }],
+            generationConfig,
+          }),
+          signal: controller.signal,
+        },
+      );
+      if (!response.ok) {
+        const body = await response.text();
+        const error = new Error(`Gemini answered ${response.status}: ${body.slice(0, 400)}`);
+        error.status = response.status;
+        throw error;
+      }
+      return response.json();
+    };
+
+    const baseConfig = {
+      temperature: 0.1,
+      topP: 0.95,
+      maxOutputTokens: 8192,
+      responseMimeType: 'application/json',
+    };
+    let data;
+    try {
+      // Translation is not a reasoning task, so skip thinking tokens.
+      data = await send({ ...baseConfig, thinkingConfig: { thinkingBudget: 0 } });
+    } catch (error) {
+      // Some models reject the thinking config; try once without it.
+      if (error.status !== 400) throw error;
+      data = await send(baseConfig);
     }
-    const data = await response.json();
+
     const parts = data?.candidates?.[0]?.content?.parts || [];
     const text = parts.map((part) => part.text || '').join('').trim();
     if (!text) {
@@ -112,7 +130,7 @@ export async function autoTranslateBatchToGeorgian(texts) {
     (Array.isArray(texts) ? texts : [])
       .map((text) => String(text ?? '').trim())
       .filter(Boolean),
-  )].slice(0, 40);
+  )].slice(0, 60);
   if (!source.length) throw new Error('Nothing to translate.');
 
   // Long manual paragraphs can fill the JSON reply on their own. Keep each
@@ -148,6 +166,7 @@ export async function autoTranslateBatchToGeorgian(texts) {
 
   const timeoutMs = Number(config.geminiTimeoutMs) || 60_000;
   let lastError = null;
+  let quotaError = null;
   for (const model of modelChain()) {
     try {
       const parsed = await callGemini(model, source, key, timeoutMs);
@@ -161,10 +180,11 @@ export async function autoTranslateBatchToGeorgian(texts) {
       return out;
     } catch (error) {
       lastError = error;
+      if (error.status === 429) quotaError = error;
       console.warn(`[translate] gemini ${model} failed: ${error.message}`);
     }
   }
-  throw lastError || new Error('Gemini translation failed.');
+  throw quotaError || lastError || new Error('Gemini translation failed.');
 }
 
 /** Translate one string; used by the single-key admin endpoint. */

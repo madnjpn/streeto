@@ -51,6 +51,17 @@ export const rememberFine = (vehicleId, fine) =>
     Number.isFinite(Number(fine.amount)) ? Number(fine.amount) : null,
   );
 
+/** Drop fines that are no longer in the current unpaid list. */
+export const pruneFines = (vehicleId, keys = []) => {
+  if (!keys.length) return run('DELETE FROM vehicle_fines WHERE vehicle_id = ?', vehicleId);
+  return run(
+    `DELETE FROM vehicle_fines
+      WHERE vehicle_id = ? AND fine_key NOT IN (${keys.map(() => '?').join(',')})`,
+    vehicleId,
+    ...keys,
+  );
+};
+
 /** Store the summary of the latest fines check. */
 export const setFinesSnapshot = (vehicleId, { checkedAt, count, amount }) =>
   run(

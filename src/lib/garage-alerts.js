@@ -46,21 +46,40 @@ function fineAmount(fine) {
   return Number.isFinite(amount) ? amount : 0;
 }
 
+/** A fine is only worth a reminder while it is still unpaid. */
+export function isUnpaidFine(fine) {
+  if (!fine) return false;
+  const stateId = Number(fine.stateId);
+  const canPay = Number(fine.canPay);
+  const state = String(fine.state || '');
+
+  // protocols.ge marks paid fines with stateId/canPay = 1.
+  if (stateId === 1 || canPay === 1) return false;
+  if (/paid|გადახდილი/i.test(state)) return false;
+  if (stateId === 0 || canPay === 0) return true;
+  if (/unpaid|გადაუხდელი/i.test(state)) return true;
+  if (fine.payable === true) return true;
+  const due = Number(fine.amountToPay);
+  return Number.isFinite(due) && due > 0;
+}
+
 /**
  * Record a lookup result against a vehicle. Returns the fines that were
  * not in the database before this check.
  */
 export function rememberFines(vehicleId, result, { now = new Date() } = {}) {
-  const list = Array.isArray(result?.fines) ? result.fines : [];
+  const list = (Array.isArray(result?.fines) ? result.fines : []).filter(isUnpaidFine);
   const seen = new Set(vehicles.fineKeys(vehicleId));
   const fresh = [];
   let amount = 0;
+  const keys = [];
 
   for (const fine of list) {
     const key = fineKey(fine);
     if (!key) continue;
     const value = fineAmount(fine);
     amount += value;
+    keys.push(key);
     if (!seen.has(key)) {
       seen.add(key);
       fresh.push({ ...fine, key, amount: value });
@@ -71,6 +90,10 @@ export function rememberFines(vehicleId, result, { now = new Date() } = {}) {
       amount: value,
     });
   }
+
+  // A paid fine is no longer in `keys`; remove the old row so the next
+  // check does not treat it as a fine that still needs a reminder.
+  vehicles.pruneFines(vehicleId, keys);
 
   vehicles.setFinesSnapshot(vehicleId, {
     checkedAt: now.toISOString(),
@@ -291,6 +314,7 @@ export function startGarageAlerts() {
 
 export default {
   daysUntil,
+  isUnpaidFine,
   rememberFines,
   checkFinesForAllVehicles,
   notifyPtiAlerts,

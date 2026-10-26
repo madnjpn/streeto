@@ -66,7 +66,7 @@ const { vehicleSlug } = await import('../src/lib/rockauto.js');
 const { twinsOf } = await import('../src/lib/twins.js');
 const { outbox } = await import('../src/lib/mail.js');
 const { translate } = await import('../src/lib/i18n.js');
-const { notifyPtiAlerts, checkFinesForAllVehicles } = await import('../src/lib/garage-alerts.js');
+const { notifyPtiAlerts, checkFinesForAllVehicles, isUnpaidFine } = await import('../src/lib/garage-alerts.js');
 
 /* ── tiny test harness ────────────────────────────────────────── */
 let passed = 0;
@@ -1961,10 +1961,15 @@ try {
     const lookup = async ({ plate }) => ({
       fines: plate === 'FINE001'
         ? [
-            { protocolId: 9001, protocolNo: 'F-9001', amount: 5000, amountToPay: 2500, automobileNo: plate },
-            { protocolId: 9002, protocolNo: 'F-9002', amount: 3000, amountToPay: 3000, automobileNo: plate },
+            { protocolId: 9001, protocolNo: 'F-9001', amount: 5000, amountToPay: 2500, automobileNo: plate, stateId: 0, canPay: 0, payable: true },
+            { protocolId: 9002, protocolNo: 'F-9002', amount: 3000, amountToPay: 3000, automobileNo: plate, stateId: 0, canPay: 0, payable: true },
+            { protocolId: 9003, protocolNo: 'F-9003', amount: 5000, amountToPay: null, automobileNo: plate, stateId: 1, canPay: 1, payable: false, state: 'გადახდილია დროულად' },
           ]
         : [],
+    });
+    check('paid fines are not treated as unpaid', () => {
+      assert.equal(isUnpaidFine({ stateId: 1, canPay: 1, payable: false }), false);
+      assert.equal(isUnpaidFine({ stateId: 0, canPay: 0, payable: true }), true);
     });
     const fineAlerts = () => get(
       "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND type = 'fine' AND entity_id = ?",

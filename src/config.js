@@ -97,6 +97,9 @@ export const config = {
 
   /** Gemini model used for certificate OCR. */
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  /** Gemini model used for dictionary translation. Falls through a model
+   *  chain, because the free tier quota is counted per model. */
+  translateGeminiModel: process.env.TRANSLATE_GEMINI_MODEL || 'gemini-3.5-flash',
 
   /** How long we wait for a Gemini OCR reply (ms). */
   geminiTimeoutMs: toNum(process.env.GEMINI_TIMEOUT_MS, 60000),

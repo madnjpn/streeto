@@ -140,7 +140,7 @@ if (autoBtn) {
 
     // Gemini translates a group in one request, so the free quota is not
     // spent one key at a time. Smaller batches keep the JSON reply short.
-    const BATCH_SIZE = 30;
+    const BATCH_SIZE = 50;
     for (let start = 0; start < rows.length; start += BATCH_SIZE) {
       const batch = rows.slice(start, start + BATCH_SIZE);
       const keys = [];
@@ -210,7 +210,7 @@ if (autoBtn) {
         autoStatus.textContent = t('Translated {n} of {m}', { n: done, m: rows.length });
       }
       // Keep below the free tier's per-minute request limit.
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     if (autoStatus) {
