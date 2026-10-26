@@ -1,0 +1,17 @@
+<%
+  const current = typeof adminTab !== 'undefined' ? adminTab : '';
+  const claimCount = typeof pendingClaims !== 'undefined' ? pendingClaims : 0;
+  const tabClass = (name) => `feedtabs__tab${current === name ? ' is-active' : ''}`;
+%>
+<div class="feedtabs">
+  <a class="<%= tabClass('users') %>" href="/admin?tab=users"><%= t('Drivers') %></a>
+  <a class="<%= tabClass('content') %>" href="/admin?tab=content"><%= t('Content') %></a>
+  <a class="<%= tabClass('backups') %>" href="/admin?tab=backups"><%= t('Backups') %></a>
+  <a class="<%= tabClass('reports') %>" href="/admin?tab=reports"><%= t('Reports') %></a>
+  <a class="<%= tabClass('appearance') %>" href="/admin?tab=appearance"><%= t('Appearance') %></a>
+  <a class="<%= tabClass('partners') %>" href="/admin/partners"><%= t('Partners') %></a>
+  <a class="<%= tabClass('claims') %>" href="/admin/service-claims"><%= t('Claims') %><% if (claimCount) { %> <span class="pip pip--solid"><%= claimCount %></span><% } %></a>
+  <a class="<%= tabClass('translations') %>" href="/admin/translations"><%= t('Translations') %></a>
+  <a class="<%= tabClass('how-it-works') %>" href="/admin/how-it-works"><%= t('How it works') %></a>
+  <a class="<%= tabClass('style-guide') %>" href="/admin/style-guide"><%= t('UI system') %></a>
+</div>

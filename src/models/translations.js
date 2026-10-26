@@ -278,6 +278,10 @@ export function remove(lang, key) {
   if (map) map.set(key, key);
 }
 
+/** One row, used by the automatic translator. */
+export const one = (lang, key) =>
+  get('SELECT key, value, deleted FROM translations WHERE lang = ? AND key = ?', lang, key);
+
 /** Every key of a language, for the admin list. */
 export function list(lang, { q = '', only = '', limit = 2000, offset = 0 } = {}) {
   const needle = String(q || '').trim();
@@ -439,7 +443,7 @@ export function fillProblem(problem) {
 }
 
 export default {
-  seed, load, init, dictionary, set, remove, list, countFor, missing, missingCount,
+  seed, load, init, dictionary, set, remove, one, list, countFor, missing, missingCount,
   isUsedInSource, invalidateSourceScan, checkValue, placeholdersOf, fillProblem,
   syncWithCode, registerMissing, removeUnused,
 };

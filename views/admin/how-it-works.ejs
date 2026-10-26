@@ -11,6 +11,7 @@ const usedIcons = [...new Set(sections.map((section) => section.icon).filter((na
     <p class="eyebrow"><%= t('control room') %></p>
     <h1 class="display"><%= t('How it works') %></h1>
     <p class="lede"><%= t('Write the manual. Every line you type appears on the page, and its English becomes a key in the Translations console.') %></p>
+    <p class="muted small"><%= sections.length %> <%= t('articles') %></p>
   </div>
   <div class="btnrow">
     <a class="btn btn--ghost" href="/about" target="_blank" rel="noopener"><%= t('Open the page') %></a>
@@ -24,18 +25,7 @@ const usedIcons = [...new Set(sections.map((section) => section.icon).filter((na
   </div>
 </div>
 
-<div class="feedtabs">
-  <a class="feedtabs__tab" href="/admin?tab=users"><%= t('Drivers') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=content"><%= t('Content') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=backups"><%= t('Backups') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=reports"><%= t('Reports') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=appearance"><%= t('Appearance') %></a>
-  <a class="feedtabs__tab" href="/admin/partners"><%= t('Partners') %></a>
-  <a class="feedtabs__tab" href="/admin/service-claims"><%= t('Claims') %></a>
-  <a class="feedtabs__tab" href="/admin/translations"><%= t('Translations') %></a>
-  <a class="feedtabs__tab is-active" href="/admin/how-it-works"><%= t('How it works') %></a>
-  <span class="feedtabs__count"><%= sections.length %> <%= t('articles') %></span>
-</div>
+<%- include('_tabs', { adminTab: 'how-it-works' }) %>
 
 <div class="howeditor howeditor--single">
   <div class="howeditor__list" data-howlist>

@@ -23,6 +23,7 @@ async function post(url, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const error = new Error(data.error || `Request failed (${res.status})`);
+    error.status = res.status;
     error.problems = data.errors || [];
     error.warnings = data.warnings || [];
     throw error;
@@ -99,3 +100,57 @@ filter?.addEventListener('input', () => {
     row.hidden = needle !== '' && !text.includes(needle);
   });
 });
+
+/* ── machine translation ─────────────────────────────────────────── */
+const autoBtn = document.querySelector('[data-tr-auto]');
+const autoStatus = document.querySelector('[data-tr-auto-status]');
+if (autoBtn) {
+  autoBtn.addEventListener('click', async () => {
+    const rows = [...document.querySelectorAll('[data-trrow].trrow--missing:not([hidden])')];
+    if (!rows.length) {
+      if (autoStatus) autoStatus.textContent = t('No missing strings on this page.');
+      return;
+    }
+
+    autoBtn.disabled = true;
+    let done = 0;
+    let failed = 0;
+
+    for (const row of rows) {
+      const input = row.querySelector('[data-tr-ka]');
+      const key = row.dataset.key;
+      if (!input || !key) continue;
+
+      state(row, t('Translating…'));
+      try {
+        const data = await post('/admin/translations/auto', { key });
+        if (data.value) {
+          input.value = data.value;
+          input.dataset.saved = data.value;
+          row.classList.remove('trrow--missing');
+          state(row, t('Saved'), 'is-ok');
+          warn(row, data.warnings || []);
+          done += 1;
+        }
+      } catch (err) {
+        failed += 1;
+        const problems = err.problems && err.problems.length ? err.problems : [{ key: err.message }];
+        state(row, t('Not saved'), 'is-bad');
+        warn(row, problems, true);
+        if (err.status === 429) break;
+      }
+
+      if (autoStatus) {
+        autoStatus.textContent = t('Translated {n} of {m}', { n: done, m: rows.length });
+      }
+      // Keep the unofficial Google endpoint happy; one request at a time.
+      await new Promise((resolve) => setTimeout(resolve, 140));
+    }
+
+    if (autoStatus) {
+      const suffix = failed ? ` ${t('{n} failed.', { n: failed })}` : '';
+      autoStatus.textContent = `${t('Translated {n} of {m}', { n: done, m: rows.length })}${suffix}`;
+    }
+    autoBtn.disabled = false;
+  });
+}

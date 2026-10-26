@@ -21,18 +21,7 @@
   <div class="adminstats__cell"><strong><%= stats.messages %></strong><small><%= t('Messages') %></small></div>
 </div>
 
-<div class="feedtabs">
-  <a class="feedtabs__tab <%= tab === 'users' ? 'is-active' : '' %>" href="/admin?tab=users"><%= t('Drivers') %></a>
-  <a class="feedtabs__tab <%= tab === 'content' ? 'is-active' : '' %>" href="/admin?tab=content"><%= t('Content') %></a>
-  <a class="feedtabs__tab <%= tab === 'backups' ? 'is-active' : '' %>" href="/admin?tab=backups"><%= t('Backups') %></a>
-  <a class="feedtabs__tab <%= tab === 'reports' ? 'is-active' : '' %>" href="/admin?tab=reports"><%= t('Reports') %></a>
-  <a class="feedtabs__tab <%= tab === 'appearance' ? 'is-active' : '' %>" href="/admin?tab=appearance"><%= t('Appearance') %></a>
-  <a class="feedtabs__tab <%= tab === 'partners' ? 'is-active' : '' %>" href="/admin/partners"><%= t('Partners') %></a>
-  <a class="feedtabs__tab <%= tab === 'claims' ? 'is-active' : '' %>" href="/admin/service-claims"><%= t('Claims') %><% if (pendingClaims) { %> <span class="pip pip--solid"><%= pendingClaims %></span><% } %></a>
-  <a class="feedtabs__tab" href="/admin/translations"><%= t('Translations') %></a>
-  <a class="feedtabs__tab" href="/admin/how-it-works"><%= t('How it works') %></a>
-  <a class="feedtabs__tab" href="/admin/style-guide"><%= t('UI system') %></a>
-</div>
+<%- include('_tabs', { adminTab: tab }) %>
 
 <% if (tab === 'users') { %>
   <section class="card adminpanel">

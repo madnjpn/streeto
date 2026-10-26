@@ -25,6 +25,7 @@ import { verifyCsrf } from '../middleware/csrf.js';
 import { wantsJson, jsonOk, jsonError, fail } from '../lib/http.js';
 import { latinFonts, georgianFonts } from './pages.js';
 import { DEFAULT_LATIN, DEFAULT_GEORGIAN, getFont, setFontSlot, listCustomFonts, addCustomFont, removeCustomFont } from '../models/appearance.js';
+import { autoTranslateToGeorgian } from '../lib/auto-translate.js';
 
 const router = express.Router();
 
@@ -546,6 +547,35 @@ router.post('/admin/translations/sync', requireAdmin, verifyCsrf, (req, res) => 
     m: removed,
   });
   return res.redirect('/admin/translations');
+});
+
+/** Machine-translate one missing string; the client walks the missing rows. */
+router.post('/admin/translations/auto', requireAdmin, verifyCsrf, async (req, res) => {
+  const key = String(req.body.key ?? '').trim();
+  if (!key) return jsonError(res, 'No key given.', 400);
+
+  const row = translations.one('ka', key);
+  if (!row) return jsonError(res, 'That string is gone.', 404);
+  if (row.value && !row.deleted) return jsonOk(res, { key, value: row.value, skipped: true });
+
+  let value;
+  try {
+    value = await autoTranslateToGeorgian(key);
+  } catch (error) {
+    const status = /too many|429|rate/i.test(String(error?.message || '')) ? 429 : 502;
+    return jsonError(res, req.t('Auto-translation failed. Try again later.'), status);
+  }
+
+  const check = translations.checkValue(key, value);
+  if (check.errors.length) {
+    return jsonError(res, translations.fillProblem(check.errors[0]), 422, {
+      errors: check.errors,
+      warnings: check.warnings,
+    });
+  }
+
+  translations.set('ka', key, value);
+  return jsonOk(res, { key, value, warnings: check.warnings });
 });
 
 router.post('/admin/translations', requireAdmin, verifyCsrf, (req, res) => {

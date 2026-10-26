@@ -7,6 +7,8 @@
   <a class="btn btn--primary" href="/services/maintenance" target="_blank"><%- include('../partials/icon', { name: 'external-link', size: 16 }) %> <%= t('View services') %></a>
 </div>
 
+<%- include('_tabs', { adminTab: 'claims' }) %>
+
 <% if (!claims.length) { %>
   <%- include('../partials/empty', { icon: 'shield', title: t('No pending claims'), text: t('All claims have been reviewed.') }) %>
 <% } else { %>

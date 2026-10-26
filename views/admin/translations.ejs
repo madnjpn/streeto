@@ -3,8 +3,13 @@
     <p class="eyebrow"><%= t('control room') %></p>
     <h1 class="display"><%= t('Translations') %></h1>
     <p class="lede"><%= t('Every word of the site, English on the left and Georgian on the right. The English is the key the templates ask for, so it cannot be changed here.') %></p>
+    <p class="muted small tr__summary"><%= total %> <%= t('strings') %><% if (missing) { %> · <b class="tr__missing"><%= missing %> <%= t('not translated yet') %></b><% } %></p>
   </div>
   <div class="btnrow">
+    <button class="btn btn--primary" type="button" data-tr-auto <%= missing ? '' : 'disabled' %>>
+      <%- include('../partials/icon', { name: 'bolt', size: 16 }) %> <span data-tr-auto-label><%= t('Auto-translate missing') %></span>
+    </button>
+    <span class="muted small" data-tr-auto-status role="status" aria-live="polite"></span>
     <% if (unusedCount) { %>
       <form action="/admin/translations/sync" method="post" data-sync-form>
         <input type="hidden" name="<%= csrfField %>" value="<%= csrfToken %>">
@@ -19,18 +24,7 @@
   </div>
 </div>
 
-<div class="feedtabs">
-  <a class="feedtabs__tab" href="/admin?tab=users"><%= t('Drivers') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=content"><%= t('Content') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=backups"><%= t('Backups') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=reports"><%= t('Reports') %></a>
-  <a class="feedtabs__tab" href="/admin?tab=appearance"><%= t('Appearance') %></a>
-  <a class="feedtabs__tab" href="/admin/partners"><%= t('Partners') %></a>
-  <a class="feedtabs__tab" href="/admin/service-claims"><%= t('Claims') %></a>
-  <a class="feedtabs__tab is-active" href="/admin/translations"><%= t('Translations') %></a>
-  <a class="feedtabs__tab" href="/admin/how-it-works"><%= t('How it works') %></a>
-  <span class="feedtabs__count"><%= total %> <%= t('strings') %><% if (missing) { %> · <b class="tr__missing"><%= missing %> <%= t('not translated yet') %></b><% } %></span>
-</div>
+<%- include('_tabs', { adminTab: 'translations' }) %>
 
 <section class="card adminpanel">
   <form class="inlineform adminfilter" action="/admin/translations" method="get" role="search">

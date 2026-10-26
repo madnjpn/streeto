@@ -2854,6 +2854,12 @@ export default {
   'Switch': 'გადართვა',
   'Capture': 'გადაღება',
   'Meetup deleted': 'შეხვედრა წაშლილია',
+  'Auto-translate missing': 'გამოტოვებულის ავტომატური თარგმნა',
+  'Translating…': 'ითარგმნება…',
+  'Translated {n} of {m}': 'თარგმნილია {n} / {m}',
+  '{n} failed.': '{n} ვერ თარგმნა.',
+  'No missing strings on this page.': 'ამ გვერდზე გადაუთარგმნელი სტრიქონები არ არის.',
+  'Auto-translation failed. Try again later.': 'ავტომატური თარგმნა ვერ მოხერხდა. სცადეთ მოგვიანებით.',
   'This removes the meetup from the network. Drivers keep their saved run summaries. This cannot be undone.': 'ეს შეხვედრას ქსელიდან შლის. მძღოლებს მათი შენახული რბოლის შეჯამებები რჩებათ. ამის გაუქმება შეუძლებელია.',
   'Delete this Underground meetup? Drivers will keep their saved summaries.': 'წავშალო ეს Underground შეხვედრა? მძღოლებს მათი შენახული შეჯამებები რჩებათ.',
 };
