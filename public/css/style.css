@@ -4465,6 +4465,26 @@ body.page-underground .langswitch__opt.is-active:hover {
 
 /* ── admin console: translations ──────────────────────────────── */
 .tr__hint { margin: 4px 0 12px; }
+.tr__summary {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  max-width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(var(--veil), 0.035);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.tr__summary strong { color: var(--text); font-size: 13px; }
+.tr__summary-sep { color: var(--dim); }
+.tr__summary .tr__missing { color: var(--amber); font-weight: 700; }
+.tr__summary .tr__missing strong { color: inherit; }
 .tr__missing { color: var(--amber); font-weight: 700; }
 .tr__switch { margin: 0 0 12px; }
 

@@ -3,7 +3,10 @@
     <p class="eyebrow"><%= t('control room') %></p>
     <h1 class="display"><%= t('Translations') %></h1>
     <p class="lede"><%= t('Every word of the site, English on the left and Georgian on the right. The English is the key the templates ask for, so it cannot be changed here.') %></p>
-    <p class="muted small tr__summary"><%= total %> <%= t('strings') %><% if (missing) { %> · <b class="tr__missing"><%= missing %> <%= t('not translated yet') %></b><% } %></p>
+    <div class="tr__summary">
+      <span><strong><%= total %></strong> <%= t('strings') %></span>
+      <% if (missing) { %><span class="tr__summary-sep">·</span><span class="tr__missing"><strong><%= missing %></strong> <%= t('not translated yet') %></span><% } %>
+    </div>
   </div>
   <div class="btnrow">
     <button class="btn btn--primary" type="button" data-tr-auto <%= missing ? '' : 'disabled' %>>
