@@ -1902,6 +1902,7 @@ export default {
   "Changes go live the moment you leave the field. The English text stays the key, so a translation can never break the page. The words of the site itself cannot be removed - clear the Georgian box and the English text is shown instead.": "ცვლილება მოქმედებს იმნივიცში, როგორც ველი დატოვებთ. ინგლისური ტექსტი რჩება გასაღები, ამიტომ თარგმანს ვერ შეეცვლის გვერდი. საიტის სიტყვებს ვერ წაიშლით - დატოვეთ ქართული ველი ცარიელი და ინგლისური ტექსტი გამოიჩნდება.",
 
   "The translation must keep the {name} placeholder - it is filled in when the page is rendered.": "თარგმანმა უნდა შეინარჩუნოს {name} ჩანაწერი - იგი შეივსება გვერდის გამოსაჩვენებლობისას.",
+  "The translation must use Georgian letters, not Armenian or Cyrillic characters.": "თარგმანი უნდა იყოს ქართული ასოებით, სომხური ან კირილიცური სიმბოლოების გარეშე.",
   "The {name} tag is not closed - that would break the page.": "ტეგი {name} არ არის დახურული - ეს გვერდს გატეხს.",
   "The English text has no {name} - it will show as plain text.": "ინგლისურ ტექსტში {name} არ არის - იგი ჩველფერი ტექსტად გამოჩნდება.",
   "The English text uses {name} - the bold or italic part will be lost.": "ინგლისური ტექსტი იყენებს {name} - მტკიცებული ან დახრილი ნაწილი დაიკარგება.",

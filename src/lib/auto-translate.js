@@ -59,6 +59,7 @@ const PROMPT = [
   'Keep the meaning. Do not translate word-for-word when the result sounds unnatural.',
   'Return ONLY a JSON object whose keys are exactly the input strings and whose values are the Georgian translations.',
   'Do not add comments, explanations or extra keys.',
+  'Use Georgian letters only. Never use Armenian or Cyrillic letters, even when a word looks similar.',
   'Preserve {placeholders}, HTML tags, punctuation, numbers and units exactly.',
   'Keep brand names and model names in Latin where that is how Georgians write them.',
   'Input:',

@@ -59,9 +59,15 @@
     <% items.forEach(function (n) { %>
       <%
         /* Notification text is stored as "key" or "key|name" so the reader's
-           language decides the wording (see the notify() call sites). */
+           language decides the wording (see the notify() call sites).
+           Counted messages carry "|n|plural|name". */
         const parts = String(n.text || '').split('|');
-        const notifVars = parts.length > 1 ? { name: parts.slice(1).join('|') } : undefined;
+        let notifVars;
+        if (parts.length >= 4 && parts[0].includes('{n}')) {
+          notifVars = { n: parts[1], plural: parts[2], name: parts.slice(3).join('|') };
+        } else if (parts.length > 1) {
+          notifVars = { name: parts.slice(1).join('|') };
+        }
         // Older chat mentions stored the raw English place name ("chat" /
         // "global channel") in the variable. Translate those rows too.
         const legacyMention = parts[0] === 'mentioned you in {name}' && parts[1]

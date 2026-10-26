@@ -380,6 +380,15 @@ export function checkValue(key, value) {
   // is shown. There is nothing to check.
   if (!text.trim()) return { errors, warnings };
 
+  // Georgian text must not contain lookalike letters from another script.
+  // Gemini occasionally slips an Armenian or Cyrillic character into a
+  // Georgian word; saving it would make the page look broken.
+  if (/[\p{Script=Armenian}\p{Script=Cyrillic}]/u.test(text)) {
+    errors.push({
+      key: 'The translation must use Georgian letters, not Armenian or Cyrillic characters.',
+    });
+  }
+
   // 1. placeholders
   const keyPh = placeholdersOf(source);
   const valuePh = placeholdersOf(text);
