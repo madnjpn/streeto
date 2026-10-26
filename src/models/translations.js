@@ -388,6 +388,12 @@ export function checkValue(key, value) {
       key: 'The translation must use Georgian letters, not Armenian or Cyrillic characters.',
     });
   }
+  // A word split between scripts ("კოლექtorის") is also a model slip.
+  if (/[\p{Script=Georgian}][A-Za-z]|[A-Za-z][\p{Script=Georgian}]/u.test(text)) {
+    errors.push({
+      key: 'The translation must not mix Georgian and Latin letters inside one word.',
+    });
+  }
 
   // 1. placeholders
   const keyPh = placeholdersOf(source);

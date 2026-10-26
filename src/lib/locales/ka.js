@@ -1903,6 +1903,7 @@ export default {
 
   "The translation must keep the {name} placeholder - it is filled in when the page is rendered.": "თარგმანმა უნდა შეინარჩუნოს {name} ჩანაწერი - იგი შეივსება გვერდის გამოსაჩვენებლობისას.",
   "The translation must use Georgian letters, not Armenian or Cyrillic characters.": "თარგმანი უნდა იყოს ქართული ასოებით, სომხური ან კირილიცური სიმბოლოების გარეშე.",
+  "The translation must not mix Georgian and Latin letters inside one word.": "თარგმანში ერთ სიტყვაში ქართული და ლათინური ასოები არ უნდა აირიოს.",
   "The {name} tag is not closed - that would break the page.": "ტეგი {name} არ არის დახურული - ეს გვერდს გატეხს.",
   "The English text has no {name} - it will show as plain text.": "ინგლისურ ტექსტში {name} არ არის - იგი ჩველფერი ტექსტად გამოჩნდება.",
   "The English text uses {name} - the bold or italic part will be lost.": "ინგლისური ტექსტი იყენებს {name} - მტკიცებული ან დახრილი ნაწილი დაიკარგება.",
