@@ -524,6 +524,7 @@ router.post('/underground/:id/finish', requireAuth, verifyCsrf, async (req, res,
         siteName: config.siteName,
         siteUrl,
         logoUrl: siteUrl ? `${siteUrl}/websitelogo.png` : '/websitelogo.png',
+        lang,
       });
       try {
         await sendMail({ to: person.email, subject: mail.subject, html: mail.html, text: mail.text });

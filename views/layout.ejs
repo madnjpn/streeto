@@ -31,6 +31,11 @@
   // class is set in <head> so the first paint never flashes the page first.
   (function () {
     try {
+      // Keep the selected language available to the offline shell, which is
+      // a static page and cannot ask the server for it.
+      localStorage.setItem('streeto.lang', '<%= lang %>');
+    } catch (error) { /* private mode */ }
+    try {
       // The native Android shell has its own splash; do not cover it.
       if (window.StreetNative) return;
       var standalone =

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ka">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07080b">
-  <title>STREETO — offline</title>
+  <title>STREETO - offline</title>
   <link rel="icon" href="/favicon.ico">
   <style>
     :root { color-scheme: dark; --neon: #1fe0ff; --bg: #07080b; --panel: #12161d; --text: #f4f7fa; --muted: #8a96a8; }
@@ -20,9 +20,55 @@
 <body>
   <main>
     <img src="/icons/icon-192.png" alt="STREETO">
-    <h1>კავშირი არ არის</h1>
-    <p>STREETO ახლა ქსელს ვერ უკავშირდება. შეამოწმეთ ინტერნეტი და სცადეთ ხელახლა.</p>
-    <a href="/">ხელახლა ცდა</a>
+    <h1 data-offline-title>No connection</h1>
+    <p data-offline-body>STREETO could not be reached. Check your connection and try again.</p>
+    <a href="/" data-offline-retry>Try again</a>
   </main>
+  <script>
+    (function () {
+      var copy = {
+        en: {
+          doc: 'STREETO - offline',
+          title: 'No connection',
+          body: 'STREETO could not be reached. Check your connection and try again.',
+          retry: 'Try again'
+        },
+        ka: {
+          doc: 'STREETO - კავშირი არ არის',
+          title: 'კავშირი არ არის',
+          body: 'STREETO-ს ვერ დავუკავშირდით. შეამოწმეთ ინტერნეტი და სცადეთ ხელახლა.',
+          retry: 'სცადეთ ხელახლა'
+        }
+      };
+
+      function cookie(name) {
+        var parts = String(document.cookie || '').split(';');
+        for (var i = 0; i < parts.length; i += 1) {
+          var item = parts[i].trim();
+          if (item.indexOf(name + '=') === 0) {
+            try { return decodeURIComponent(item.slice(name.length + 1)); } catch (error) { return ''; }
+          }
+        }
+        return '';
+      }
+
+      var selected = '';
+      try { selected = localStorage.getItem('streeto.lang') || ''; } catch (error) { /* private mode */ }
+      if (!selected) selected = cookie('streeto.lang.hint');
+      if (selected !== 'en' && selected !== 'ka') {
+        selected = String(navigator.language || '').toLowerCase().indexOf('ka') === 0 ? 'ka' : 'en';
+      }
+
+      var text = copy[selected] || copy.en;
+      document.documentElement.lang = selected;
+      document.title = text.doc;
+      var title = document.querySelector('[data-offline-title]');
+      var body = document.querySelector('[data-offline-body]');
+      var retry = document.querySelector('[data-offline-retry]');
+      if (title) title.textContent = text.title;
+      if (body) body.textContent = text.body;
+      if (retry) retry.textContent = text.retry;
+    })();
+  </script>
 </body>
 </html>

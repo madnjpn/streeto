@@ -66,6 +66,7 @@ const { vehicleSlug } = await import('../src/lib/rockauto.js');
 const { twinsOf } = await import('../src/lib/twins.js');
 const { outbox } = await import('../src/lib/mail.js');
 const { translate } = await import('../src/lib/i18n.js');
+const { resetEmail } = await import('../src/lib/mail-templates.js');
 const { notifyPtiAlerts, checkFinesForAllVehicles, isUnpaidFine } = await import('../src/lib/garage-alerts.js');
 
 /* ── tiny test harness ────────────────────────────────────────── */
@@ -3547,10 +3548,26 @@ try {
     const { sendPtiReminders, sendDigests, ptiRemindersDue, daysLeft } =
       await import('../src/lib/mail-jobs.js');
 
+    // The recovery letter should declare and speak the selected language.
+    check('the recovery letter follows the selected language', () => {
+      const letter = resetEmail({
+        t: (key, vars) => translate('ka', key, vars),
+        user: { username: 'smoke' },
+        link: 'https://streeto.net/reset/test',
+        minutes: 60,
+        siteName: 'STREETO',
+        siteUrl: 'https://streeto.net',
+        logoUrl: 'https://streeto.net/websitelogo.png',
+        lang: 'ka',
+      });
+      assert.match(letter.html, /<html lang="ka">/);
+      assert.equal(letter.subject, translate('ka', '{site} - set a new password', { site: 'STREETO' }));
+    });
+
     // A car whose inspection is coming up.
     const soon = new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10);
     const far = new Date(Date.now() + 200 * 86400000).toISOString().slice(0, 10);
-    db.prepare('UPDATE users SET mail_pti = 1, mail_digest = 1 WHERE id = ?').run(aId);
+    db.prepare('UPDATE users SET mail_pti = 1, mail_digest = 1, language = ? WHERE id = ?').run('ka', aId);
     db.prepare(
       'UPDATE builds SET pti_expires_at = ?, pti_plate = ? WHERE id = (SELECT id FROM builds WHERE user_id = ? LIMIT 1)',
     ).run(soon, 'AB123CD', aId);
@@ -3575,11 +3592,12 @@ try {
 
     const before = outbox.length;
     const sent = await sendPtiReminders();
-    check('the inspection reminder goes out', () => {
+    check('the inspection reminder goes out in the member language', () => {
       assert.equal(sent, due.length);
       assert.equal(outbox.length, before + due.length);
-      const mail = outbox[outbox.length - 1] || {};
+      const mail = outbox.slice(before).find((one) => one.to === A.email) || {};
       assert.ok(String(mail.subject || '').length > 0, 'the letter has a subject');
+      assert.match(String(mail.html || ''), /<html lang="ka">/);
       assert.ok(String(mail.html || '').includes('AB123CD'), 'the letter names the car');
     });
 
@@ -3604,6 +3622,15 @@ try {
       assert.ok(digests >= 1, 'at least one digest was sent');
       assert.equal(outbox.length, digestBefore + digests);
     });
+    check('the digest body follows the member language', () => {
+      const mail = outbox.slice(digestBefore).find((one) => one.to === A.email);
+      assert.ok(mail, 'the Georgian member got a digest');
+      assert.match(String(mail.html || ''), /<html lang="ka">/);
+      assert.ok(
+        String(mail.html || '').includes(translate('ka', 'People answered you')),
+        'the section title is translated',
+      );
+    });
     const secondDigest = await sendDigests();
     check('the digest is not sent twice in the same week', () => {
       assert.equal(secondDigest, 0);
@@ -3617,6 +3644,9 @@ try {
       const toB = outbox.slice(offBefore).filter((m) => String(m.to || '').includes(B.email));
       assert.equal(toB.length, 0, 'no letter went to the member who opted out');
     });
+
+    // The next section checks the English Underground summary.
+    db.prepare('UPDATE users SET language = NULL WHERE id = ?').run(aId);
   }
 
   /* 15b. Underground ------------------------------------------------ */

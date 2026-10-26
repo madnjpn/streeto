@@ -118,6 +118,19 @@ export function i18n(req, res, next) {
 
   res.locals.lang = lang;
   res.locals.t = t;
+  // Non-httpOnly companion cookie so the static offline page can read the
+  // language choice. The real language cookie stays httpOnly.
+  try {
+    res.cookie('streeto.lang.hint', lang, {
+      maxAge: LANG_COOKIE_MAX_AGE,
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: String(process.env.NODE_ENV || '') === 'production',
+      path: '/',
+    });
+  } catch {
+    /* headers already sent - not fatal */
+  }
   res.locals.f = localizedFormat(lang);
   res.locals.langs = LANGS;
   res.locals.langName = (code) => LANGS.find((l) => l.code === code)?.native ?? code;

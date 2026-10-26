@@ -1,5 +1,5 @@
 /* STREETO service worker — push notifications + offline shell. */
-const SHELL_CACHE = 'streeto-shell-v2';
+const SHELL_CACHE = 'streeto-shell-v3';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
   OFFLINE_URL,

@@ -150,6 +150,7 @@ export async function sendPtiReminders() {
       siteName: config.siteName,
       siteUrl: config.publicUrl || `http://localhost:${config.port}`,
       logoUrl: `${config.publicUrl || `http://localhost:${config.port}`}/websitelogo.png`,
+      lang: member.language || 'en',
     });
     try {
       await sendMail({
@@ -194,8 +195,8 @@ function carsOf(userId) {
  * Every part is a sentence with a link - the letter is a list of what
  * the site has for them, not a report card.
  */
-export function digestFor(userId) {
-  const t = (key, vars) => translate('en', key, vars);
+export function digestFor(userId, lang = 'en') {
+  const t = (key, vars) => translate(lang, key, vars);
   const sections = [];
   const base = config.publicUrl || `http://localhost:${config.port}`;
 
@@ -310,7 +311,7 @@ export async function sendDigests() {
   let sent = 0;
   for (const member of members) {
     if (alreadySent(member.id, 'digest', week)) continue;
-    const sections = digestFor(member.id);
+    const sections = digestFor(member.id, member.language || 'en');
     if (!sections.length) continue;
 
     const t = (key, vars) => translate(member.language || 'en', key, vars);
@@ -322,6 +323,7 @@ export async function sendDigests() {
       siteName: config.siteName,
       siteUrl: base,
       logoUrl: `${base}/websitelogo.png`,
+      lang: member.language || 'en',
     });
     try {
       await sendMail({

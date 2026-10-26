@@ -65,7 +65,7 @@ const ART = [
  * @param {string} data.siteUrl  https://streeto.net
  * @param {string} data.logoUrl  absolute URL of websitelogo.png
  */
-export function resetEmail({ t, user, link, minutes, siteName, siteUrl, logoUrl }) {
+export function resetEmail({ t, user, link, minutes, siteName, siteUrl, logoUrl, lang = 'en' }) {
   const username = String(user.username || '');
   const safeUser = esc(username);
   const safeLink = esc(link);
@@ -81,7 +81,7 @@ export function resetEmail({ t, user, link, minutes, siteName, siteUrl, logoUrl 
   });
 
   const html = `<!doctype html>
-<html lang="ka">
+<html lang="${esc(lang)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -218,7 +218,7 @@ export function resetEmail({ t, user, link, minutes, siteName, siteUrl, logoUrl 
  * @param {string} data.siteUrl
  * @param {string} data.logoUrl
  */
-export function digestEmail({ t, user, sections, siteName, siteUrl, logoUrl }) {
+export function digestEmail({ t, user, sections, siteName, siteUrl, logoUrl, lang = 'en' }) {
   const username = String(user.username || '');
   const safeSite = esc(siteName);
   const safeSiteUrl = esc(siteUrl || '');
@@ -247,7 +247,7 @@ export function digestEmail({ t, user, sections, siteName, siteUrl, logoUrl }) {
             </tr>`;
 
   const html = `<!doctype html>
-<html lang="ka">
+<html lang="${esc(lang)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -336,7 +336,7 @@ export function digestEmail({ t, user, sections, siteName, siteUrl, logoUrl }) {
  * The site already knows when a car has to go to the technical
  * inspection. This letter says so before the date, not after it.
  */
-export function ptiReminderEmail({ t, user, cars, days, siteName, siteUrl, logoUrl }) {
+export function ptiReminderEmail({ t, user, cars, days, siteName, siteUrl, logoUrl, lang = 'en' }) {
   const username = String(user.username || '');
   const safeSite = esc(siteName);
   const safeSiteUrl = esc(siteUrl || '');
@@ -357,7 +357,7 @@ export function ptiReminderEmail({ t, user, cars, days, siteName, siteUrl, logoU
               </tr>`).join('');
 
   const html = `<!doctype html>
-<html lang="ka">
+<html lang="${esc(lang)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -446,7 +446,7 @@ export default { resetEmail, digestEmail, ptiReminderEmail };
  * The summary of an Underground night.
  * One letter per approved driver when the host finishes the night.
  */
-export function undergroundSummaryEmail({ t, user, event, runs, run, siteName, siteUrl, logoUrl }) {
+export function undergroundSummaryEmail({ t, user, event, runs, run, siteName, siteUrl, logoUrl, lang = 'en' }) {
   const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const title = safe(event.title);
   const type = safe(String(event.type || '').toUpperCase());
@@ -464,7 +464,7 @@ export function undergroundSummaryEmail({ t, user, event, runs, run, siteName, s
     ? list.map(runStats).join('')
     : '<tr><td colspan="2" style="padding:14px 0;color:#8b95a7;font-family:' + FONT + ';font-size:13px;">' + safe(t('No run was recorded.')) + '</td></tr>';
 
-  const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="dark"></head>' +
+  const html = '<!doctype html><html lang="' + safe(lang) + '"><head><meta charset="utf-8"><meta name="color-scheme" content="dark"></head>' +
     '<body style="margin:0;padding:0;background:' + INK + ';">' +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + INK + ';padding:36px 12px;"><tr><td align="center">' +
     '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">' +

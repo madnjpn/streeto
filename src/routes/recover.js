@@ -111,6 +111,7 @@ async function sendReset(req, user) {
     siteName: config.siteName,
     siteUrl,
     logoUrl: `${siteUrl}/websitelogo.png`,
+    lang: req.lang,
   });
 
   try {
