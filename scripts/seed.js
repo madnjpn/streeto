@@ -224,7 +224,7 @@ async function main() {
   /* ── the founding admin ─────────────────────────────────────── */
   const admin = users.createUser({
     username: 'admin',
-    email: 'admin@streeto.test',
+    email: 'streeto.official@gmail.com',
     passwordHash,
     displayName: 'STREETO Admin',
   });
@@ -619,7 +619,7 @@ async function main() {
   console.log('\n[seed] done.');
   console.log('  Log in as nightrider@streeto.test / street123 (or any demo handle)');
   console.log('  Handles: ' + PEOPLE.map((p) => p.username).join(', '));
-  console.log(`  Admin:   admin@streeto.test / ${PASSWORD} (full access at /admin)`);
+  console.log(`  Admin:   streeto.official@gmail.com / ${PASSWORD} (full access at /admin)`);
   console.log('  Try /builds for the garage, voting and the hall of fame.');
 }
 
