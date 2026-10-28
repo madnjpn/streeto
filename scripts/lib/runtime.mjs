@@ -280,7 +280,7 @@ export async function installServices(options) {
 /** Start both services. */
 export function startServices() {
   if (isWindows) {
-    shQuiet('powershell.exe', ['-NoProfile', '-Command', `Start-ScheduledTask -TaskName '${APP_TASK}'`]);
+    shQuiet('schtasks.exe', ['/Run', '/TN', APP_TASK]);
     shQuiet('sc.exe', ['start', TUNNEL_SERVICE]);
     return;
   }
@@ -296,7 +296,7 @@ export function startServices() {
 /** Stop both services without removing them. */
 export function stopServices() {
   if (isWindows) {
-    shQuiet('powershell.exe', ['-NoProfile', '-Command', `Stop-ScheduledTask -TaskName '${APP_TASK}' -ErrorAction SilentlyContinue`]);
+    shQuiet('schtasks.exe', ['/End', '/TN', APP_TASK]);
     shQuiet('sc.exe', ['stop', TUNNEL_SERVICE]);
     return;
   }
@@ -318,14 +318,12 @@ export function restartServices() {
 /** A short status of the services, for the report at the end. */
 export async function serviceStatus() {
   if (isWindows) {
-    const tunnel = shQuiet('sc.exe', ['query', 'Cloudflared']);
-    const task = shQuiet('powershell.exe', [
-      '-NoProfile', '-Command',
-      "(Get-ScheduledTask -TaskName 'STREETO server' -ErrorAction SilentlyContinue).State",
-    ]).trim();
+    const tunnel = shQuiet('sc.exe', ['query', TUNNEL_SERVICE]);
+    const task = shQuiet('schtasks.exe', ['/Query', '/TN', APP_TASK, '/FO', 'LIST']);
+    const state = /Status:\s*(.+)/i.exec(task)?.[1]?.trim() || 'not installed';
     return {
       tunnel: /RUNNING/.test(tunnel) ? 'running' : 'stopped',
-      app: task || 'not installed',
+      app: state,
     };
   }
   if (isMac) {

@@ -46,6 +46,7 @@ if (fs.existsSync(ENV_FILE)) {
 const argv = process.argv.slice(2);
 const command = (argv.find((arg) => !arg.startsWith('-')) || 'status').toLowerCase();
 const json = argv.includes('--json');
+const plain = argv.includes('--plain');
 
 const say = (message) => {
   if (!json) console.log(message);
@@ -62,10 +63,7 @@ const envValue = (name) => String(process.env[name] || '').trim();
 function serviceInstalled() {
   if (isWindows) {
     const tunnel = shQuiet('sc.exe', ['query', TUNNEL_SERVICE]);
-    const task = shQuiet('powershell.exe', [
-      '-NoProfile', '-Command',
-      `(Get-ScheduledTask -TaskName '${APP_TASK}' -ErrorAction SilentlyContinue).State`,
-    ]).trim();
+    const task = shQuiet('schtasks.exe', ['/Query', '/TN', APP_TASK, '/FO', 'LIST']);
     return {
       app: Boolean(task),
       tunnel: /STATE|FAILED/.test(tunnel),
@@ -255,7 +253,17 @@ async function main() {
 
   if (command === 'status') {
     const result = await status();
-    if (json) console.log(JSON.stringify(result));
+    if (plain) {
+      console.log(`APP_INSTALLED=${result.services.app.installed ? 'true' : 'false'}`);
+      console.log(`APP_STATE=${result.services.app.state}`);
+      console.log(`TUNNEL_INSTALLED=${result.services.tunnel.installed ? 'true' : 'false'}`);
+      console.log(`TUNNEL_STATE=${result.services.tunnel.state}`);
+      console.log(`PORT443=${result.port443}`);
+      console.log(`LOCAL=${result.local}`);
+      console.log(`PUBLIC=${result.public.health}`);
+      console.log(`PUBLIC_URL=${result.public.url}`);
+      console.log(`LOG_FILE=${result.logFile}`);
+    } else if (json) console.log(JSON.stringify(result));
     else {
       console.log(`Platform: ${result.platform}`);
       console.log(`Project:  ${result.project}`);

@@ -1231,10 +1231,12 @@ On Windows, the desktop **STREETO Control** can do the service part: copy
 
 ### Start / stop / restart
 
-- **Desktop control panel (Windows):** double-click **`STREETO Control.vbs`**.
-  It opens without a console, checks the services, and offers:
+- **Desktop control panel (Windows):** double-click **`STREETO Control.exe`**.
+  It opens without a console or PowerShell window, checks the services, and offers:
   **Install / Repair**, **Start**, **Stop**, **Restart**, **Open site** and
   **Logs**. Closing the window does **not** stop the website.
+- **Rebuilding the panel:** `npm run control:build` (uses the built-in
+  .NET Framework compiler; no extra tools needed).
 - **First run / new server:** click **Install / Repair** and approve the
   Windows administrator prompt. It checks for Node, `cloudflared`,
   `.env.production`, certificates, the `Cloudflared` service and the
