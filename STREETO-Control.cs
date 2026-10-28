@@ -398,16 +398,18 @@ namespace StreetoControl
                 }
 
                 string appInstalled = Field(output, "APP_INSTALLED");
-                string appState = Field(output, "APP_STATE");
+                string appRunning = Field(output, "APP_RUNNING");
+                string appMode = Field(output, "APP_MODE");
                 string tunnelInstalled = Field(output, "TUNNEL_INSTALLED");
-                string tunnelState = Field(output, "TUNNEL_STATE");
+                string tunnelRunning = Field(output, "TUNNEL_RUNNING");
+                string tunnelMode = Field(output, "TUNNEL_MODE");
                 string localState = Field(output, "LOCAL");
                 string publicState = Field(output, "PUBLIC");
                 string url = Field(output, "PUBLIC_URL");
                 if (!String.IsNullOrEmpty(url)) publicUrl = url;
 
-                SetServiceRow(serverDot, serverText, appState, appInstalled == "true");
-                SetServiceRow(tunnelDot, tunnelText, tunnelState, tunnelInstalled == "true");
+                SetServiceRow(serverDot, serverText, appInstalled == "true", appRunning == "true", appMode);
+                SetServiceRow(tunnelDot, tunnelText, tunnelInstalled == "true", tunnelRunning == "true", tunnelMode);
                 SetPlainRow(localDot, localText,
                     localState == "ok" ? "OK  \u00B7  port 443 listening" : "Down  \u00B7  nothing on 443",
                     localState == "ok" ? ok : danger);
@@ -440,14 +442,15 @@ namespace StreetoControl
             return "";
         }
 
-        private void SetServiceRow(StatusDot dot, Label label, string state, bool installed)
+        private void SetServiceRow(StatusDot dot, Label label, bool installed, bool running, string mode)
         {
-            string value = installed
-                ? state.ToUpperInvariant() + "  \u00B7  INSTALLED"
-                : "NOT INSTALLED";
-            Color color = installed && (state == "running" || state == "ready") ? ok
-                : (state == "stopped" || state == "disabled" || !installed) ? danger : amber;
-            SetPlainRow(dot, label, value, color);
+            if (running)
+            {
+                string where = mode == "service" ? "SERVICE" : "FOREGROUND";
+                SetPlainRow(dot, label, "RUNNING  \u00B7  " + where, ok);
+                return;
+            }
+            SetPlainRow(dot, label, installed ? "STOPPED" : "NOT INSTALLED", danger);
         }
 
         private void SetPlainRow(StatusDot dot, Label label, string value, Color color)

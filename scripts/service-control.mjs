@@ -116,6 +116,17 @@ function httpsOk(url, timeoutMs = 3500) {
   });
 }
 
+function processRunning(image) {
+  if (isWindows) {
+    const out = shQuiet('tasklist.exe', ['/FI', `IMAGENAME eq ${image}`, '/FO', 'CSV', '/NH']);
+    return /^"[^"]+","\d+"/m.test(out);
+  }
+  if (isMac || isLinux) {
+    return Boolean(shQuiet('pgrep', ['-x', image.replace(/\.exe$/i, '')]).trim());
+  }
+  return false;
+}
+
 async function status() {
   const services = serviceInstalled();
   const state = await serviceStatus();
@@ -123,6 +134,12 @@ async function status() {
   const localHealth = free ? false : await httpsOk('https://localhost:443/api/health');
   const base = envValue('PUBLIC_URL') || PUBLIC_URL;
   const publicHealth = base ? await httpsOk(`${base.replace(/\/+$/, '')}/api/health`) : false;
+  const tunnelProcess = processRunning(isWindows ? 'cloudflared.exe' : 'cloudflared');
+  const appRunning = localHealth;
+  const appMode = String(state.app).toLowerCase() === 'running'
+    ? 'service' : (appRunning ? 'foreground' : 'stopped');
+  const tunnelMode = String(state.tunnel).toLowerCase() === 'running'
+    ? 'service' : (tunnelProcess ? 'foreground' : 'stopped');
   return {
     ok: true,
     platform,
@@ -131,8 +148,20 @@ async function status() {
     envFile: ENV_FILE,
     logFile: LOG_FILE,
     services: {
-      app: { name: APP_TASK, installed: services.app, state: state.app },
-      tunnel: { name: TUNNEL_SERVICE, installed: services.tunnel, state: state.tunnel },
+      app: {
+        name: APP_TASK,
+        installed: services.app,
+        state: state.app,
+        running: appRunning,
+        mode: appMode,
+      },
+      tunnel: {
+        name: TUNNEL_SERVICE,
+        installed: services.tunnel,
+        state: state.tunnel,
+        running: tunnelProcess || String(state.tunnel).toLowerCase() === 'running',
+        mode: tunnelMode,
+      },
     },
     port443: free ? 'free' : 'listening',
     local: localHealth ? 'ok' : 'down',
@@ -256,8 +285,12 @@ async function main() {
     if (plain) {
       console.log(`APP_INSTALLED=${result.services.app.installed ? 'true' : 'false'}`);
       console.log(`APP_STATE=${result.services.app.state}`);
+      console.log(`APP_RUNNING=${result.services.app.running ? 'true' : 'false'}`);
+      console.log(`APP_MODE=${result.services.app.mode}`);
       console.log(`TUNNEL_INSTALLED=${result.services.tunnel.installed ? 'true' : 'false'}`);
       console.log(`TUNNEL_STATE=${result.services.tunnel.state}`);
+      console.log(`TUNNEL_RUNNING=${result.services.tunnel.running ? 'true' : 'false'}`);
+      console.log(`TUNNEL_MODE=${result.services.tunnel.mode}`);
       console.log(`PORT443=${result.port443}`);
       console.log(`LOCAL=${result.local}`);
       console.log(`PUBLIC=${result.public.health}`);
