@@ -16,7 +16,7 @@ namespace StreetoControl
         [STAThread]
         private static void Main()
         {
-            if (!IsAdministrator())
+            if (!IsAdministrator() && Environment.GetEnvironmentVariable("STREETO_CONTROL_ALLOW_NONADMIN") != "1")
             {
                 try
                 {
