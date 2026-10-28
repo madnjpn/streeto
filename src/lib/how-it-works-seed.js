@@ -24,6 +24,7 @@ export const HOW_IT_WORKS_SEED = [
     blocks: [
       { kind: 'p', body: 'Post text, a photo, a video, a pin drop or an SOS. Choose Public or Friends only for every post - friends first or the whole network, your call.' },
       { kind: 'p', body: 'Like, comment, reply, react, edit or delete your own posts. Group posts stay in their group; the wall is the main feed.' },
+      { kind: 'p', body: 'A like, comment or reaction on your post or comment reaches you in the bell and, when enabled, as a push notification.' },
     ],
   },
   {
@@ -33,6 +34,7 @@ export const HOW_IT_WORKS_SEED = [
       { kind: 'p', body: 'A build is the home for your car: photos and clips, engine, drivetrain, power, weight, mods and the story. Public builds can be seen by everyone; private builds stay yours.' },
       { kind: 'p', body: 'Link a build to My Ride so the car and its registration certificate stay together. Follow builds you like, vote for Build of the Week, and mark a public build for sale with a price.' },
       { kind: 'p', body: 'Build of the Week, Month and Year are decided by driver votes. Watchers get a notification when a build goes up for sale.' },
+      { kind: 'p', body: 'When someone votes for your build, you get a notification with the build name and the voter\'s username. Reacting to your comments works the same way.' },
     ],
   },
   {
@@ -51,6 +53,7 @@ export const HOW_IT_WORKS_SEED = [
       { kind: 'p', body: 'A green, red or grey badge shows the annual technical inspection for every build and My Ride vehicle with a plate. Public pages show the status and date, never the plate.' },
       { kind: 'p', body: 'Check fines from My Garage → Fines. Pay online through TBC, Bank of Georgia or Liberty.' },
       { kind: 'p', body: 'Fines stay private to the owner and update when you check them again.' },
+      { kind: 'p', body: 'Fines are checked automatically every 12 hours. New unpaid fines and expired inspections create a bell/push alert, and unpaid fines or expired inspections are reminded about once a day. Paid fines do not create notifications.' },
     ],
   },
   {
@@ -68,6 +71,16 @@ export const HOW_IT_WORKS_SEED = [
       { kind: 'p', body: 'Host a meetup with a title, date and spot: search a street, use GPS or tap the map. Set open, private or invite-only.' },
       { kind: 'p', body: 'See who is going, get directions, weather and a Touge route with start and finish, elevation and a 3D preview.' },
       { kind: 'p', body: 'Private and invite-only spots stay hidden from logged-out visitors.' },
+    ],
+  },
+  {
+    icon: 'bolt',
+    heading: 'Underground nights',
+    blocks: [
+      { kind: 'p', body: 'Underground is the closed night side of STREETO: drag, drift and touge nights hosted by a driver, with every car approved by the host and the map unlocked only after approval.' },
+      { kind: 'p', body: 'Approved drivers see the live map, can publish speed and position in race mode, and get their runs saved with server-calculated metrics.' },
+      { kind: 'p', body: 'After the night, every driver gets a summary with runs, maps and statistics in My Underground. Saved runs stay there even if the meetup is deleted.' },
+      { kind: 'p', body: 'Hosts can appear anonymously. Join requests, approvals, cancellations, finishes and summaries all reach the right drivers through the bell and push notifications.' },
     ],
   },
   {
@@ -104,12 +117,22 @@ export const HOW_IT_WORKS_SEED = [
     ],
   },
   {
-    icon: 'settings',
-    heading: 'Notifications, themes and settings',
+    icon: 'palette',
+    heading: 'Settings, themes and appearance',
     blocks: [
-      { kind: 'p', body: 'Choose push notifications for messages, friend requests, comments, likes, invites and meetups. Muted chats stay quiet.' },
-      { kind: 'p', body: 'Pick Street, Black & Gold or White & Gold; your theme follows your account. Manage profile, password and language in Settings.' },
-      { kind: 'p', body: 'The footer and Settings show the current web/iOS and Android versions.' },
+      { kind: 'p', body: 'Pick Street, Black & Gold, Underground or White & Gold. Your theme follows your account on every device you log in from.' },
+      { kind: 'p', body: 'Manage your profile, password, language and currency in Settings. The footer and Settings show the current web/iOS and Android versions.' },
+      { kind: 'p', body: 'The offline screen and the emails STREETO sends use the language selected on your account.' },
+    ],
+  },
+  {
+    icon: 'bell',
+    heading: 'Notifications and alerts',
+    blocks: [
+      { kind: 'p', body: 'The bell and push notifications cover friend requests, messages and mentions, comments and replies, post likes, comment reactions, build votes, groups, meetups and Underground updates.' },
+      { kind: 'p', body: 'A build vote notification names the build and the voter. Garage alerts warn you about new or unpaid fines and about a technical inspection that is expiring or expired.' },
+      { kind: 'p', body: 'Choose which push categories can interrupt you in Settings > Notifications: messages, social, groups, meetups, Underground, builds, services and garage. The bell always keeps the full activity list.' },
+      { kind: 'p', body: 'Android uses Firebase Cloud Messaging. On iPhone and iPad, push works on iOS 16.4 or newer after STREETO is added to the Home Screen. Muted chats and paid fines stay quiet.' },
     ],
   },
   {
