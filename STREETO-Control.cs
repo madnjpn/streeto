@@ -26,24 +26,21 @@ namespace StreetoControl
                     info.Verb = "runas";
                     Process.Start(info);
                 }
-                catch
-                {
-                    /* the user cancelled UAC */
-                }
+                catch { }
                 return;
             }
 
             string root = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
-            string node = FindNode();
+            string node = FindNode(root);
             if (node == null)
             {
-                MessageBox.Show("Node.js was not found. Install Node.js 22.5 or newer.",
+                MessageBox.Show("Node.js was not found. Install Node.js 22.5 or newer, or keep runtime\\node\\node.exe in the project.",
                     "STREETO Control", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (!File.Exists(Path.Combine(root, "scripts", "service-control.mjs")))
             {
-                MessageBox.Show("STREETO-Control.exe must stay in the STREETO project folder.",
+                MessageBox.Show("STREETO Control.exe must stay in the STREETO project folder.",
                     "STREETO Control", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -61,15 +58,11 @@ namespace StreetoControl
                 WindowsPrincipal principal = new WindowsPrincipal(identity);
                 return principal.IsInRole(WindowsBuiltInRole.Administrator);
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
-        private static string FindNode()
+        private static string FindNode(string root)
         {
-            string root = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
             string portable = Path.Combine(root, "runtime", "node", "node.exe");
             if (File.Exists(portable)) return portable;
 
@@ -107,19 +100,31 @@ namespace StreetoControl
         private readonly string controlScript;
         private readonly string logPath;
 
-        private readonly Color ink = Color.FromArgb(8, 10, 15);
-        private readonly Color panel = Color.FromArgb(17, 21, 29);
-        private readonly Color hover = Color.FromArgb(29, 37, 50);
-        private readonly Color line = Color.FromArgb(42, 49, 63);
-        private readonly Color textColor = Color.FromArgb(242, 246, 250);
-        private readonly Color muted = Color.FromArgb(145, 156, 174);
+        private readonly Color ink = Color.FromArgb(7, 8, 11);
+        private readonly Color ink2 = Color.FromArgb(11, 13, 18);
+        private readonly Color panel = Color.FromArgb(17, 20, 26);
+        private readonly Color panel2 = Color.FromArgb(21, 25, 34);
+        private readonly Color line = Color.FromArgb(36, 42, 54);
+        private readonly Color lineSoft = Color.FromArgb(26, 31, 40);
+        private readonly Color textColor = Color.FromArgb(233, 237, 245);
+        private readonly Color muted = Color.FromArgb(133, 143, 163);
+        private readonly Color dim = Color.FromArgb(93, 102, 120);
         private readonly Color neon = Color.FromArgb(31, 224, 255);
-        private readonly Color green = Color.FromArgb(61, 220, 151);
-        private readonly Color red = Color.FromArgb(255, 91, 108);
-        private readonly Color amber = Color.FromArgb(255, 190, 72);
+        private readonly Color neonDeep = Color.FromArgb(10, 156, 196);
+        private readonly Color neon2 = Color.FromArgb(255, 45, 120);
+        private readonly Color neon3 = Color.FromArgb(182, 255, 60);
+        private readonly Color amber = Color.FromArgb(255, 176, 32);
+        private readonly Color danger = Color.FromArgb(255, 77, 94);
+        private readonly Color dangerSoft = Color.FromArgb(255, 138, 150);
+        private readonly Color ok = Color.FromArgb(120, 230, 130);
+        private readonly Color onAccent = Color.FromArgb(4, 20, 26);
+        private readonly Color accentA = Color.FromArgb(47, 233, 255);
+        private readonly Color accentB = Color.FromArgb(15, 184, 221);
+        private readonly Color accentC = Color.FromArgb(8, 147, 184);
 
         private Font uiFont;
         private Font smallFont;
+        private Font smallBold;
         private Font titleFont;
         private Font monoFont;
         private PrivateFontCollection fonts;
@@ -146,7 +151,7 @@ namespace StreetoControl
             this.logPath = Path.Combine(root, "data", "logs", "server.log");
 
             Text = "STREETO Control";
-            ClientSize = new Size(760, 560);
+            ClientSize = new Size(700, 560);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -187,18 +192,17 @@ namespace StreetoControl
                     fonts.AddFontFile(fontPath);
                     FontFamily family = fonts.Families[0];
                     uiFont = new Font(family, 9.5f, FontStyle.Regular);
-                    smallFont = new Font(family, 8.5f, FontStyle.Regular);
+                    smallFont = new Font(family, 8.3f, FontStyle.Regular);
+                    smallBold = new Font(family, 8.3f, FontStyle.Bold);
                     titleFont = PickTitleFont(family);
                     monoFont = new Font("Consolas", 8.5f, FontStyle.Regular);
                     return;
                 }
-                catch
-                {
-                    /* fall back to the Windows fonts */
-                }
+                catch { }
             }
             uiFont = new Font("Segoe UI", 9.5f);
-            smallFont = new Font("Segoe UI", 8.5f);
+            smallFont = new Font("Segoe UI", 8.3f);
+            smallBold = new Font("Segoe UI", 8.3f, FontStyle.Bold);
             titleFont = PickTitleFont(new FontFamily("Segoe UI"));
             monoFont = new Font("Consolas", 8.5f);
         }
@@ -207,20 +211,20 @@ namespace StreetoControl
         {
             try
             {
-                Font title = new Font("Bahnschrift", 28f, FontStyle.Bold);
-                if (String.Equals(title.Name, "Bahnschrift", StringComparison.OrdinalIgnoreCase))
-                    return title;
+                Font title = new Font("Bahnschrift", 35f, FontStyle.Bold);
+                if (String.Equals(title.Name, "Bahnschrift", StringComparison.OrdinalIgnoreCase)) return title;
                 title.Dispose();
             }
             catch { }
-            return new Font(fallback, 27f, FontStyle.Bold);
+            return new Font(fallback, 32f, FontStyle.Bold);
         }
 
         private void LoadIcon()
         {
             try
             {
-                string iconPath = Path.Combine(root, "public", "icons", "icon-192.png");
+                string iconPath = Path.Combine(root, "public", "icons", "streeto-mark.png");
+                if (!File.Exists(iconPath)) iconPath = Path.Combine(root, "public", "icons", "icon-192.png");
                 if (!File.Exists(iconPath)) return;
                 using (Bitmap bitmap = new Bitmap(iconPath))
                 {
@@ -232,117 +236,118 @@ namespace StreetoControl
 
         private void BuildLayout()
         {
-            Label title = new Label();
+            Label eyebrow = MakeLabel(this, "CONTROL ROOM", smallBold, neon, 34, 23);
+            Label subtitle = MakeLabel(this, "SERVER  /  CLOUDFLARE TUNNEL", smallFont, muted, 35, 94);
+
+            GlowTitle title = new GlowTitle();
             title.Text = "STREETO";
             title.Font = titleFont;
             title.ForeColor = neon;
-            title.AutoSize = true;
-            title.Location = new Point(28, 16);
+            title.GlowColor = neon;
+            title.Location = new Point(32, 38);
+            title.Size = new Size(420, 58);
             Controls.Add(title);
 
-            Label subtitle = new Label();
-            subtitle.Text = "SERVER  /  CLOUDFLARE TUNNEL";
-            subtitle.Font = smallFont;
-            subtitle.ForeColor = muted;
-            subtitle.AutoSize = true;
-            subtitle.Location = new Point(31, 59);
-            Controls.Add(subtitle);
+            CardPanel statusCard = new CardPanel();
+            statusCard.Location = new Point(24, 112);
+            statusCard.Size = new Size(652, 196);
+            statusCard.Radius = 16;
+            statusCard.FillColor = panel;
+            statusCard.BorderColor = line;
+            Controls.Add(statusCard);
 
-            AddRow("Web server", 100, out serverDot, out serverText);
-            AddRow("Cloudflare Tunnel", 132, out tunnelDot, out tunnelText);
-            AddRow("Local HTTPS (443)", 164, out localDot, out localText);
-            AddRow("Public site", 196, out publicDot, out publicText);
+            MakeLabel(statusCard, "SYSTEM STATUS", smallBold, neon, 20, 14);
+            StatusDot liveDot = new StatusDot();
+            liveDot.DotColor = ok;
+            liveDot.Location = new Point(578, 20);
+            statusCard.Controls.Add(liveDot);
+            MakeLabel(statusCard, "LIVE", smallBold, ok, 595, 14);
 
-            Panel rule = new Panel();
-            rule.BackColor = line;
-            rule.Location = new Point(28, 232);
-            rule.Size = new Size(704, 1);
-            Controls.Add(rule);
+            AddRow(statusCard, "Web server", 50, out serverDot, out serverText);
+            AddRule(statusCard, 80);
+            AddRow(statusCard, "Cloudflare Tunnel", 92, out tunnelDot, out tunnelText);
+            AddRule(statusCard, 122);
+            AddRow(statusCard, "Local HTTPS", 134, out localDot, out localText);
+            AddRule(statusCard, 164);
+            AddRow(statusCard, "Public site", 176, out publicDot, out publicText);
 
-            installButton = NewButton("Install services", "install", 28, 248, 138, true);
-            NewButton("Start", "start", 178, 248, 76, false);
-            NewButton("Stop", "stop", 262, 248, 76, false);
-            NewButton("Restart", "restart", 346, 248, 88, false);
-            NewButton("Open site", "open", 452, 248, 86, false);
-            NewButton("Logs", "logs", 546, 248, 76, false);
-            NewButton("Refresh", "refresh", 630, 248, 102, false);
+            installButton = NewButton("Install", "install", 24, 326, 112, ButtonKind.Primary);
+            NewButton("Start", "start", 146, 326, 58, ButtonKind.Ghost);
+            NewButton("Stop", "stop", 212, 326, 58, ButtonKind.Danger);
+            NewButton("Restart", "restart", 278, 326, 76, ButtonKind.Ghost);
+            NewButton("Site", "open", 362, 326, 58, ButtonKind.Ghost);
+            NewButton("Logs", "logs", 428, 326, 58, ButtonKind.Ghost);
+            NewButton("Refresh", "refresh", 494, 326, 74, ButtonKind.Ghost);
 
-            Label activity = new Label();
-            activity.Text = "ACTIVITY";
-            activity.Font = smallFont;
-            activity.ForeColor = muted;
-            activity.AutoSize = true;
-            activity.Location = new Point(28, 300);
-            Controls.Add(activity);
+            CardPanel activityCard = new CardPanel();
+            activityCard.Location = new Point(24, 374);
+            activityCard.Size = new Size(652, 160);
+            activityCard.Radius = 16;
+            activityCard.FillColor = panel;
+            activityCard.BorderColor = line;
+            Controls.Add(activityCard);
+
+            MakeLabel(activityCard, "ACTIVITY", smallBold, neon, 20, 13);
+            MakeLabel(activityCard, "LIVE LOG", smallFont, dim, 570, 13);
 
             logBox = new TextBox();
             logBox.Multiline = true;
             logBox.ReadOnly = true;
             logBox.ScrollBars = ScrollBars.Vertical;
-            logBox.BackColor = Color.FromArgb(4, 6, 10);
-            logBox.ForeColor = Color.FromArgb(190, 205, 220);
-            logBox.BorderStyle = BorderStyle.FixedSingle;
+            logBox.BackColor = Color.FromArgb(10, 12, 17);
+            logBox.ForeColor = Color.FromArgb(170, 183, 202);
+            logBox.BorderStyle = BorderStyle.None;
             logBox.Font = monoFont;
-            logBox.Location = new Point(28, 322);
-            logBox.Size = new Size(704, 190);
-            Controls.Add(logBox);
+            logBox.Location = new Point(18, 38);
+            logBox.Size = new Size(616, 104);
+            activityCard.Controls.Add(logBox);
 
-            Label footer = new Label();
-            footer.Text = "Services keep running when this window is closed.";
-            footer.Font = smallFont;
-            footer.ForeColor = muted;
-            footer.AutoSize = true;
-            footer.Location = new Point(28, 526);
-            Controls.Add(footer);
+            MakeLabel(this, "SERVICES KEEP RUNNING WHEN THIS WINDOW IS CLOSED", smallFont, dim, 26, 542);
         }
 
-        private void AddRow(string caption, int y, out StatusDot dot, out Label value)
+        private Label MakeLabel(Control parent, string text, Font font, Color color, int x, int y)
+        {
+            Label label = new Label();
+            label.Text = text;
+            label.Font = font;
+            label.ForeColor = color;
+            label.BackColor = parent is CardPanel ? ((CardPanel)parent).FillColor : Color.Transparent;
+            label.AutoSize = true;
+            label.Location = new Point(x, y);
+            parent.Controls.Add(label);
+            return label;
+        }
+
+        private void AddRow(Control parent, string caption, int y, out StatusDot dot, out Label value)
         {
             dot = new StatusDot();
-            dot.Location = new Point(30, y + 6);
+            dot.Location = new Point(22, y + 6);
             dot.DotColor = muted;
-            Controls.Add(dot);
+            parent.Controls.Add(dot);
 
-            Label label = new Label();
-            label.Text = caption;
-            label.Font = smallFont;
-            label.ForeColor = muted;
-            label.AutoSize = true;
-            label.Location = new Point(50, y);
-            Controls.Add(label);
-
-            value = new Label();
-            value.Text = "Checking...";
-            value.Font = uiFont;
-            value.ForeColor = textColor;
-            value.AutoSize = true;
-            value.Location = new Point(190, y);
-            Controls.Add(value);
+            Label label = MakeLabel(parent, caption, smallFont, muted, 42, y);
+            value = MakeLabel(parent, "Checking...", uiFont, textColor, 190, y);
         }
 
-        private FlatButton NewButton(string caption, string action, int x, int y, int width, bool primary)
+        private void AddRule(Control parent, int y)
+        {
+            Panel rule = new Panel();
+            rule.BackColor = lineSoft;
+            rule.Location = new Point(20, y);
+            rule.Size = new Size(724, 1);
+            parent.Controls.Add(rule);
+        }
+
+        private FlatButton NewButton(string caption, string action, int x, int y, int width, ButtonKind kind)
         {
             FlatButton button = new FlatButton();
-            button.Text = caption;
+            button.Text = caption.ToUpperInvariant();
             button.Tag = action;
             button.Location = new Point(x, y);
             button.Size = new Size(width, 34);
-            button.Font = uiFont;
-            button.Cursor = Cursors.Hand;
-            if (primary)
-            {
-                button.NormalColor = neon;
-                button.HoverColor = Color.FromArgb(118, 240, 255);
-                button.BorderColor = neon;
-                button.TextColor = Color.FromArgb(4, 18, 26);
-            }
-            else
-            {
-                button.NormalColor = panel;
-                button.HoverColor = hover;
-                button.BorderColor = line;
-                button.TextColor = textColor;
-            }
+            button.Font = smallBold;
+            button.Kind = kind;
+            button.ApplyStyle();
             button.Click += delegate { RunAction((string)button.Tag); };
             Controls.Add(button);
             return button;
@@ -380,8 +385,7 @@ namespace StreetoControl
                     Thread.Sleep(50);
                 }
                 exitCode = process.ExitCode;
-                string output = (stdout.Result + Environment.NewLine + stderr.Result).Trim();
-                return output;
+                return (stdout.Result + Environment.NewLine + stderr.Result).Trim();
             }
         }
 
@@ -394,8 +398,8 @@ namespace StreetoControl
                 string output = RunControl("status --plain", out code);
                 if (code != 0 || output.Length == 0)
                 {
-                    SetPlainRow(serverDot, serverText, "Status unavailable", red);
-                    SetPlainRow(tunnelDot, tunnelText, "Status unavailable", red);
+                    SetPlainRow(serverDot, serverText, "Status unavailable", danger);
+                    SetPlainRow(tunnelDot, tunnelText, "Status unavailable", danger);
                     SetPlainRow(localDot, localText, "", muted);
                     SetPlainRow(publicDot, publicText, "", muted);
                     return;
@@ -412,15 +416,19 @@ namespace StreetoControl
 
                 SetServiceRow(serverDot, serverText, appState, appInstalled == "true");
                 SetServiceRow(tunnelDot, tunnelText, tunnelState, tunnelInstalled == "true");
-                SetPlainRow(localDot, localText, localState + (localState == "ok" ? "  \u00B7  port 443 listening" : "  \u00B7  not answering"), localState == "ok" ? green : red);
-                SetPlainRow(publicDot, publicText, publicState + "  \u00B7  " + publicUrl, publicState == "ok" ? green : red);
+                SetPlainRow(localDot, localText,
+                    localState == "ok" ? "OK  \u00B7  port 443 listening" : "Down  \u00B7  nothing on 443",
+                    localState == "ok" ? ok : danger);
+                SetPlainRow(publicDot, publicText,
+                    (publicState == "ok" ? "OK" : "Down") + "  \u00B7  " + publicUrl,
+                    publicState == "ok" ? ok : danger);
 
                 installButton.Text = (appInstalled == "true" && tunnelInstalled == "true")
-                    ? "Repair services" : "Install services";
+                    ? "REPAIR" : "INSTALL";
             }
             catch (Exception error)
             {
-                SetPlainRow(serverDot, serverText, "Status unavailable", red);
+                SetPlainRow(serverDot, serverText, "Status unavailable", danger);
                 SetPlainRow(tunnelDot, tunnelText, "", muted);
                 SetPlainRow(localDot, localText, "", muted);
                 SetPlainRow(publicDot, publicText, "", muted);
@@ -442,9 +450,11 @@ namespace StreetoControl
 
         private void SetServiceRow(StatusDot dot, Label label, string state, bool installed)
         {
-            string value = state + (installed ? "  \u00B7  installed" : "  \u00B7  not installed");
-            Color color = installed && (state == "running" || state == "ready") ? green
-                : (state == "stopped" || state == "disabled" || !installed) ? red : amber;
+            string value = installed
+                ? state.ToUpperInvariant() + "  \u00B7  INSTALLED"
+                : "NOT INSTALLED";
+            Color color = installed && (state == "running" || state == "ready") ? ok
+                : (state == "stopped" || state == "disabled" || !installed) ? danger : amber;
             SetPlainRow(dot, label, value, color);
         }
 
@@ -508,6 +518,130 @@ namespace StreetoControl
                 SetBusy(false);
             }
         }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle bounds = ClientRectangle;
+            using (LinearGradientBrush baseBrush = new LinearGradientBrush(
+                bounds, ink, ink2, LinearGradientMode.Vertical))
+            {
+                e.Graphics.FillRectangle(baseBrush, bounds);
+            }
+            DrawGlow(e.Graphics, new Rectangle(520, -180, 560, 520), Color.FromArgb(42, neon));
+            DrawGlow(e.Graphics, new Rectangle(-180, 400, 520, 420), Color.FromArgb(30, neon2));
+            DrawGlow(e.Graphics, new Rectangle(280, -140, 420, 300), Color.FromArgb(14, neon3));
+            using (Pen hairline = new Pen(Color.FromArgb(9, 255, 255, 255), 1))
+            {
+                for (int x = -ClientSize.Height; x < ClientSize.Width; x += 28)
+                {
+                    e.Graphics.DrawLine(hairline, x, 0, x + ClientSize.Height, ClientSize.Height);
+                }
+            }
+        }
+
+        private void DrawGlow(Graphics graphics, Rectangle rectangle, Color color)
+        {
+            using (GraphicsPath path = new GraphicsPath())
+            {
+                path.AddEllipse(rectangle);
+                using (PathGradientBrush brush = new PathGradientBrush(path))
+                {
+                    brush.CenterColor = color;
+                    brush.SurroundColors = new Color[] { Color.FromArgb(0, color) };
+                    graphics.FillPath(brush, path);
+                }
+            }
+        }
+    }
+
+    internal sealed class GlowTitle : Control
+    {
+        public Color GlowColor = Color.FromArgb(31, 224, 255);
+
+        public GlowTitle()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+                ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
+            BackColor = Color.Transparent;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+            using (StringFormat format = new StringFormat(StringFormat.GenericTypographic))
+            {
+                format.Alignment = StringAlignment.Near;
+                format.LineAlignment = StringAlignment.Near;
+                for (int offset = 4; offset >= 1; offset--)
+                {
+                    using (SolidBrush glow = new SolidBrush(Color.FromArgb(12, GlowColor)))
+                    {
+                        e.Graphics.DrawString(Text, Font, glow,
+                            new RectangleF(-offset, -offset, Width + offset * 2, Height + offset * 2), format);
+                        e.Graphics.DrawString(Text, Font, glow,
+                            new RectangleF(offset, offset, Width - offset * 2, Height - offset * 2), format);
+                    }
+                }
+                using (SolidBrush main = new SolidBrush(ForeColor))
+                {
+                    e.Graphics.DrawString(Text, Font, main, new PointF(0, 0), format);
+                }
+            }
+        }
+    }
+
+    internal sealed class CardPanel : Panel
+    {
+        public int Radius = 16;
+        public Color FillColor = Color.FromArgb(17, 20, 26);
+        public Color BorderColor = Color.FromArgb(36, 42, 54);
+
+        public CardPanel()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+                ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            BackColor = FillColor;
+        }
+
+        protected override void OnResize(EventArgs eventargs)
+        {
+            base.OnResize(eventargs);
+            using (GraphicsPath path = Rounded(ClientRectangle, Radius))
+            {
+                Region = new Region(path);
+            }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (GraphicsPath path = Rounded(ClientRectangle, Radius))
+            using (SolidBrush fill = new SolidBrush(FillColor))
+            using (Pen border = new Pen(BorderColor, 1))
+            {
+                e.Graphics.FillPath(fill, path);
+                e.Graphics.DrawPath(border, path);
+            }
+        }
+
+        private static GraphicsPath Rounded(Rectangle rectangle, int radius)
+        {
+            GraphicsPath path = new GraphicsPath();
+            int diameter = radius * 2;
+            Rectangle arc = new Rectangle(rectangle.X, rectangle.Y, diameter, diameter);
+            path.AddArc(arc, 180, 90);
+            arc.X = rectangle.Right - diameter;
+            path.AddArc(arc, 270, 90);
+            arc.Y = rectangle.Bottom - diameter;
+            path.AddArc(arc, 0, 90);
+            arc.X = rectangle.Left;
+            path.AddArc(arc, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
     }
 
     internal sealed class StatusDot : Control
@@ -528,73 +662,75 @@ namespace StreetoControl
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (SolidBrush glow = new SolidBrush(Color.FromArgb(35, dotColor)))
+            {
+                e.Graphics.FillEllipse(glow, 0, 0, Width, Height);
+            }
             using (SolidBrush brush = new SolidBrush(dotColor))
             {
-                e.Graphics.FillEllipse(brush, 1, 1, Width - 2, Height - 2);
+                e.Graphics.FillEllipse(brush, 2, 2, Width - 4, Height - 4);
             }
         }
     }
 
+    internal enum ButtonKind { Primary, Ghost, Danger }
+
     internal sealed class FlatButton : Button
     {
-        public Color NormalColor = Color.FromArgb(17, 21, 29);
-        public Color HoverColor = Color.FromArgb(29, 37, 50);
-        public Color BorderColor = Color.FromArgb(42, 49, 63);
-        public Color TextColor = Color.White;
-        private bool isHovered;
+        public ButtonKind Kind = ButtonKind.Ghost;
 
         public FlatButton()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             FlatStyle = FlatStyle.Flat;
-            FlatAppearance.BorderSize = 0;
+            FlatAppearance.BorderSize = 1;
             UseVisualStyleBackColor = false;
+            TextAlign = ContentAlignment.MiddleCenter;
+            Cursor = Cursors.Hand;
         }
 
-        protected override void OnMouseEnter(EventArgs e)
+        public void ApplyStyle()
         {
-            isHovered = true;
-            Invalidate();
-            base.OnMouseEnter(e);
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            isHovered = false;
-            Invalidate();
-            base.OnMouseLeave(e);
-        }
-
-        protected override void OnEnabledChanged(EventArgs e)
-        {
-            Invalidate();
-            base.OnEnabledChanged(e);
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = Enabled ? (isHovered ? HoverColor : NormalColor) : Color.FromArgb(35, 40, 50);
-            Color border = Enabled ? BorderColor : Color.FromArgb(55, 62, 76);
-            Color text = Enabled ? TextColor : Color.FromArgb(120, 130, 145);
-            using (GraphicsPath path = Rounded(ClientRectangle, 8))
-            using (SolidBrush brush = new SolidBrush(fill))
-            using (Pen pen = new Pen(border, 1))
+            if (Kind == ButtonKind.Primary)
             {
-                e.Graphics.FillPath(brush, path);
-                e.Graphics.DrawPath(pen, path);
+                BackColor = Color.FromArgb(47, 233, 255);
+                ForeColor = Color.FromArgb(4, 20, 26);
+                FlatAppearance.BorderColor = Color.FromArgb(31, 224, 255);
+                FlatAppearance.MouseOverBackColor = Color.FromArgb(15, 184, 221);
+                FlatAppearance.MouseDownBackColor = Color.FromArgb(8, 147, 184);
             }
-            TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, text,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            else if (Kind == ButtonKind.Danger)
+            {
+                BackColor = Color.FromArgb(42, 22, 27);
+                ForeColor = Color.FromArgb(255, 138, 150);
+                FlatAppearance.BorderColor = Color.FromArgb(110, 255, 77, 94);
+                FlatAppearance.MouseOverBackColor = Color.FromArgb(58, 26, 33);
+                FlatAppearance.MouseDownBackColor = Color.FromArgb(75, 30, 39);
+            }
+            else
+            {
+                BackColor = Color.FromArgb(21, 25, 34);
+                ForeColor = Color.FromArgb(233, 237, 245);
+                FlatAppearance.BorderColor = Color.FromArgb(36, 42, 54);
+                FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 42, 55);
+                FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 53, 68);
+            }
+        }
+
+        protected override void OnResize(EventArgs eventargs)
+        {
+            base.OnResize(eventargs);
+            using (GraphicsPath path = Rounded(ClientRectangle, Height / 2))
+            {
+                Region = new Region(path);
+            }
         }
 
         private static GraphicsPath Rounded(Rectangle rectangle, int radius)
         {
             GraphicsPath path = new GraphicsPath();
-            int diameter = radius * 2;
+            int diameter = Math.Max(2, Math.Min(radius * 2, Math.Min(rectangle.Width, rectangle.Height)));
             Rectangle arc = new Rectangle(rectangle.X, rectangle.Y, diameter, diameter);
             path.AddArc(arc, 180, 90);
             arc.X = rectangle.Right - diameter;
