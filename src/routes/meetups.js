@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { verifyCsrf } from '../middleware/csrf.js';
 import { cleanText, checkCoords, checkZoom } from '../lib/validate.js';
 import { routeDistanceKm } from '../lib/route-length.js';
+import { announceMeetup, announceMeetupCancelled } from '../lib/meetup-alerts.js';
 import { backTo, wantsJson, jsonOk, jsonError, pagination } from '../lib/http.js';
 
 const router = express.Router();
@@ -215,6 +216,10 @@ router.post('/meetups/new', requireAuth, verifyCsrf, async (req, res) => {
     routeDistanceKm: routeDistance,
     routeView: routeView ? JSON.stringify(routeView) : null,
   });
+
+  // A new run reaches the people who can see it through a push as well
+  // as the meetup board.
+  announceMeetup(meetup, req.user.id);
 
   // In a private/invite meetup nobody finds it by browsing, so the host
   // gets a nudge to invite people.
@@ -464,6 +469,7 @@ router.post('/meetups/:id/delete', requireAuth, verifyCsrf, (req, res, next) => 
     return res.redirect(`/meetups/${meetup.id}`);
   }
 
+  announceMeetupCancelled(meetup, req.user.id);
   meetups.remove(meetup.id);
   req.flash('success', 'Meetup cancelled.');
   return res.redirect('/meetups');

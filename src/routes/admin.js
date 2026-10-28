@@ -20,6 +20,7 @@ import { removeUpload, fontUpload, partnerUpload, validateFont, uploadUrl, fontC
 import { prepareLogo, nameFromLogoFile, cleanPartnerUrl } from '../lib/logos.js';
 import { removeUserFolder } from '../lib/upload-paths.js';
 import { sendPtiReminders, sendDigests } from '../lib/mail-jobs.js';
+import { announceMeetupCancelled } from '../lib/meetup-alerts.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { verifyCsrf } from '../middleware/csrf.js';
 import { wantsJson, jsonOk, jsonError, fail } from '../lib/http.js';
@@ -184,7 +185,10 @@ router.post('/admin/posts/:id/delete', verifyCsrf, (req, res) => {
 router.post('/admin/meetups/:id/delete', verifyCsrf, (req, res) => {
   const id = Number(req.params.id);
   const meetup = meetups.byId(id);
-  if (meetup) meetups.remove(id);
+  if (meetup) {
+    announceMeetupCancelled(meetup, req.user.id);
+    meetups.remove(id);
+  }
   req.flash(meetup ? 'success' : 'error', meetup ? 'Meetup removed.' : 'That meetup no longer exists.');
   return back(req, res, 'content');
 });

@@ -1428,6 +1428,15 @@ try {
       assert.equal(res.status, 302);
       assert.ok(meetupId > 0);
     });
+    check('a new meetup is pushed to the network', () => {
+      const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'meetup_new',
+        meetupId,
+      ));
+    });
   }
   {
     const { res, html } = await a.page(`/meetups/${meetupId}`);
@@ -1454,6 +1463,31 @@ try {
     const res = await b.post(`/meetups/${meetupId}/maybe`, { headers: b.jsonHeaders() });
     const body = await res.json();
     check('B can toggle maybe', () => assert.equal(body.status, 'maybe'));
+  }
+  {
+    const res = await a.post('/meetups/new', a.formWithCsrf({
+      title: 'Smoke Cancelled Meetup',
+      description: 'This one will be called off.',
+      place_name: 'Cancelled Corner',
+      address: 'Cancelled Corner, Somewhere',
+      lat: '41.7151',
+      lng: '44.8271',
+      starts_at: '2030-06-02T20:00',
+      privacy: 'open',
+    }));
+    const cancelledId = Number((res.headers.get('location') ?? '').split('/').pop());
+    await b.post(`/meetups/${cancelledId}/join`, { headers: b.jsonHeaders() });
+    const cancelled = await a.post(`/meetups/${cancelledId}/delete`, a.formWithCsrf({}));
+    check('cancelling a meetup pushes to everyone who joined', () => {
+      const bId = get('SELECT id FROM users WHERE username = ?', B.username).id;
+      assert.equal(cancelled.status, 302);
+      assert.ok(get(
+        'SELECT 1 AS x FROM notifications WHERE user_id = ? AND type = ? AND entity_id = ?',
+        bId,
+        'meetup_cancelled',
+        cancelledId,
+      ));
+    });
   }
   {
     const res = await a.post('/meetups/new', a.formWithCsrf({

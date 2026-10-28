@@ -884,6 +884,8 @@ export default {
   'Removed.': 'ამოღებულია.',
   'Only the host can delete a meetup.': 'შეხვედრის წაშლა მხოლოდ მასპინძელს შეუძლია.',
   'Meetup cancelled.': 'შეხვედრა გაუქმდა.',
+  'New meetup: {name}': 'ახალი შეხვედრა: {name}',
+  'Meetup cancelled: {name}': 'შეხვედრა გაუქმდა: {name}',
   'All your friends are already invited.': 'ყველა შენი მეგობარი უკვე მოწვეულია.',
   '@{user} invited.': '@{user} მოწვეულია.',
   'Invited {n} friend.': 'მოწვეულია {n} მეგობარი.',

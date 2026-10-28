@@ -20,6 +20,51 @@ const router = express.Router();
 // Every chat page needs a login.
 router.use('/chat', requireAuth);
 
+/**
+ * Push one chat message to everybody in the conversation who has not
+ * muted it. The global channel behaves like any other thread now: every
+ * message pushes, and the mute switch is the way to opt out.
+ */
+function pushChatMessage({
+  conversationId,
+  senderId,
+  senderUsername,
+  body = null,
+  mediaType = null,
+  shareType = null,
+}) {
+  try {
+    const recipients = chat.memberIds(conversationId).filter(
+      (uid) => uid !== senderId && !chat.isMuted(conversationId, uid),
+    );
+    recipients.forEach((uid) => {
+      const lang = users.findById(uid)?.language || 'en';
+      let text = body ? body.slice(0, 120) : '';
+      if (!text) {
+        if (shareType) {
+          const what = translate(lang, SHARE_LABELS[shareType] || 'link');
+          text = translate(lang, 'Shared a {what}', { what });
+        } else if (mediaType === 'video') {
+          text = translate(lang, 'Sent a video');
+        } else if (mediaType === 'photo') {
+          text = translate(lang, 'Sent a photo');
+        } else {
+          text = translate(lang, 'Sent a file');
+        }
+      }
+      pushToUser(uid, {
+        title: translate(lang, 'New message from @{user}', { user: senderUsername }),
+        body: text,
+        url: `/?chat=${conversationId}`,
+        tag: `chat-${conversationId}`,
+        category: 'messages',
+      });
+    });
+  } catch {
+    /* push is best-effort; the message is already saved */
+  }
+}
+
 /** Render one message bubble server-side so the client never builds HTML. */
 async function renderMessage(res, message, viewerId) {
   // The green dot on the avatar needs to know who is online.
@@ -190,31 +235,15 @@ router.post('/chat/:id/send', chatUpload, optimizeAs('chat'), verifyCsrf, (req, 
     }
   } catch (e) {}
 
-  // Push notifications for recipients. The global channel does not push
-  // every message (that would be an alert for every driver); mentions are
-  // handled separately. A muted thread never pushes.
-  try {
-    if (chat.kindOf(id) !== 'global') {
-      const recipients = chat.memberIds(id).filter(
-        (uid) => uid !== req.user.id && !chat.isMuted(id, uid),
-      );
-      recipients.forEach((uid) => {
-        const lang = users.findById(uid)?.language || 'en';
-        const fallback = mediaType === 'video'
-          ? 'Sent a video'
-          : mediaType === 'photo'
-            ? 'Sent a photo'
-            : 'Sent a file';
-        pushToUser(uid, {
-          title: translate(lang, 'New message from @{user}', { user: req.user.username }),
-          body: body ? body.slice(0, 120) : translate(lang, fallback),
-          url: `/?chat=${id}`,
-          tag: `chat-${id}`,
-          category: 'messages',
-        });
-      });
-    }
-  } catch (e) {}
+  // Every message, including global-channel messages, pushes to the
+  // members who have not muted this conversation.
+  pushChatMessage({
+    conversationId: id,
+    senderId: req.user.id,
+    senderUsername: req.user.username,
+    body,
+    mediaType,
+  });
 
   if (wantsJson(req)) {
     return renderMessage(res, message, req.user.id)
@@ -267,6 +296,15 @@ router.post('/share', requireAuth, verifyCsrf, async (req, res, next) => {
           io.to(`user:${req.user.id}`).emit('chat:message', { ...payload, self: true });
         }
       } catch (e) {}
+
+      pushChatMessage({
+        conversationId: channel.id,
+        senderId: req.user.id,
+        senderUsername: req.user.username,
+        body: note || null,
+        shareType: card.type,
+      });
+
       if (wantsJson(req)) {
         const payload = await renderMessage(res, message, req.user.id);
         return jsonOk(res, { conversationId: channel.id, message: payload, share: card });
@@ -305,21 +343,13 @@ router.post('/share', requireAuth, verifyCsrf, async (req, res, next) => {
       }
     } catch (e) {}
 
-    try {
-      if (!chat.isMuted(conversation.id, target.id)) {
-        const lang = users.findById(target.id)?.language || 'en';
-        const what = translate(lang, SHARE_LABELS[card.type] || 'link');
-        pushToUser(target.id, {
-          title: translate(lang, 'New message from @{user}', { user: req.user.username }),
-          body: note
-            ? note.slice(0, 120)
-            : translate(lang, 'Shared a {what}', { what }),
-          url: `/?chat=${conversation.id}`,
-          tag: `chat-${conversation.id}`,
-          category: 'messages',
-        });
-      }
-    } catch (e) {}
+    pushChatMessage({
+      conversationId: conversation.id,
+      senderId: req.user.id,
+      senderUsername: req.user.username,
+      body: note || null,
+      shareType: card.type,
+    });
 
     if (wantsJson(req)) {
       const payload = await renderMessage(res, message, req.user.id);

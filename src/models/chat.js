@@ -336,9 +336,9 @@ export function sendMessage({
             text: isGlobal
               ? 'mentioned you in the global channel'
               : 'mentioned you in a chat',
-            // A direct message already sends its own chat push; for the
-            // global channel the mention is the only alert.
-            push: isGlobal,
+            // Every chat message now sends its own push (the global
+            // channel included); this row is the mention in the bell.
+            push: false,
           });
         }
       }
