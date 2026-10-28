@@ -293,7 +293,7 @@ namespace StreetoControl
             logBox = new TextBox();
             logBox.Multiline = true;
             logBox.ReadOnly = true;
-            logBox.ScrollBars = ScrollBars.Vertical;
+            logBox.ScrollBars = ScrollBars.None;
             logBox.BackColor = Color.FromArgb(10, 12, 17);
             logBox.ForeColor = Color.FromArgb(170, 183, 202);
             logBox.BorderStyle = BorderStyle.None;
@@ -519,6 +519,20 @@ namespace StreetoControl
             }
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            try
+            {
+                int dark = 1;
+                DwmSetWindowAttribute(Handle, 20, ref dark, sizeof(int));
+            }
+            catch { }
+        }
+
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -679,12 +693,19 @@ namespace StreetoControl
     internal sealed class FlatButton : Button
     {
         public ButtonKind Kind = ButtonKind.Ghost;
+        private bool hovered;
+        private Color fillColor = Color.FromArgb(21, 25, 34);
+        private Color hoverColor = Color.FromArgb(35, 42, 55);
+        private Color borderColor = Color.FromArgb(36, 42, 54);
+        private Color textColor = Color.FromArgb(233, 237, 245);
 
         public FlatButton()
         {
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
+                ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            BackColor = Color.FromArgb(7, 8, 11);
             FlatStyle = FlatStyle.Flat;
-            FlatAppearance.BorderSize = 1;
+            FlatAppearance.BorderSize = 0;
             UseVisualStyleBackColor = false;
             TextAlign = ContentAlignment.MiddleCenter;
             Cursor = Cursors.Hand;
@@ -694,36 +715,77 @@ namespace StreetoControl
         {
             if (Kind == ButtonKind.Primary)
             {
-                BackColor = Color.FromArgb(47, 233, 255);
-                ForeColor = Color.FromArgb(4, 20, 26);
-                FlatAppearance.BorderColor = Color.FromArgb(31, 224, 255);
-                FlatAppearance.MouseOverBackColor = Color.FromArgb(15, 184, 221);
-                FlatAppearance.MouseDownBackColor = Color.FromArgb(8, 147, 184);
+                fillColor = Color.FromArgb(47, 233, 255);
+                hoverColor = Color.FromArgb(80, 240, 255);
+                borderColor = Color.FromArgb(31, 224, 255);
+                textColor = Color.FromArgb(4, 20, 26);
             }
             else if (Kind == ButtonKind.Danger)
             {
-                BackColor = Color.FromArgb(42, 22, 27);
-                ForeColor = Color.FromArgb(255, 138, 150);
-                FlatAppearance.BorderColor = Color.FromArgb(110, 255, 77, 94);
-                FlatAppearance.MouseOverBackColor = Color.FromArgb(58, 26, 33);
-                FlatAppearance.MouseDownBackColor = Color.FromArgb(75, 30, 39);
+                fillColor = Color.FromArgb(42, 22, 27);
+                hoverColor = Color.FromArgb(62, 28, 35);
+                borderColor = Color.FromArgb(110, 255, 77, 94);
+                textColor = Color.FromArgb(255, 138, 150);
             }
             else
             {
-                BackColor = Color.FromArgb(21, 25, 34);
-                ForeColor = Color.FromArgb(233, 237, 245);
-                FlatAppearance.BorderColor = Color.FromArgb(36, 42, 54);
-                FlatAppearance.MouseOverBackColor = Color.FromArgb(35, 42, 55);
-                FlatAppearance.MouseDownBackColor = Color.FromArgb(45, 53, 68);
+                fillColor = Color.FromArgb(21, 25, 34);
+                hoverColor = Color.FromArgb(35, 42, 55);
+                borderColor = Color.FromArgb(36, 42, 54);
+                textColor = Color.FromArgb(233, 237, 245);
             }
+            Invalidate();
         }
 
-        protected override void OnResize(EventArgs eventargs)
+        protected override void OnMouseEnter(EventArgs e)
         {
-            base.OnResize(eventargs);
-            using (GraphicsPath path = Rounded(ClientRectangle, Height / 2))
+            hovered = true;
+            Invalidate();
+            base.OnMouseEnter(e);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            hovered = false;
+            Invalidate();
+            base.OnMouseLeave(e);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle rectangle = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = Rounded(rectangle, Height / 2))
             {
-                Region = new Region(path);
+                if (Kind == ButtonKind.Primary)
+                {
+                    using (SolidBrush fill = new SolidBrush(Enabled ? (hovered ? hoverColor : fillColor)
+                        : Color.FromArgb(28, 32, 41)))
+                    {
+                        e.Graphics.FillPath(fill, path);
+                    }
+                }
+                else
+                {
+                    using (SolidBrush fill = new SolidBrush(Enabled ? (hovered ? hoverColor : fillColor)
+                        : Color.FromArgb(28, 32, 41)))
+                    {
+                        e.Graphics.FillPath(fill, path);
+                    }
+                }
+                using (Pen border = new Pen(Enabled ? borderColor : Color.FromArgb(49, 56, 68), 1))
+                {
+                    e.Graphics.DrawPath(border, path);
+                }
+
+                Rectangle textRect = new Rectangle(4, 0, Width - 8, Height);
+                GraphicsState state = e.Graphics.Save();
+                e.Graphics.SetClip(path);
+                TextRenderer.DrawText(e.Graphics, Text.ToUpperInvariant(), Font, textRect,
+                    Enabled ? textColor : Color.FromArgb(95, 104, 121),
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                    TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+                e.Graphics.Restore(state);
             }
         }
 
