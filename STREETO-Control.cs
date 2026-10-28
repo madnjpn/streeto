@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -118,7 +119,7 @@ namespace StreetoControl
         private readonly Color dangerSoft = Color.FromArgb(255, 138, 150);
         private readonly Color ok = Color.FromArgb(120, 230, 130);
         private readonly Color onAccent = Color.FromArgb(4, 20, 26);
-        private readonly Color accentA = Color.FromArgb(47, 233, 255);
+        private readonly Color accentA = Color.Magenta;
         private readonly Color accentB = Color.FromArgb(15, 184, 221);
         private readonly Color accentC = Color.FromArgb(8, 147, 184);
 
@@ -137,7 +138,7 @@ namespace StreetoControl
         private Label tunnelText;
         private Label localText;
         private Label publicText;
-        private FlatButton installButton;
+        private ButtonBar buttonBar;
         private TextBox logBox;
         private System.Windows.Forms.Timer timer;
         private string publicUrl = "https://streeto.net";
@@ -271,13 +272,19 @@ namespace StreetoControl
             AddRule(statusCard, 164);
             AddRow(statusCard, "Public site", 176, out publicDot, out publicText);
 
-            installButton = NewButton("Install", "install", 24, 326, 112, ButtonKind.Primary);
-            NewButton("Start", "start", 146, 326, 58, ButtonKind.Ghost);
-            NewButton("Stop", "stop", 212, 326, 58, ButtonKind.Danger);
-            NewButton("Restart", "restart", 278, 326, 76, ButtonKind.Ghost);
-            NewButton("Site", "open", 362, 326, 58, ButtonKind.Ghost);
-            NewButton("Logs", "logs", 428, 326, 58, ButtonKind.Ghost);
-            NewButton("Refresh", "refresh", 494, 326, 74, ButtonKind.Ghost);
+            buttonBar = new ButtonBar();
+            buttonBar.Location = new Point(24, 326);
+            buttonBar.Size = new Size(652, 34);
+            buttonBar.Font = smallBold;
+            buttonBar.Add("install", "Install", ButtonKind.Primary, 0, 112);
+            buttonBar.Add("start", "Start", ButtonKind.Ghost, 122, 58);
+            buttonBar.Add("stop", "Stop", ButtonKind.Danger, 188, 58);
+            buttonBar.Add("restart", "Restart", ButtonKind.Ghost, 254, 76);
+            buttonBar.Add("open", "Site", ButtonKind.Ghost, 338, 58);
+            buttonBar.Add("logs", "Logs", ButtonKind.Ghost, 404, 58);
+            buttonBar.Add("refresh", "Refresh", ButtonKind.Ghost, 470, 74);
+            buttonBar.ActionClicked += delegate(string action) { RunAction(action); };
+            Controls.Add(buttonBar);
 
             CardPanel activityCard = new CardPanel();
             activityCard.Location = new Point(24, 374);
@@ -336,21 +343,6 @@ namespace StreetoControl
             rule.Location = new Point(20, y);
             rule.Size = new Size(724, 1);
             parent.Controls.Add(rule);
-        }
-
-        private FlatButton NewButton(string caption, string action, int x, int y, int width, ButtonKind kind)
-        {
-            FlatButton button = new FlatButton();
-            button.Text = caption.ToUpperInvariant();
-            button.Tag = action;
-            button.Location = new Point(x, y);
-            button.Size = new Size(width, 34);
-            button.Font = smallBold;
-            button.Kind = kind;
-            button.ApplyStyle();
-            button.Click += delegate { RunAction((string)button.Tag); };
-            Controls.Add(button);
-            return button;
         }
 
         private void AppendLog(string message)
@@ -423,8 +415,8 @@ namespace StreetoControl
                     (publicState == "ok" ? "OK" : "Down") + "  \u00B7  " + publicUrl,
                     publicState == "ok" ? ok : danger);
 
-                installButton.Text = (appInstalled == "true" && tunnelInstalled == "true")
-                    ? "REPAIR" : "INSTALL";
+                buttonBar.SetText("install", (appInstalled == "true" && tunnelInstalled == "true")
+                    ? "REPAIR" : "INSTALL");
             }
             catch (Exception error)
             {
@@ -469,10 +461,10 @@ namespace StreetoControl
         private void SetBusy(bool value)
         {
             busy = value;
-            foreach (Control control in Controls)
+            if (buttonBar != null)
             {
-                FlatButton button = control as FlatButton;
-                if (button != null) button.Enabled = !value;
+                buttonBar.Enabled = !value;
+                buttonBar.Invalidate();
             }
             Application.DoEvents();
         }
@@ -690,102 +682,195 @@ namespace StreetoControl
 
     internal enum ButtonKind { Primary, Ghost, Danger }
 
-    internal sealed class FlatButton : Button
+    internal sealed class ButtonBar : Control
     {
-        public ButtonKind Kind = ButtonKind.Ghost;
-        private bool hovered;
-        private Color fillColor = Color.FromArgb(21, 25, 34);
-        private Color hoverColor = Color.FromArgb(35, 42, 55);
-        private Color borderColor = Color.FromArgb(36, 42, 54);
-        private Color textColor = Color.FromArgb(233, 237, 245);
+        private sealed class Spec
+        {
+            public string Action;
+            public string Text;
+            public ButtonKind Kind;
+            public Rectangle Bounds;
+        }
 
-        public FlatButton()
+        private readonly List<Spec> specs = new List<Spec>();
+        private int hovered = -1;
+        private int pressed = -1;
+
+        public event Action<string> ActionClicked;
+
+        public ButtonBar()
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint |
                 ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Color.FromArgb(7, 8, 11);
-            FlatStyle = FlatStyle.Flat;
-            FlatAppearance.BorderSize = 0;
-            UseVisualStyleBackColor = false;
-            TextAlign = ContentAlignment.MiddleCenter;
-            Cursor = Cursors.Hand;
         }
 
-        public void ApplyStyle()
+        public void Add(string action, string text, ButtonKind kind, int x, int width)
         {
-            if (Kind == ButtonKind.Primary)
+            specs.Add(new Spec
             {
-                fillColor = Color.FromArgb(47, 233, 255);
-                hoverColor = Color.FromArgb(80, 240, 255);
-                borderColor = Color.FromArgb(31, 224, 255);
-                textColor = Color.FromArgb(4, 20, 26);
-            }
-            else if (Kind == ButtonKind.Danger)
-            {
-                fillColor = Color.FromArgb(42, 22, 27);
-                hoverColor = Color.FromArgb(62, 28, 35);
-                borderColor = Color.FromArgb(110, 255, 77, 94);
-                textColor = Color.FromArgb(255, 138, 150);
-            }
-            else
-            {
-                fillColor = Color.FromArgb(21, 25, 34);
-                hoverColor = Color.FromArgb(35, 42, 55);
-                borderColor = Color.FromArgb(36, 42, 54);
-                textColor = Color.FromArgb(233, 237, 245);
-            }
+                Action = action,
+                Text = text,
+                Kind = kind,
+                Bounds = new Rectangle(x, 0, width, Height - 1),
+            });
             Invalidate();
         }
 
-        protected override void OnMouseEnter(EventArgs e)
+        public void SetText(string action, string text)
         {
-            hovered = true;
-            Invalidate();
-            base.OnMouseEnter(e);
+            foreach (Spec spec in specs)
+            {
+                if (spec.Action == action)
+                {
+                    spec.Text = text;
+                    Invalidate();
+                    return;
+                }
+            }
+        }
+
+        private int HitTest(Point point)
+        {
+            for (int i = 0; i < specs.Count; i++)
+            {
+                if (specs[i].Bounds.Contains(point)) return i;
+            }
+            return -1;
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            int hit = Enabled ? HitTest(e.Location) : -1;
+            if (hit != hovered)
+            {
+                hovered = hit;
+                Cursor = hit >= 0 ? Cursors.Hand : Cursors.Default;
+                Invalidate();
+            }
+            base.OnMouseMove(e);
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
-            hovered = false;
+            hovered = -1;
+            pressed = -1;
+            Cursor = Cursors.Default;
             Invalidate();
             base.OnMouseLeave(e);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && Enabled)
+            {
+                pressed = HitTest(e.Location);
+                Invalidate();
+            }
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            int hit = Enabled ? HitTest(e.Location) : -1;
+            if (e.Button == MouseButtons.Left && hit >= 0 && hit == pressed)
+            {
+                pressed = -1;
+                Invalidate();
+                if (ActionClicked != null) ActionClicked(specs[hit].Action);
+            }
+            else
+            {
+                pressed = -1;
+                Invalidate();
+            }
+            base.OnMouseUp(e);
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            hovered = -1;
+            pressed = -1;
+            Cursor = Cursors.Default;
+            Invalidate();
+            base.OnEnabledChanged(e);
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            Rectangle rectangle = new Rectangle(0, 0, Width - 1, Height - 1);
-            using (GraphicsPath path = Rounded(rectangle, Height / 2))
+            using (SolidBrush background = new SolidBrush(Color.FromArgb(7, 8, 11)))
             {
-                if (Kind == ButtonKind.Primary)
+                e.Graphics.FillRectangle(background, ClientRectangle);
+            }
+
+            for (int i = 0; i < specs.Count; i++)
+            {
+                Spec spec = specs[i];
+                bool hover = Enabled && hovered == i;
+                bool down = Enabled && pressed == i;
+                Color fill;
+                Color hoverFill;
+                Color border;
+                Color text;
+                if (!Enabled)
                 {
-                    using (SolidBrush fill = new SolidBrush(Enabled ? (hovered ? hoverColor : fillColor)
-                        : Color.FromArgb(28, 32, 41)))
-                    {
-                        e.Graphics.FillPath(fill, path);
-                    }
+                    fill = Color.FromArgb(28, 32, 41);
+                    hoverFill = fill;
+                    border = Color.FromArgb(49, 56, 68);
+                    text = Color.FromArgb(95, 104, 121);
+                }
+                else if (spec.Kind == ButtonKind.Primary)
+                {
+                    fill = Color.FromArgb(47, 233, 255);
+                    hoverFill = Color.FromArgb(80, 240, 255);
+                    border = Color.FromArgb(31, 224, 255);
+                    text = Color.FromArgb(4, 20, 26);
+                }
+                else if (spec.Kind == ButtonKind.Danger)
+                {
+                    fill = Color.FromArgb(42, 22, 27);
+                    hoverFill = Color.FromArgb(62, 28, 35);
+                    border = Color.FromArgb(110, 255, 77, 94);
+                    text = Color.FromArgb(255, 138, 150);
                 }
                 else
                 {
-                    using (SolidBrush fill = new SolidBrush(Enabled ? (hovered ? hoverColor : fillColor)
-                        : Color.FromArgb(28, 32, 41)))
-                    {
-                        e.Graphics.FillPath(fill, path);
-                    }
-                }
-                using (Pen border = new Pen(Enabled ? borderColor : Color.FromArgb(49, 56, 68), 1))
-                {
-                    e.Graphics.DrawPath(border, path);
+                    fill = Color.FromArgb(21, 25, 34);
+                    hoverFill = Color.FromArgb(35, 42, 55);
+                    border = Color.FromArgb(36, 42, 54);
+                    text = Color.FromArgb(233, 237, 245);
                 }
 
-                Rectangle textRect = new Rectangle(4, 0, Width - 8, Height);
-                GraphicsState state = e.Graphics.Save();
-                e.Graphics.SetClip(path);
-                TextRenderer.DrawText(e.Graphics, Text.ToUpperInvariant(), Font, textRect,
-                    Enabled ? textColor : Color.FromArgb(95, 104, 121),
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
-                    TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
-                e.Graphics.Restore(state);
+                using (GraphicsPath path = Rounded(spec.Bounds, spec.Bounds.Height / 2))
+                {
+                    if (spec.Kind == ButtonKind.Primary && Enabled)
+                    {
+                        using (LinearGradientBrush gradient = new LinearGradientBrush(
+                            spec.Bounds, hover ? hoverFill : fill, Color.FromArgb(8, 147, 184), 45f))
+                        {
+                            e.Graphics.FillPath(gradient, path);
+                        }
+                    }
+                    else
+                    {
+                        using (SolidBrush brush = new SolidBrush(down ? border : (hover ? hoverFill : fill)))
+                        {
+                            e.Graphics.FillPath(brush, path);
+                        }
+                    }
+                    using (Pen pen = new Pen(border, 1))
+                    {
+                        e.Graphics.DrawPath(pen, path);
+                    }
+
+                    GraphicsState state = e.Graphics.Save();
+                    e.Graphics.SetClip(path);
+                    TextRenderer.DrawText(e.Graphics, spec.Text.ToUpperInvariant(), Font, spec.Bounds,
+                        text, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                        TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+                    e.Graphics.Restore(state);
+                }
             }
         }
 
@@ -806,3 +891,4 @@ namespace StreetoControl
         }
     }
 }
+
