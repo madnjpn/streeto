@@ -168,11 +168,11 @@ export async function installTunnelServiceWindows({ exe, token, log }) {
 /** Register the app as a scheduled task that starts with Windows. */
 export async function installAppServiceWindows({ node, project, envFile, log }) {
   const task = [
-    'powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
     `$a = New-ScheduledTaskAction -Execute '${node}' -Argument '--env-file="${envFile}" "${path.join(project, 'scripts', 'run-server.mjs')}"' -WorkingDirectory '${project}';` +
     `$t = New-ScheduledTaskTrigger -AtStartup;` +
     `$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 5 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero);` +
     `$p = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest;` +
+    `Stop-ScheduledTask -TaskName '${APP_TASK}' -ErrorAction SilentlyContinue;` +
     `Unregister-ScheduledTask -TaskName '${APP_TASK}' -Confirm:$false -ErrorAction SilentlyContinue;` +
     `Register-ScheduledTask -TaskName '${APP_TASK}' -Action $a -Trigger $t -Settings $s -Principal $p -Force | Out-Null;` +
     `Start-ScheduledTask -TaskName '${APP_TASK}';`,

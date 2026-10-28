@@ -146,6 +146,19 @@ function psQuote(value) {
   return `'${String(value ?? '').replace(/'/g, "''")}'`;
 }
 
+/** Last-resort foreground start if service installation fails. */
+async function startFallbackServer() {
+  if (!isWindows) return;
+  if (!(await portFree(443))) return;
+  const script = `
+$node = ${psQuote(process.execPath)}
+$envFile = ${psQuote(`--env-file=${ENV_FILE}`)}
+$server = ${psQuote(path.join(ROOT, 'server.js'))}
+Start-Process -FilePath $node -ArgumentList @($envFile, $server) -WorkingDirectory ${psQuote(ROOT)} -WindowStyle Hidden`;
+  shQuiet('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script]);
+  say('Started a fallback server so the site stays online.');
+}
+
 /** Stop the old go-live.bat processes for this project, not other apps. */
 function stopForeground(token) {
   const script = `
@@ -194,18 +207,28 @@ async function install() {
   const exe = await ensureCloudflared(say);
   say(`cloudflared: ${exe}`);
   say('Installing/updating the Cloudflared service and STREETO server task...');
-  await installServices({
-    exe,
-    token,
-    node: process.execPath,
-    project: ROOT,
-    envFile: ENV_FILE,
-    log: say,
-  });
-  say('Starting services...');
-  startServices();
-  await new Promise((resolve) => setTimeout(resolve, 2500));
+  try {
+    await installServices({
+      exe,
+      token,
+      node: process.execPath,
+      project: ROOT,
+      envFile: ENV_FILE,
+      log: say,
+    });
+    say('Starting services...');
+    startServices();
+  } catch (error) {
+    say(`Install failed: ${error?.message || error}`);
+    await startFallbackServer();
+    throw error;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   const result = await status();
+  if (!result.local) {
+    say('The service did not answer on port 443 yet; restoring a fallback server.');
+    await startFallbackServer();
+  }
   if (json) console.log(JSON.stringify(result));
   else {
     say(`Server: ${result.services.app.state} (${result.services.app.installed ? 'installed' : 'missing'})`);
