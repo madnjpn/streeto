@@ -118,6 +118,7 @@ export async function ensureCloudflared(log) {
 
 const APP_TASK = 'STREETO server';
 const TUNNEL_SERVICE = 'Cloudflared';
+export { APP_TASK, TUNNEL_SERVICE };
 
 async function windowsServiceExists(name) {
   const out = shQuiet('sc.exe', ['query', name]);
@@ -152,6 +153,7 @@ export async function installTunnelServiceWindows({ exe, token, log }) {
     log('Created the Cloudflared service.');
   }
   shQuiet('sc.exe', ['config', TUNNEL_SERVICE, 'start=', 'auto']);
+  shQuiet('sc.exe', ['failure', TUNNEL_SERVICE, 'reset=', '86400', 'actions=', 'restart/5000/restart/10000/restart/30000']);
   shQuiet('sc.exe', ['start', TUNNEL_SERVICE]);
 
   const state = shQuiet('sc.exe', ['query', TUNNEL_SERVICE]);
@@ -167,7 +169,7 @@ export async function installTunnelServiceWindows({ exe, token, log }) {
 export async function installAppServiceWindows({ node, project, envFile, log }) {
   const task = [
     'powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
-    `$a = New-ScheduledTaskAction -Execute '${node}' -Argument '--env-file="${envFile}" "${path.join(project, 'server.js')}"' -WorkingDirectory '${project}';` +
+    `$a = New-ScheduledTaskAction -Execute '${node}' -Argument '--env-file="${envFile}" "${path.join(project, 'scripts', 'run-server.mjs')}"' -WorkingDirectory '${project}';` +
     `$t = New-ScheduledTaskTrigger -AtStartup;` +
     `$s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 5 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero);` +
     `$p = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest;` +
@@ -212,7 +214,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=${project}
-ExecStart=${node} --env-file=${envFile} ${path.join(project, 'server.js')}
+ExecStart=${node} --env-file=${envFile} ${path.join(project, 'scripts', 'run-server.mjs')}
 Restart=always
 RestartSec=5
 Environment=NODE_ENV=production
@@ -248,7 +250,7 @@ export async function installLaunchdAgents({ exe, token, node, project, envFile,
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>net.streeto.server</string>
-<key>ProgramArguments</key><array><string>${node}</string><string>--env-file=${envFile}</string><string>${path.join(project, 'server.js')}</string></array>
+<key>ProgramArguments</key><array><string>${node}</string><string>--env-file=${envFile}</string><string>${path.join(project, 'scripts', 'run-server.mjs')}</string></array>
 <key>WorkingDirectory</key><string>${project}</string>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><true/>
@@ -273,6 +275,44 @@ export async function installServices(options) {
     return;
   }
   await installSystemdUnits(options);
+}
+
+/** Start both services. */
+export function startServices() {
+  if (isWindows) {
+    shQuiet('powershell.exe', ['-NoProfile', '-Command', `Start-ScheduledTask -TaskName '${APP_TASK}'`]);
+    shQuiet('sc.exe', ['start', TUNNEL_SERVICE]);
+    return;
+  }
+  if (isMac) {
+    shQuiet('launchctl', ['start', 'net.streeto.server']);
+    shQuiet('launchctl', ['start', 'net.cloudflare.cloudflared']);
+    return;
+  }
+  shQuiet('systemctl', ['start', 'streeto.service']);
+  shQuiet('systemctl', ['start', 'cloudflared.service']);
+}
+
+/** Stop both services without removing them. */
+export function stopServices() {
+  if (isWindows) {
+    shQuiet('powershell.exe', ['-NoProfile', '-Command', `Stop-ScheduledTask -TaskName '${APP_TASK}' -ErrorAction SilentlyContinue`]);
+    shQuiet('sc.exe', ['stop', TUNNEL_SERVICE]);
+    return;
+  }
+  if (isMac) {
+    shQuiet('launchctl', ['stop', 'net.streeto.server']);
+    shQuiet('launchctl', ['stop', 'net.cloudflare.cloudflared']);
+    return;
+  }
+  shQuiet('systemctl', ['stop', 'streeto.service']);
+  shQuiet('systemctl', ['stop', 'cloudflared.service']);
+}
+
+/** Restart both services. */
+export function restartServices() {
+  stopServices();
+  startServices();
 }
 
 /** A short status of the services, for the report at the end. */
@@ -300,4 +340,4 @@ export async function serviceStatus() {
   };
 }
 
-export default { platform, isWindows, isMac, isLinux, arch, ensureCloudflared, installServices, serviceStatus, portFree, sh, shQuiet };
+export default { platform, isWindows, isMac, isLinux, arch, ensureCloudflared, installServices, startServices, stopServices, restartServices, serviceStatus, portFree, sh, shQuiet };

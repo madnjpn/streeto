@@ -1060,7 +1060,7 @@ meetup → build upload/vote/visibility/delete → certificate/PTI → parts/VIN
 negative auth/validation cases. It never touches the production DB or external
 PTI service.
 
-Current suite: **345 checks** (the number grows with features). The final line
+Current suite: **358 checks** (the number grows with features). The final line
 is `N passed, 0 failed`; any failure exits non-zero.
 
 ### 11.2 Production checks
@@ -1214,6 +1214,11 @@ tunnel is preferred because it handles changing IPs and needs no open ports.
    - `android/signing/` (keystore backup, only if you build locally)
 3. Run `npm run golive` to recreate/point the tunnel and services.
 4. `npm run prodcheck`, then start and verify.
+
+On Windows, the desktop **STREETO Control** can do the service part: copy
+`.env.production`, `certs/`, `data/` and `uploads/`, install Node, then click
+**Install / Repair**. If the tunnel token is not in `.env.production`, run
+`npm run golive` once first.
 5. Never copy `node_modules`; reinstall.
 
 ---
@@ -1226,12 +1231,26 @@ tunnel is preferred because it handles changing IPs and needs no open ports.
 
 ### Start / stop / restart
 
+- **Desktop control panel (Windows):** double-click **`STREETO Control.vbs`**.
+  It opens without a console, checks the services, and offers:
+  **Install / Repair**, **Start**, **Stop**, **Restart**, **Open site** and
+  **Logs**. Closing the window does **not** stop the website.
+- **First run / new server:** click **Install / Repair** and approve the
+  Windows administrator prompt. It checks for Node, `cloudflared`,
+  `.env.production`, certificates, the `Cloudflared` service and the
+  `STREETO server` scheduled task, creates anything missing, updates old
+  paths, and starts both.
+- **Command line equivalent:**
+  `npm run services:install`, `services:start`, `services:stop`,
+  `services:restart`, `services:status`.
+- **Logs:** `data/logs/server.log` (also opened by the Logs button).
 - **Foreground:** `npm start`; Ctrl+C stops it. The HTTP redirect listener
   closes too.
 - **Windows services (installed by golive):** restart `STREETO server` and
   `Cloudflared` via Services or `Restart-Service`.
 - **Foreground Windows tunnel:** `go-live.bat` starts/stops both; running it
-  again replaces the old server on port 443.
+  again replaces the old server on port 443. Do not run it at the same time
+  as the installed services.
 - **After a web deploy:** restart the Node process (templates/server code are
   read at boot). Static JS/CSS are read from disk and need no restart.
 - **Before a schema-changing deploy:** take a backup (Admin → Backups), then
