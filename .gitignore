@@ -62,3 +62,6 @@ public/downloads/*.apk
 # Python service runtime / caches
 rockauto-service/python-portable/
 **/__pycache__/
+
+# Portable runtime copied into the project for folder-to-folder moves
+runtime/

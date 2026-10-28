@@ -69,6 +69,10 @@ namespace StreetoControl
 
         private static string FindNode()
         {
+            string root = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
+            string portable = Path.Combine(root, "runtime", "node", "node.exe");
+            if (File.Exists(portable)) return portable;
+
             string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             string[] candidates = new string[]

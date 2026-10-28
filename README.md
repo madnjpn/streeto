@@ -1215,10 +1215,26 @@ tunnel is preferred because it handles changing IPs and needs no open ports.
 3. Run `npm run golive` to recreate/point the tunnel and services.
 4. `npm run prodcheck`, then start and verify.
 
-On Windows, the desktop **STREETO Control** can do the service part: copy
-`.env.production`, `certs/`, `data/` and `uploads/`, install Node, then click
-**Install / Repair**. If the tunnel token is not in `.env.production`, run
-`npm run golive` once first.
+On Windows, the desktop **STREETO Control** can do the service part: stop the
+old server, copy the whole project folder (including `.env.production`,
+`certs/`, `data/`, `uploads/`, `node_modules/`, `runtime/` and
+`STREETO Control.exe`), then double-click **Install / Repair** on the new
+machine. The folder carries its own `runtime/node/node.exe` and
+`runtime/cloudflared/cloudflared.exe`, so Node and cloudflared do not need
+to be installed separately.
+
+If `runtime/` is missing, run `npm run runtime:prepare` on a Windows machine
+with Node and cloudflared installed. If the tunnel token is not in
+`.env.production`, run `npm run golive` once first.
+
+The target should be Windows x64. For Linux/macOS, install Node and
+cloudflared and use `npm run services:install`; the Windows GUI is not used
+there.
+
+Stop the old server before copying `data/` so SQLite is consistent, and do
+not run the old and new servers at the same time. Copying the complete
+folder (including `node_modules/`, `runtime/`, `.env.production`, `certs/`,
+`data/` and `uploads/`) is what makes the new machine self-contained.
 5. Never copy `node_modules`; reinstall.
 
 ---

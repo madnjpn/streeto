@@ -22,6 +22,7 @@
     "services:stop": "node scripts/service-control.mjs stop",
     "services:restart": "node scripts/service-control.mjs restart",
     "control:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-control.ps1",
+    "runtime:prepare": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-runtime.ps1",
     "prodcheck": "node scripts/prod-check.mjs",
     "smoke": "node scripts/smoke.js",
     "ui:check": "node scripts/ui-check.mjs",

@@ -25,13 +25,16 @@ export const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
 
 /** Where the cloudflared binary lives per platform. */
 export function cloudflaredPaths() {
+  const portable = path.resolve(import.meta.dirname, '..', '..', 'runtime', 'cloudflared', 'cloudflared.exe');
   if (isWindows) {
     return {
+      portable,
       system: 'C:\\Program Files (x86)\\cloudflared\\cloudflared.exe',
       user: path.join(os.homedir(), 'AppData', 'Local', 'Programs', 'cloudflared', 'cloudflared.exe'),
     };
   }
   return {
+    portable: path.resolve(import.meta.dirname, '..', '..', 'runtime', 'cloudflared', 'cloudflared'),
     system: '/usr/local/bin/cloudflared',
     user: path.join(os.homedir(), '.local', 'bin', 'cloudflared'),
   };
@@ -82,6 +85,7 @@ export function portFree(port) {
  */
 export async function ensureCloudflared(log) {
   const paths = cloudflaredPaths();
+  if (paths.portable && fs.existsSync(paths.portable)) return paths.portable;
   if (fs.existsSync(paths.system)) return paths.system;
   if (fs.existsSync(paths.user)) return paths.user;
 
@@ -99,8 +103,8 @@ export async function ensureCloudflared(log) {
   }
   fs.chmodSync(binary, 0o755);
 
-  // Try the system location first, then the per-user one.
-  for (const target of [paths.system, paths.user]) {
+  // Prefer the project-local copy, so moving the folder keeps the binary.
+  for (const target of [paths.portable, paths.system, paths.user].filter(Boolean)) {
     try {
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(binary, target);
